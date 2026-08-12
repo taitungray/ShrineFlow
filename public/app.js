@@ -62,6 +62,10 @@ async function loadData() {
   state.platforms = config.publishingPlatforms || [];
   state.accounts = config.publishingAccounts || [];
 
+  if (config.version && $('#appVersion')) {
+    $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
+  }
+
   renderPreviewPlatformTabs();
   renderPlatformOptions(config.publishingPlatforms);
   renderAccountOptions('facebook');

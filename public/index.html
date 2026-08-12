@@ -7,28 +7,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=20260813-14" />
+    <link rel="stylesheet" href="/style.css?v=20260813-15" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
-    <header class="topbar">
-      <div class="brand-group">
-        <span class="brand-badge">✦ SHRINEFLOW</span>
-        <h1>神像 AI 社群小編</h1>
+    <header class="app-header-fixed">
+      <div class="topbar">
+        <div class="brand-group">
+          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag">v0.1.0</em></span>
+          <h1>神像 AI 社群小編</h1>
+        </div>
+        <div class="status-pill" id="apiStatus">檢查連線中…</div>
       </div>
-      <div class="status-pill" id="apiStatus">檢查連線中…</div>
+
+      <div class="nav-wrapper">
+        <nav class="view-tabs" aria-label="工作區分頁">
+          <button class="view-tab active" type="button" data-view-target="create"><span>✦</span> 產生文案</button>
+          <button class="view-tab" type="button" data-view-target="review"><span>✏️</span> 編輯預覽</button>
+          <button class="view-tab" type="button" data-view-target="drafts"><span>📁</span> 草稿</button>
+          <button class="view-tab" type="button" data-view-target="schedule"><span>📅</span> 排程</button>
+          <button class="view-tab" type="button" data-view-target="settings"><span>⚙️</span> 設定</button>
+        </nav>
+      </div>
     </header>
 
     <main class="shell">
-      <nav class="view-tabs" aria-label="工作區分頁">
-        <button class="view-tab active" type="button" data-view-target="create"><span>✦</span> 產生文案</button>
-        <button class="view-tab" type="button" data-view-target="review"><span>✏️</span> 編輯預覽</button>
-        <button class="view-tab" type="button" data-view-target="drafts"><span>📁</span> 草稿</button>
-        <button class="view-tab" type="button" data-view-target="schedule"><span>📅</span> 排程</button>
-        <button class="view-tab" type="button" data-view-target="settings"><span>⚙️</span> 設定</button>
-      </nav>
 
       <section class="workspace-grid">
 
@@ -41,74 +46,82 @@
             </div>
           </div>
 
-          <div class="upload-zone" id="uploadZone">
-            <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple />
-            <label for="imageInput" class="upload-prompt">
-              <span class="upload-icon">↥</span>
-              <strong>拖曳或點擊上傳素材</strong>
-              <small>JPG / PNG / MP4（單檔 ≤ 20MB）</small>
-            </label>
-            <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label for="godName" class="field-label-group">
-                <span class="field-label">神明名稱 <span class="field-required">*</span></span>
-              </label>
-              <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="例：天上聖母、關聖帝君" autocomplete="off" required />
-              <datalist id="godSuggestions"></datalist>
-            </div>
-            <div class="field">
-              <span class="field-label">貼文類型</span>
-              <div class="radio-pill-group">
-                <label class="radio-pill">
-                  <input type="radio" name="postType" value="work" checked />
-                  <span>🎨 作品介紹</span>
-                </label>
-                <label class="radio-pill">
-                  <input type="radio" name="postType" value="birthday" />
-                  <span>🎂 聖誕祝壽</span>
-                </label>
+          <!-- STEP 1：發布平台與帳號設定 -->
+          <fieldset class="form-group-card">
+            <legend class="group-title">🚀 1. 發布平台與格式</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="createChannel" class="field-label">發布平台</label>
+                <select id="createChannel" name="channel"></select>
+              </div>
+              <div class="field">
+                <label for="createAccount" class="field-label">發布帳號</label>
+                <select id="createAccount" name="accountId"></select>
               </div>
             </div>
-          </div>
 
-          <div class="field">
-            <label for="extraNotes" class="field-label-group">
-              <span class="field-label">補充說明 <span class="field-optional">(選填)</span></span>
-            </label>
-            <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
-          </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="createContentType" class="field-label">發布格式</label>
+                <select id="createContentType" name="contentType"></select>
+              </div>
+              <div class="field">
+                <label class="field-label">格式說明</label>
+                <div id="createContentSettings" class="content-settings"></div>
+              </div>
+            </div>
+          </fieldset>
 
-          <div class="field">
-            <label for="defaultHashtags" class="field-label-group">
-              <span class="field-label">Hashtag</span>
-            </label>
-            <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
-          </div>
+          <!-- STEP 2：素材與文案內容設定 -->
+          <fieldset class="form-group-card">
+            <legend class="group-title">📸 2. 素材與文案設定</legend>
+            <div class="upload-zone" id="uploadZone">
+              <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple />
+              <label for="imageInput" class="upload-prompt">
+                <span class="upload-icon">↥</span>
+                <strong>拖曳或點擊上傳素材</strong>
+                <small>JPG / PNG / MP4（單檔 ≤ 20MB）</small>
+              </label>
+              <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
+            </div>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="createChannel" class="field-label">發布平台</label>
-              <select id="createChannel" name="channel"></select>
+            <div class="field-row">
+              <div class="field">
+                <label for="godName" class="field-label-group">
+                  <span class="field-label">神明名稱 <span class="field-required">*</span></span>
+                </label>
+                <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="例：天上聖母、關聖帝君" autocomplete="off" required />
+                <datalist id="godSuggestions"></datalist>
+              </div>
+              <div class="field">
+                <span class="field-label">貼文類型</span>
+                <div class="radio-pill-group">
+                  <label class="radio-pill">
+                    <input type="radio" name="postType" value="work" checked />
+                    <span>🎨 作品介紹</span>
+                  </label>
+                  <label class="radio-pill">
+                    <input type="radio" name="postType" value="birthday" />
+                    <span>🎂 聖誕祝壽</span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label for="createAccount" class="field-label">發布帳號</label>
-              <select id="createAccount" name="accountId"></select>
-            </div>
-          </div>
 
-          <div class="field-row">
             <div class="field">
-              <label for="createContentType" class="field-label">發布格式</label>
-              <select id="createContentType" name="contentType"></select>
+              <label for="extraNotes" class="field-label-group">
+                <span class="field-label">補充說明 <span class="field-optional">(選填)</span></span>
+              </label>
+              <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
             </div>
+
             <div class="field">
-              <label class="field-label">格式說明</label>
-              <div id="createContentSettings" class="content-settings"></div>
+              <label for="defaultHashtags" class="field-label-group">
+                <span class="field-label">Hashtag</span>
+              </label>
+              <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
             </div>
-          </div>
+          </fieldset>
 
           <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
           <p class="form-hint" id="formMessage"></p>
@@ -176,12 +189,8 @@
             </div>
           </div>
 
-          <div class="settings-section">
-            <div class="settings-section-header">
-              <h3>Gemini AI</h3>
-              <span class="settings-section-desc">產文用的 AI 引擎</span>
-            </div>
-
+          <fieldset class="form-group-card">
+            <legend class="group-title">🤖 Gemini AI 設定</legend>
             <div class="field">
               <div class="field-label-group">
                 <label for="settingGeminiApiKey" class="field-label">API Key <span class="field-required">*</span></label>
@@ -203,18 +212,14 @@
               </div>
             </details>
 
-            <button type="button" id="btnTestGemini" class="btn-test">測試連線</button>
-            <span id="testGeminiResult" class="test-result"></span>
-          </div>
-
-          <hr class="divider" />
-
-          <div class="settings-section">
-            <div class="settings-section-header">
-              <h3>Facebook</h3>
-              <span class="settings-section-desc">自動發文用 <span class="field-optional">(選填)</span></span>
+            <div class="action-box">
+              <button type="button" id="btnTestGemini" class="btn-test">🧪 測試 Gemini 連線</button>
+              <span id="testGeminiResult" class="test-result"></span>
             </div>
+          </fieldset>
 
+          <fieldset class="form-group-card">
+            <legend class="group-title">📘 Facebook 發布設定 <span class="field-optional">(選填)</span></legend>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
@@ -238,11 +243,13 @@
               </div>
             </details>
 
-            <button type="button" id="btnTestFacebook" class="btn-test">測試連線</button>
-            <span id="testFacebookResult" class="test-result"></span>
-          </div>
+            <div class="action-box">
+              <button type="button" id="btnTestFacebook" class="btn-test">🧪 測試 Facebook 連線</button>
+              <span id="testFacebookResult" class="test-result"></span>
+            </div>
+          </fieldset>
 
-          <button class="primary-button" type="submit" id="saveSettingsBtn">儲存設定</button>
+          <button class="primary-button" type="submit" id="saveSettingsBtn">💾 儲存設定</button>
         </form>
       </section>
 
@@ -311,6 +318,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=20260813-14" type="module"></script>
+    <script src="/app.js?v=20260813-15" type="module"></script>
   </body>
 </html>

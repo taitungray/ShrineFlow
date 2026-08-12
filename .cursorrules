@@ -1,0 +1,14 @@
+# Cursor & Codex Agent Rules for ShrineFlow
+
+Please strictly follow the master agent guidelines in `AGENTS.md` and the UI/UX Pro-Max design system in `.agents/skills/ui-ux-pro-max/SKILL.md`.
+
+## Key Directives Summary:
+1. **Design System & Aesthetics**: Follow `ui-ux-pro-max` standards (Warm dark mode, Noto Serif TC/Noto Sans TC/Outfit fonts, high contrast text).
+2. **Form Layout**: Use `<div class="field">` container structure with explicit `<label for="...">`. NEVER wrap inputs inside top-level labels.
+3. **No Dropdowns for Few Options**: Use `.radio-pill-group` segmented buttons for 2-4 options instead of `<select>`.
+4. **Group Containers**: Cluster related fields using `<fieldset class="form-group-card">` with `<legend class="group-title">`.
+5. **Anti-Jitter & Height Locking**: Lock `.panel` (min-height: 540px) and `.content-settings` (min-height: 42px) to prevent layout jumping.
+6. **No Horizontal Scrollbars**: Use `flex-wrap: wrap` on tabs (`.platform-tabs`, `.view-tabs`).
+7. **Git Workflow**: Commit ONLY when the user explicitly commands `commit`.
+8. **Testing**: Run targeted tests only when modifying specific backend modules.
+9. **Version Synchronization**: Always sync `package.json` version (`version: "0.2.0"`) with dynamic `/api/config` and UI tags.

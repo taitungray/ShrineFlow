@@ -87,14 +87,29 @@ body::before {
 .ambient-one { top: -8rem; left: -8rem; width: 28rem; height: 28rem; background: #e8c9b6; }
 .ambient-two { right: -10rem; bottom: -6rem; width: 26rem; height: 26rem; background: #d99a4e; }
 
-/* Header & Brand */
+/* Header & Brand (Locked Sticky Top Area) */
+.app-header-fixed {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background-color: var(--bg-app);
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: min(960px, calc(100% - 36px));
   margin: 0 auto;
-  padding: 24px 0 16px;
+  padding: 8px 0 12px;
+}
+
+.nav-wrapper {
+  width: min(960px, calc(100% - 36px));
+  margin: 0 auto;
 }
 
 .brand-group h1 {
@@ -112,6 +127,22 @@ body::before {
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+.version-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  color: var(--text-tertiary);
+  background: var(--bg-card);
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
 }
 
 .status-pill {
@@ -135,19 +166,20 @@ body::before {
 /* Shell & Navigation Tabs */
 .shell {
   width: min(960px, calc(100% - 36px));
-  margin: 0 auto 60px;
+  margin: 20px auto 60px;
 }
 
 .view-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  margin: 8px 0 20px;
+  margin: 0;
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .view-tab {
@@ -155,8 +187,9 @@ body::before {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex: 1;
-  padding: 10px 14px;
+  flex: 1 1 0px;
+  min-width: 0;
+  padding: 10px 8px;
   border: 0;
   border-radius: var(--r-md);
   color: var(--text-tertiary);
@@ -198,14 +231,7 @@ body::before {
   min-height: 540px;
 }
 
-@keyframes panelFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
-.panel:not(.is-hidden) {
-  animation: panelFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
 .panel-heading {
   display: flex;
@@ -255,9 +281,28 @@ h4 {
   font-weight: 700;
 }
 
-/* ==========================================================================
-   Form Structure & Controls (Strict Anti-Overlap Rules)
-   ========================================================================== */
+/* Form Group Card Section */
+.form-group-card {
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+}
+
+.group-title {
+  padding: 0 8px;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.action-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
 
 .field-row {
   display: grid;
@@ -322,6 +367,24 @@ select, textarea, input[type="text"], input[type="password"], input[type="dateti
   font-weight: 500;
   line-height: 1.4;
   transition: var(--transition);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238c7b73' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+option {
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  padding: 8px 12px;
 }
 
 ::placeholder {
