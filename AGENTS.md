@@ -18,6 +18,7 @@
    - **雙欄對齊與間距**：`.field-row` 雙欄佈局中，兩側必須為同等高度與結構的 `.field` 區塊，禁止在欄位側邊直接放置無 label 的浮動說明文字，避免欄位對齊錯位與文字撞字。
    - **預覽區塊縱向對齊**：預覽區域 (`.review-preview`) 中的平台頁籤 (`.platform-tabs`)、描述文字 (`.platform-status`) 與媒體預覽框 (`.preview-image-wrap`) 必須使用 `display: flex; flex-direction: column; gap: 12px;` 確保垂直順序排列，嚴禁使用 `position: absolute` 或負 margin 導致元素重疊。
    - **全展開頁籤無滾動條 (No Horizontal Scrollbars)**：所有分頁導覽與平台切換按鈕 (`.platform-tabs`) 必須完全平舖展示 (`flex-wrap: wrap`)，**禁止設定 `overflow-x: auto`**，避免出現擠壓與水平滑動條。
+   - **高度防跳動與鎖定 (Height Stability & Anti-Jitter)**：頁面面板 (`.panel`)、工作區 (`.workspace-grid`) 與動態設定區 (`.content-settings`) 必須設定合理的 `min-height`（面板 `540px`，動態設定 `42px`），切換選項與分頁時**嚴禁畫面忽大忽小、底部按鈕上跳下彈**。
 
 2. **視覺層級 (Visual Hierarchy)**
    - **文字輕重分明**：透過字體大小 (font-size)、字重 (font-weight: 700/800 vs 400)、顏色對比度（主標/主要標籤高對比 `#1e1917`，次要說明中對比 `#5c504a`，輔助說明/Placeholder 低對比 `#8c7b73`）引導視覺。
