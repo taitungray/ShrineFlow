@@ -79,19 +79,35 @@ export function renderCreatePublishSpec() {
   const accountSelect = $('#createAccount');
   const typeSelect = $('#createContentType');
   if (!platformSelect || !accountSelect || !typeSelect) return;
+
   const platforms = state.platforms.length ? state.platforms : [];
-  platformSelect.innerHTML = platforms.map((platform) => '<option value="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.name) + '</option>').join('');
-  if (!platformSelect.value) platformSelect.value = 'facebook';
+  const currentVal = platformSelect.value;
+
+  if (!platformSelect.options.length) {
+    platformSelect.innerHTML = platforms.map((platform) => '<option value="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.name) + '</option>').join('');
+  }
+  if (currentVal && [...platformSelect.options].some((opt) => opt.value === currentVal)) {
+    platformSelect.value = currentVal;
+  } else if (!platformSelect.value) {
+    platformSelect.value = 'facebook';
+  }
+
   const platformId = platformSelect.value || 'facebook';
+  const platform = state.platforms.find((item) => item.id === platformId);
+
   const accounts = state.accounts.filter((account) => account.platformId === platformId);
   accountSelect.innerHTML = accounts.length
     ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled ? '' : ' disabled') + '>' + escapeHtml(account.name) + (account.enabled ? '' : '（尚未連接）') + '</option>').join('')
-    : '<option value="" disabled>尚未連接帳號</option>';
+    : '<option value="" disabled selected>尚未連接 ' + escapeHtml(platform?.name || '') + ' 帳號</option>';
+
   const firstAccount = accounts.find((account) => account.enabled);
   if (firstAccount) accountSelect.value = firstAccount.id;
-  const platform = state.platforms.find((item) => item.id === platformId);
+
   const contentTypes = platform?.contentTypes || [];
-  typeSelect.innerHTML = contentTypes.map((contentType) => '<option value="' + escapeHtml(contentType.id) + '">' + escapeHtml(contentType.name) + (contentType.canPublish ? '' : '（規劃中）') + '</option>').join('');
+  typeSelect.innerHTML = contentTypes.length
+    ? contentTypes.map((contentType) => '<option value="' + escapeHtml(contentType.id) + '">' + escapeHtml(contentType.name) + (contentType.canPublish ? '' : '（規劃中）') + '</option>').join('')
+    : '<option value="" disabled selected>尚未定義格式</option>';
+
   renderCreateContentSettings(platformId, typeSelect.value);
 }
 
