@@ -1,4 +1,4 @@
-import { $, escapeHtml, formatDate, setPreviewMessage, showToast } from './dom.js';
+import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
 import { state, PLATFORM_NAMES } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api } from './api.js';
@@ -44,7 +44,7 @@ export function initScheduleDialog(refreshListsFn) {
       const now = new Date(Date.now() + 60 * 60 * 1000);
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       $('#scheduledAt').value = now.toISOString().slice(0, 16);
-      $('#scheduleChannel').value = 'facebook';
+      setFieldValue($('#scheduleChannel'), 'facebook');
       renderAccountOptions('facebook');
       renderContentTypeOptions('facebook');
       dialog.showModal();
@@ -61,7 +61,7 @@ export function initScheduleDialog(refreshListsFn) {
 
   const contentTypeSel = $('#scheduleContentType');
   if (contentTypeSel) {
-    contentTypeSel.addEventListener('change', (event) => renderContentSettings($('#scheduleChannel').value, event.target.value));
+    contentTypeSel.addEventListener('change', (event) => renderContentSettings(fieldValue($('#scheduleChannel')), event.target.value));
   }
 
   const form = $('#scheduleForm');
@@ -75,9 +75,9 @@ export function initScheduleDialog(refreshListsFn) {
           body: JSON.stringify({
             postId: state.savedPost.id,
             scheduledAt: new Date($('#scheduledAt').value).toISOString(),
-            channel: $('#scheduleChannel').value,
+            channel: fieldValue($('#scheduleChannel')) || 'facebook',
             accountId: $('#scheduleAccount').value,
-            contentType: $('#scheduleContentType').value,
+            contentType: fieldValue($('#scheduleContentType')) || 'post',
             contentSettings: readContentSettings(),
           }),
         });

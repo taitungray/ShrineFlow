@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=20260813-15" />
+    <link rel="stylesheet" href="/style.css?v=0.2.1" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -16,19 +16,19 @@
     <header class="app-header-fixed">
       <div class="topbar">
         <div class="brand-group">
-          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag">v0.1.0</em></span>
+          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.2.1</em></span>
           <h1>神像 AI 社群小編</h1>
         </div>
         <div class="status-pill" id="apiStatus">檢查連線中…</div>
       </div>
 
       <div class="nav-wrapper">
-        <nav class="view-tabs" aria-label="工作區分頁">
-          <button class="view-tab active" type="button" data-view-target="create"><span>✦</span> 產生文案</button>
-          <button class="view-tab" type="button" data-view-target="review"><span>✏️</span> 編輯預覽</button>
-          <button class="view-tab" type="button" data-view-target="drafts"><span>📁</span> 草稿</button>
-          <button class="view-tab" type="button" data-view-target="schedule"><span>📅</span> 排程</button>
-          <button class="view-tab" type="button" data-view-target="settings"><span>⚙️</span> 設定</button>
+        <nav class="view-tabs" role="tablist" aria-label="工作區分頁">
+          <button class="view-tab active" type="button" id="viewTabCreate" role="tab" aria-selected="true" aria-controls="generateForm" aria-label="產生文案" data-view-target="create"><span>✦</span> 產生文案</button>
+          <button class="view-tab" type="button" id="viewTabReview" role="tab" aria-selected="false" aria-controls="reviewPanel" aria-label="編輯預覽" data-view-target="review"><span>✏️</span> 編輯預覽</button>
+          <button class="view-tab" type="button" id="viewTabDrafts" role="tab" aria-selected="false" aria-controls="draftsPanel" aria-label="草稿" data-view-target="drafts"><span>📁</span> 草稿</button>
+          <button class="view-tab" type="button" id="viewTabSchedule" role="tab" aria-selected="false" aria-controls="schedulePanel" aria-label="排程" data-view-target="schedule"><span>📅</span> 排程</button>
+          <button class="view-tab" type="button" id="viewTabSettings" role="tab" aria-selected="false" aria-controls="settingsForm" aria-label="設定" data-view-target="settings"><span>⚙️</span> 設定</button>
         </nav>
       </div>
     </header>
@@ -49,25 +49,22 @@
           <!-- STEP 1：發布平台與帳號設定 -->
           <fieldset class="form-group-card">
             <legend class="group-title">🚀 1. 發布平台與格式</legend>
+            <div class="field">
+              <span id="createChannelLabel" class="field-label">發布平台</span>
+              <div class="radio-pill-group" id="createChannel" role="radiogroup" aria-labelledby="createChannelLabel"></div>
+            </div>
+            <div class="field">
+              <span id="createContentTypeLabel" class="field-label">發布格式</span>
+              <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
+            </div>
             <div class="field-row">
-              <div class="field">
-                <label for="createChannel" class="field-label">發布平台</label>
-                <select id="createChannel" name="channel"></select>
-              </div>
               <div class="field">
                 <label for="createAccount" class="field-label">發布帳號</label>
-                <select id="createAccount" name="accountId"></select>
-              </div>
-            </div>
-
-            <div class="field-row">
-              <div class="field">
-                <label for="createContentType" class="field-label">發布格式</label>
-                <select id="createContentType" name="contentType"></select>
+                <select id="createAccount" name="accountId" aria-label="發布帳號"></select>
               </div>
               <div class="field">
-                <label class="field-label">格式說明</label>
-                <div id="createContentSettings" class="content-settings"></div>
+                <span id="createContentSettingsLabel" class="field-label">格式說明</span>
+                <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
               </div>
             </div>
           </fieldset>
@@ -76,7 +73,7 @@
           <fieldset class="form-group-card">
             <legend class="group-title">📸 2. 素材與文案設定</legend>
             <div class="upload-zone" id="uploadZone">
-              <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple />
+              <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple aria-label="上傳素材" />
               <label for="imageInput" class="upload-prompt">
                 <span class="upload-icon">↥</span>
                 <strong>拖曳或點擊上傳素材</strong>
@@ -94,14 +91,14 @@
                 <datalist id="godSuggestions"></datalist>
               </div>
               <div class="field">
-                <span class="field-label">貼文類型</span>
-                <div class="radio-pill-group">
+                <span id="postTypeLabel" class="field-label">貼文類型</span>
+                <div class="radio-pill-group" role="radiogroup" aria-labelledby="postTypeLabel">
                   <label class="radio-pill">
-                    <input type="radio" name="postType" value="work" checked />
+                    <input id="postTypeWork" type="radio" name="postType" value="work" checked />
                     <span>🎨 作品介紹</span>
                   </label>
                   <label class="radio-pill">
-                    <input type="radio" name="postType" value="birthday" />
+                    <input id="postTypeBirthday" type="radio" name="postType" value="birthday" />
                     <span>🎂 聖誕祝壽</span>
                   </label>
                 </div>
@@ -123,12 +120,12 @@
             </div>
           </fieldset>
 
-          <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
+          <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
           <p class="form-hint" id="formMessage"></p>
         </form>
 
         <!-- ========== 編輯預覽 ========== -->
-        <section class="panel is-hidden" data-view-panel="review">
+        <section class="panel is-hidden" id="reviewPanel" data-view-panel="review">
           <div class="panel-heading">
             <div>
               <p class="section-tag">EDIT & PREVIEW</p>
@@ -152,8 +149,8 @@
                 <input id="hashtagsText" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
               </div>
               <div class="action-row">
-                <button class="btn-secondary" id="saveButton" type="button" disabled>💾 儲存草稿</button>
-                <button class="btn-dark" id="scheduleButton" type="button" disabled>📅 排程發布</button>
+                <button class="btn-secondary" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
+                <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
               </div>
               <p class="form-hint" id="previewMessage"></p>
             </div>
@@ -198,7 +195,7 @@
               </div>
               <div class="input-action">
                 <input id="settingGeminiApiKey" type="password" placeholder="AIzaSy..." />
-                <button type="button" id="toggleGeminiKey" class="btn-icon">顯示</button>
+                <button type="button" id="toggleGeminiKey" class="btn-icon" aria-label="顯示或隱藏 API Key">顯示</button>
               </div>
             </div>
 
@@ -213,7 +210,7 @@
             </details>
 
             <div class="action-box">
-              <button type="button" id="btnTestGemini" class="btn-test">🧪 測試 Gemini 連線</button>
+              <button type="button" id="btnTestGemini" class="btn-test" aria-label="測試 Gemini 連線">🧪 測試 Gemini 連線</button>
               <span id="testGeminiResult" class="test-result"></span>
             </div>
           </fieldset>
@@ -232,7 +229,7 @@
               </div>
               <div class="input-action">
                 <input id="settingFacebookPageAccessToken" type="password" placeholder="EAA..." />
-                <button type="button" id="toggleFbToken" class="btn-icon">顯示</button>
+                <button type="button" id="toggleFbToken" class="btn-icon" aria-label="顯示或隱藏 Page Access Token">顯示</button>
               </div>
             </div>
 
@@ -244,24 +241,24 @@
             </details>
 
             <div class="action-box">
-              <button type="button" id="btnTestFacebook" class="btn-test">🧪 測試 Facebook 連線</button>
+              <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試 Facebook 連線</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
           </fieldset>
 
-          <button class="primary-button" type="submit" id="saveSettingsBtn">💾 儲存設定</button>
+          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存設定">💾 儲存設定</button>
         </form>
       </section>
 
       <section class="bottom-grid">
         <!-- 草稿 -->
-        <section class="panel is-hidden" data-view-panel="drafts">
+        <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
           <div class="panel-heading compact">
             <div>
               <p class="section-tag">DRAFTS</p>
               <h3>草稿</h3>
             </div>
-            <button class="btn-text" id="refreshButton" type="button">↻ 重新整理</button>
+            <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
           </div>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
@@ -272,7 +269,7 @@
         </section>
 
         <!-- 排程 -->
-        <section class="panel is-hidden" data-view-panel="schedule">
+        <section class="panel is-hidden" id="schedulePanel" data-view-panel="schedule">
           <div class="panel-heading compact">
             <div>
               <p class="section-tag">SCHEDULE</p>
@@ -294,30 +291,26 @@
         <button class="close-button" value="cancel" aria-label="關閉">×</button>
         <p class="section-tag">PUBLISH</p>
         <h3>排程發布</h3>
-        <div class="field"><label for="scheduleChannel" class="field-label">平台</label>
-          <select id="scheduleChannel">
-            <option value="facebook">Facebook</option>
-            <option value="instagram" disabled>Instagram（即將支援）</option>
-            <option value="threads" disabled>Threads（即將支援）</option>
-            <option value="line" disabled>LINE VOOM（即將支援）</option>
-          </select>
+        <div class="field">
+          <span id="scheduleChannelLabel" class="field-label">平台</span>
+          <div class="radio-pill-group" id="scheduleChannel" role="radiogroup" aria-labelledby="scheduleChannelLabel"></div>
         </div>
-        <div class="field"><label for="scheduleAccount" class="field-label">帳號</label>
-          <select id="scheduleAccount">
+        <div class="field">
+          <label for="scheduleAccount" class="field-label">帳號</label>
+          <select id="scheduleAccount" aria-label="排程帳號">
             <option value="facebook:default">預設帳號</option>
           </select>
         </div>
-        <div class="field"><label for="scheduleContentType" class="field-label">格式</label>
-          <select id="scheduleContentType">
-            <option value="post">貼文</option>
-          </select>
+        <div class="field">
+          <span id="scheduleContentTypeLabel" class="field-label">格式</span>
+          <div class="radio-pill-group" id="scheduleContentType" role="radiogroup" aria-labelledby="scheduleContentTypeLabel"></div>
         </div>
         <div id="scheduleContentSettings" class="content-settings"></div>
         <div class="field"><label for="scheduledAt" class="field-label">發布時間</label><input id="scheduledAt" type="datetime-local" required /></div>
-        <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit">確認排程</button>
+        <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=20260813-15" type="module"></script>
+    <script src="/app.js?v=0.2.1" type="module"></script>
   </body>
 </html>

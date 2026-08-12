@@ -10,7 +10,7 @@
 
   /* Hierarchy Colors */
   --bg-app: #f7f1eb;
-  --bg-card: rgba(255, 253, 249, 0.96);
+  --bg-card: #ffffff;
   --bg-input: #ffffff;
   --bg-subtle: #f3e9df;
 
@@ -40,7 +40,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-app: #141211;
-    --bg-card: rgba(28, 24, 22, 0.96);
+    --bg-card: #1c1816;
     --bg-input: #231e1c;
     --bg-subtle: #292321;
 
@@ -179,7 +179,6 @@ body::before {
   border-radius: var(--r-lg);
   background: var(--bg-card);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
 }
 
 .view-tab {
@@ -189,6 +188,7 @@ body::before {
   gap: 6px;
   flex: 1 1 0px;
   min-width: 0;
+  min-height: 44px;
   padding: 10px 8px;
   border: 0;
   border-radius: var(--r-md);
@@ -277,6 +277,7 @@ h3 {
 
 h4 {
   color: var(--text-primary);
+  font-family: "Noto Serif TC", serif;
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -293,6 +294,7 @@ h4 {
 .group-title {
   padding: 0 8px;
   color: var(--text-primary);
+  font-family: "Noto Serif TC", serif;
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -356,6 +358,7 @@ h4 {
 
 select, textarea, input[type="text"], input[type="password"], input[type="datetime-local"] {
   width: 100%;
+  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -401,15 +404,17 @@ select:focus, textarea:focus, input:focus {
 /* Radio Segmented Pills */
 .radio-pill-group {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .radio-pill {
-  flex: 1;
+  flex: 1 1 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  min-width: 0;
   cursor: pointer;
 }
 
@@ -426,6 +431,7 @@ select:focus, textarea:focus, input:focus {
   justify-content: center;
   gap: 6px;
   width: 100%;
+  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -444,10 +450,15 @@ select:focus, textarea:focus, input:focus {
   box-shadow: 0 2px 8px rgba(194, 94, 64, 0.2);
 }
 
-.radio-pill:hover input[type="radio"]:not(:checked) + span {
+.radio-pill:hover input[type="radio"]:not(:checked):not(:disabled) + span {
   border-color: var(--brand);
   background: var(--brand-soft);
   color: var(--brand);
+}
+
+.radio-pill input[type="radio"]:disabled + span {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* Upload Zone */
@@ -468,7 +479,8 @@ select:focus, textarea:focus, input:focus {
   transition: var(--transition);
 }
 
-.upload-zone:hover {
+.upload-zone:hover,
+.upload-zone.drag-active {
   border-color: var(--brand);
   background: var(--brand-soft);
 }
@@ -539,6 +551,7 @@ select:focus, textarea:focus, input:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 44px;
   padding: 10px 14px;
   color: var(--text-secondary);
   font-size: 0.8rem;
@@ -568,6 +581,7 @@ select:focus, textarea:focus, input:focus {
   justify-content: center;
   gap: 6px;
   width: 100%;
+  min-height: 44px;
   padding: 12px 18px;
   border: 0;
   border-radius: var(--r-sm);
@@ -590,6 +604,7 @@ select:focus, textarea:focus, input:focus {
 
 .btn-secondary, .btn-dark {
   flex: 1;
+  min-height: 44px;
   padding: 10px 16px;
   border: 0;
   border-radius: var(--r-sm);
@@ -613,7 +628,9 @@ select:focus, textarea:focus, input:focus {
 .btn-dark:hover:not(:disabled) { background: #3c3330; }
 
 .btn-text {
-  padding: 4px 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 12px;
   border: 0;
   border-radius: var(--r-sm);
   color: var(--brand);
@@ -626,20 +643,22 @@ select:focus, textarea:focus, input:focus {
 .btn-text:hover { background: var(--brand-soft); }
 
 .input-action {
-  position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  gap: 8px;
   width: 100%;
 }
 
 .input-action input {
-  padding-right: 68px;
+  flex: 1;
+  min-width: 0;
 }
 
 .btn-icon {
-  position: absolute;
-  right: 6px;
-  padding: 5px 10px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   color: var(--text-tertiary);
@@ -652,7 +671,8 @@ select:focus, textarea:focus, input:focus {
 .btn-icon:hover { color: var(--brand); border-color: var(--brand); }
 
 .btn-test {
-  padding: 7px 16px;
+  min-height: 44px;
+  padding: 10px 16px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   color: var(--text-secondary);
@@ -701,9 +721,11 @@ select:focus, textarea:focus, input:focus {
 .review-editor, .review-preview {
   display: flex;
   flex-direction: column;
-  gap: 14px;
   width: 100%;
 }
+
+.review-editor { gap: 14px; }
+.review-preview { gap: 12px; }
 
 .platform-tabs {
   display: flex;
@@ -714,7 +736,9 @@ select:focus, textarea:focus, input:focus {
 }
 
 .platform-tab {
-  padding: 6px 14px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--r-full);
   color: var(--text-tertiary);
@@ -725,6 +749,12 @@ select:focus, textarea:focus, input:focus {
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+}
+
+.platform-tab:hover:not(.active) {
+  color: var(--brand);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .platform-tab.active {
@@ -738,8 +768,7 @@ select:focus, textarea:focus, input:focus {
   color: var(--text-tertiary);
   font-size: 0.75rem;
   line-height: 1.4;
-  margin-top: -6px;
-  margin-bottom: 4px;
+  margin: 0;
 }
 
 .preview-image-wrap {
@@ -816,7 +845,7 @@ select:focus, textarea:focus, input:focus {
 
 .media-order-controls { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 3px; }
 .media-order-controls button {
-  width: 24px; height: 24px; padding: 0;
+  width: 44px; height: 44px; padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
   color: #ffffff;
@@ -907,12 +936,14 @@ select:focus, textarea:focus, input:focus {
 .schedule-dialog form { position: relative; padding: 28px; }
 .schedule-dialog h3 { margin-bottom: 14px; }
 .close-button {
-  position: absolute; top: 14px; right: 14px;
-  width: 28px; height: 28px;
+  position: absolute; top: 10px; right: 10px;
+  width: 44px; height: 44px;
   border: 0; border-radius: 50%;
   color: var(--text-tertiary); background: transparent;
   font-size: 1.4rem; cursor: pointer;
+  transition: var(--transition);
 }
+.close-button:hover { color: var(--brand); background: var(--brand-soft); }
 
 /* Toast */
 .toast {
@@ -944,10 +975,10 @@ select:focus, textarea:focus, input:focus {
 
 /* Responsive Adjustments */
 @media (max-width: 860px) { .review-layout, .bottom-grid { grid-template-columns: 1fr; } }
-@media (max-width: 600px) {
-  .topbar, .shell { width: min(100% - 20px, 960px); }
+@media (max-width: 768px) {
+  .topbar, .shell, .nav-wrapper { width: min(100% - 20px, 960px); }
   .view-tabs { flex-wrap: wrap; }
-  .view-tab { flex: 1 1 auto; }
+  .view-tab { flex: 1 1 calc(50% - 4px); }
   .field-row { grid-template-columns: 1fr; }
   .panel { padding: 20px; }
 }

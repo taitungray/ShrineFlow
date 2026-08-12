@@ -1,4 +1,4 @@
-import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast } from './dom.js';
+import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, PLATFORM_DESCRIPTIONS, mediaPathsOf } from './state.js';
 import { renderCreatePublishSpec, renderCreateContentSettings, readCreateContentSettings } from './platform-ui.js';
 import { api } from './api.js';
@@ -13,7 +13,7 @@ export function updateLivePreview() {
   }
   const hashtagsPreview = $('#hashtagsPreview');
   if (hashtagsPreview) hashtagsPreview.textContent = $('#hashtagsText')?.value?.trim() || '';
-  const previewCard = document.querySelector('.copy-preview-card');
+  const previewCard = document.querySelector('.copy-card');
   if (previewCard) {
     previewCard.dataset.platform = state.selectedPlatform;
     const title = previewCard.querySelector('h4');
@@ -33,7 +33,7 @@ export function renderPreviewPlatformTabs() {
   container.innerHTML = platforms.map((platform) => {
     const active = platform.id === state.selectedPlatform;
     const status = platform.canPublish ? '' : '（預覽）';
-    return '<button class="platform-tab' + (active ? ' active' : '') + '" type="button" role="tab" aria-selected="' + active + '" data-preview-platform="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.shortName || platform.name) + status + '</button>';
+    return '<button class="platform-tab' + (active ? ' active' : '') + '" type="button" role="tab" aria-selected="' + active + '" aria-label="' + escapeHtml((platform.shortName || platform.name) + status) + '" data-preview-platform="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.shortName || platform.name) + status + '</button>';
   }).join('');
   container.querySelectorAll('[data-preview-platform]').forEach((button) => button.addEventListener('click', () => {
     state.selectedPlatform = button.dataset.previewPlatform;
@@ -82,12 +82,18 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (reelText) reelText.value = generated.reel || '';
   const defaultTags = $('#defaultHashtags');
   if (generated.defaultHashtags !== undefined && defaultTags) defaultTags.value = generated.defaultHashtags;
+  const godName = $('#godName');
+  if (generated.godName && godName) godName.value = generated.godName;
+  const extraNotes = $('#extraNotes');
+  if (generated.extraNotes !== undefined && extraNotes) extraNotes.value = generated.extraNotes;
+  const postTypeRadio = document.querySelector('input[name="postType"][value="' + (generated.postType || 'work') + '"]');
+  if (postTypeRadio) postTypeRadio.checked = true;
   if (generated.channel && $('#createChannel')) {
-    $('#createChannel').value = generated.channel;
+    setFieldValue($('#createChannel'), generated.channel);
     renderCreatePublishSpec();
     if (generated.accountId) $('#createAccount').value = generated.accountId;
     if (generated.contentType) {
-      $('#createContentType').value = generated.contentType;
+      setFieldValue($('#createContentType'), generated.contentType);
       renderCreateContentSettings(generated.channel, generated.contentType);
     }
   }
@@ -115,12 +121,12 @@ export function currentDraft() {
   return {
     ...(state.generated || {}),
     godName: $('#godName')?.value || '',
-    postType: $('#postType')?.value || 'work',
+    postType: document.querySelector('input[name="postType"]:checked')?.value || 'work',
     extraNotes: $('#extraNotes')?.value || '',
     defaultHashtags: $('#defaultHashtags')?.value || '',
-    channel: $('#createChannel')?.value || 'facebook',
+    channel: fieldValue($('#createChannel')) || 'facebook',
     accountId: $('#createAccount')?.value || '',
-    contentType: $('#createContentType')?.value || 'post',
+    contentType: fieldValue($('#createContentType')) || 'post',
     contentSettings: readCreateContentSettings(),
     facebook: $('#facebookText')?.value || '',
     reel: $('#reelText')?.value || '',

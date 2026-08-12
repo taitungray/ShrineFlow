@@ -6,6 +6,25 @@ export function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => entities[character]);
 }
 
+export function fieldValue(el) {
+  if (!el) return '';
+  if (el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) return el.value;
+  if (el instanceof HTMLInputElement) return el.value;
+  const checked = el.querySelector?.('input[type="radio"]:checked');
+  return checked ? checked.value : '';
+}
+
+export function setFieldValue(el, value) {
+  if (!el) return;
+  if (el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+    el.value = value;
+    return;
+  }
+  const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(String(value)) : String(value).replace(/"/g, '\\"');
+  const radio = el.querySelector?.('input[type="radio"][value="' + escaped + '"]');
+  if (radio && !radio.disabled) radio.checked = true;
+}
+
 export function showToast(message, type = 'info') {
   const toast = $('#toast');
   if (!toast) return;

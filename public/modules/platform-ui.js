@@ -1,17 +1,75 @@
-import { $, escapeHtml } from './dom.js';
+import { $, escapeHtml, fieldValue, setFieldValue } from './dom.js';
 import { state } from './state.js';
 
-export function selectedPlatformDefinition(platformId = $('#scheduleChannel')?.value || 'facebook') {
+export function selectedPlatformDefinition(platformId = fieldValue($('#scheduleChannel')) || 'facebook') {
   return state.platforms.find((platform) => platform.id === platformId) || null;
 }
 
-export function renderPlatformOptions(platforms = []) {
-  const select = $('#scheduleChannel');
-  if (!select || !platforms.length) return;
-  select.innerHTML = platforms.map((platform) => {
-    const label = platform.enabled ? platform.name : `${platform.name}（即將支援）`;
-    return '<option value="' + escapeHtml(platform.id) + '"' + (platform.enabled ? '' : ' disabled') + '>' + escapeHtml(label) + '</option>';
+function renderRadioPills(container, items, { name, selected } = {}) {
+  if (!container) return;
+  const enabled = items.filter((item) => !item.disabled);
+  const selectedValue = items.some((item) => item.value === selected && !item.disabled)
+    ? selected
+    : (enabled[0]?.value || items[0]?.value || '');
+  container.innerHTML = items.map((item) => {
+    const id = name + '-' + item.value;
+    return '<label class="radio-pill">'
+      + '<input type="radio" id="' + escapeHtml(id) + '" name="' + escapeHtml(name) + '" value="' + escapeHtml(item.value) + '"'
+      + (item.value === selectedValue ? ' checked' : '')
+      + (item.disabled ? ' disabled' : '')
+      + ' />'
+      + '<span>' + escapeHtml(item.label) + '</span>'
+      + '</label>';
   }).join('');
+}
+
+function renderSettingField(setting, dataAttr, namePrefix) {
+  const fieldId = namePrefix + '-' + setting.id;
+  const options = setting.options || [];
+  if (setting.type === 'select' && options.length > 0 && options.length <= 4) {
+    const pills = options.map((option, index) => {
+      const inputId = fieldId + '-' + option.value;
+      return '<label class="radio-pill">'
+        + '<input type="radio" id="' + escapeHtml(inputId) + '" name="' + escapeHtml(fieldId) + '" value="' + escapeHtml(option.value) + '" '
+        + dataAttr + '="' + escapeHtml(setting.id) + '"'
+        + (index === 0 ? ' checked' : '')
+        + ' />'
+        + '<span>' + escapeHtml(option.label) + '</span>'
+        + '</label>';
+    }).join('');
+    return '<div class="field">'
+      + '<span class="field-label" id="' + escapeHtml(fieldId) + '-label">' + escapeHtml(setting.name) + '</span>'
+      + '<div class="radio-pill-group" role="radiogroup" aria-labelledby="' + escapeHtml(fieldId) + '-label">' + pills + '</div>'
+      + '</div>';
+  }
+  if (setting.type === 'select') {
+    return '<div class="field">'
+      + '<label for="' + escapeHtml(fieldId) + '" class="field-label">' + escapeHtml(setting.name) + '</label>'
+      + '<select id="' + escapeHtml(fieldId) + '" ' + dataAttr + '="' + escapeHtml(setting.id) + '">'
+      + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join('')
+      + '</select></div>';
+  }
+  return '<div class="field">'
+    + '<label for="' + escapeHtml(fieldId) + '" class="field-label">' + escapeHtml(setting.name) + '</label>'
+    + '<input id="' + escapeHtml(fieldId) + '" type="text" ' + dataAttr + '="' + escapeHtml(setting.id) + '" placeholder="' + escapeHtml(setting.placeholder || '') + '" />'
+    + '</div>';
+}
+
+function readDataSettings(dataKey) {
+  return Object.fromEntries([...document.querySelectorAll('[data-' + dataKey + ']')].flatMap((field) => {
+    if (field.type === 'radio' && !field.checked) return [];
+    return [[field.getAttribute('data-' + dataKey), field.value]];
+  }));
+}
+
+export function renderPlatformOptions(platforms = []) {
+  const group = $('#scheduleChannel');
+  if (!group || !platforms.length) return;
+  renderRadioPills(group, platforms.map((platform) => ({
+    value: platform.id,
+    label: platform.enabled ? (platform.shortName || platform.name) : `${platform.shortName || platform.name}（即將支援）`,
+    disabled: !platform.enabled,
+  })), { name: 'scheduleChannel', selected: fieldValue(group) || 'facebook' });
 }
 
 export function renderAccountOptions(platformId = 'facebook') {
@@ -25,7 +83,7 @@ export function renderAccountOptions(platformId = 'facebook') {
   if (firstEnabled) select.value = firstEnabled.id;
 }
 
-export function renderContentSettings(platformId = $('#scheduleChannel')?.value || 'facebook', contentTypeId = $('#scheduleContentType')?.value || 'post') {
+export function renderContentSettings(platformId = fieldValue($('#scheduleChannel')) || 'facebook', contentTypeId = fieldValue($('#scheduleContentType')) || 'post') {
   const container = $('#scheduleContentSettings');
   if (!container) return;
   const platform = selectedPlatformDefinition(platformId);
@@ -35,12 +93,8 @@ export function renderContentSettings(platformId = $('#scheduleChannel')?.value 
     return;
   }
   const settings = contentType.settings || [];
-  container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>' + settings.map((setting) => {
-    if (setting.type === 'select') {
-      return '<label class="field"><span>' + escapeHtml(setting.name) + '</span><select data-content-setting="' + escapeHtml(setting.id) + '">' + setting.options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join('') + '</select></label>';
-    }
-    return '<label class="field"><span>' + escapeHtml(setting.name) + '</span><input type="text" data-content-setting="' + escapeHtml(setting.id) + '" placeholder="' + escapeHtml(setting.placeholder || '') + '" /></label>';
-  }).join('');
+  container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>'
+    + settings.map((setting) => renderSettingField(setting, 'data-content-setting', 'schedule-setting')).join('');
   const submit = $('#scheduleSubmitButton');
   if (submit) {
     submit.disabled = !contentType.canPublish;
@@ -49,18 +103,19 @@ export function renderContentSettings(platformId = $('#scheduleChannel')?.value 
 }
 
 export function renderContentTypeOptions(platformId = 'facebook') {
-  const select = $('#scheduleContentType');
-  if (!select) return;
+  const group = $('#scheduleContentType');
+  if (!group) return;
   const platform = selectedPlatformDefinition(platformId);
   const contentTypes = platform?.contentTypes || (platformId === 'facebook' ? [{ id: 'post', name: '貼文', canPublish: true }] : []);
-  select.innerHTML = contentTypes.length
-    ? contentTypes.map((contentType) => '<option value="' + escapeHtml(contentType.id) + '">' + escapeHtml(contentType.name) + (contentType.canPublish ? '' : '（規劃中）') + '</option>').join('')
-    : '<option value="" disabled>尚未定義發布格式</option>';
-  renderContentSettings(platformId, select.value);
+  renderRadioPills(group, contentTypes.map((contentType) => ({
+    value: contentType.id,
+    label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
+  })), { name: 'scheduleContentType', selected: fieldValue(group) });
+  renderContentSettings(platformId, fieldValue(group));
 }
 
 export function readContentSettings() {
-  return Object.fromEntries([...document.querySelectorAll('[data-content-setting]')].map((field) => [field.dataset.contentSetting, field.value]));
+  return readDataSettings('content-setting');
 }
 
 export function renderCreateContentSettings(platformId, contentTypeId) {
@@ -68,31 +123,31 @@ export function renderCreateContentSettings(platformId, contentTypeId) {
   const platform = state.platforms.find((item) => item.id === platformId);
   const contentType = platform?.contentTypes?.find((item) => item.id === contentTypeId);
   if (!container || !contentType) return;
-  container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>' + (contentType.settings || []).map((setting) => {
-    if (setting.type === 'select') return '<label class="field"><span>' + escapeHtml(setting.name) + '</span><select data-create-content-setting="' + escapeHtml(setting.id) + '">' + setting.options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join('') + '</select></label>';
-    return '<label class="field"><span>' + escapeHtml(setting.name) + '</span><input type="text" data-create-content-setting="' + escapeHtml(setting.id) + '" placeholder="' + escapeHtml(setting.placeholder || '') + '" /></label>';
-  }).join('');
+  container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>'
+    + (contentType.settings || []).map((setting) => renderSettingField(setting, 'data-create-content-setting', 'create-setting')).join('');
 }
 
 export function renderCreatePublishSpec() {
-  const platformSelect = $('#createChannel');
+  const platformGroup = $('#createChannel');
   const accountSelect = $('#createAccount');
-  const typeSelect = $('#createContentType');
-  if (!platformSelect || !accountSelect || !typeSelect) return;
+  const typeGroup = $('#createContentType');
+  if (!platformGroup || !accountSelect || !typeGroup) return;
 
   const platforms = state.platforms.length ? state.platforms : [];
-  const currentVal = platformSelect.value;
+  const currentPlatform = fieldValue(platformGroup);
 
-  if (!platformSelect.options.length) {
-    platformSelect.innerHTML = platforms.map((platform) => '<option value="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.name) + '</option>').join('');
-  }
-  if (currentVal && [...platformSelect.options].some((opt) => opt.value === currentVal)) {
-    platformSelect.value = currentVal;
-  } else if (!platformSelect.value) {
-    platformSelect.value = 'facebook';
+  if (!platformGroup.querySelector('input[type="radio"]') && platforms.length) {
+    renderRadioPills(platformGroup, platforms.map((platform) => ({
+      value: platform.id,
+      label: platform.shortName || platform.name,
+    })), { name: 'channel', selected: currentPlatform || 'facebook' });
+  } else if (currentPlatform && [...platformGroup.querySelectorAll('input[type="radio"]')].some((opt) => opt.value === currentPlatform)) {
+    setFieldValue(platformGroup, currentPlatform);
+  } else if (!fieldValue(platformGroup) && platforms.length) {
+    setFieldValue(platformGroup, 'facebook');
   }
 
-  const platformId = platformSelect.value || 'facebook';
+  const platformId = fieldValue(platformGroup) || 'facebook';
   const platform = state.platforms.find((item) => item.id === platformId);
 
   const accounts = state.accounts.filter((account) => account.platformId === platformId);
@@ -104,13 +159,19 @@ export function renderCreatePublishSpec() {
   if (firstAccount) accountSelect.value = firstAccount.id;
 
   const contentTypes = platform?.contentTypes || [];
-  typeSelect.innerHTML = contentTypes.length
-    ? contentTypes.map((contentType) => '<option value="' + escapeHtml(contentType.id) + '">' + escapeHtml(contentType.name) + (contentType.canPublish ? '' : '（規劃中）') + '</option>').join('')
-    : '<option value="" disabled selected>尚未定義格式</option>';
+  const currentType = fieldValue(typeGroup);
+  if (contentTypes.length) {
+    renderRadioPills(typeGroup, contentTypes.map((contentType) => ({
+      value: contentType.id,
+      label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
+    })), { name: 'contentType', selected: currentType });
+  } else {
+    typeGroup.innerHTML = '';
+  }
 
-  renderCreateContentSettings(platformId, typeSelect.value);
+  renderCreateContentSettings(platformId, fieldValue(typeGroup));
 }
 
 export function readCreateContentSettings() {
-  return Object.fromEntries([...document.querySelectorAll('[data-create-content-setting]')].map((field) => [field.dataset.createContentSetting, field.value]));
+  return readDataSettings('create-content-setting');
 }

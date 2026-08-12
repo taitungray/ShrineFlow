@@ -18,7 +18,7 @@ export function renderPosts() {
       ? '<video src="' + escapeHtml(firstMedia) + '" muted playsinline preload="metadata"></video>'
       : '<img src="' + escapeHtml(firstMedia) + '" alt="" />';
     const excerpt = escapeHtml(post.facebook.slice(0, 72)) + (post.facebook.length > 72 ? '…' : '');
-    return '<button class="record-card" data-post-id="' + post.id + '" type="button">' +
+    return '<button class="record-card" id="draft-' + post.id + '" data-post-id="' + post.id + '" type="button" aria-label="載入草稿 ' + escapeHtml(post.godName) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
       '<span class="record-body"><strong>' + escapeHtml(post.godName) + '</strong><small>' + formatDate(post.createdAt) + ' ・ ' + escapeHtml(post.postType) + '</small><span>' + excerpt + '</span></span>' +
       '<span class="record-arrow">›</span></button>';

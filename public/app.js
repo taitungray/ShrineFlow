@@ -1,4 +1,4 @@
-import { $, escapeHtml, setFormMessage, showToast } from './modules/dom.js';
+import { $, escapeHtml, setFormMessage, showToast, fieldValue } from './modules/dom.js';
 import { state } from './modules/state.js';
 import { api } from './modules/api.js';
 import { initTabs, setActiveView } from './modules/tabs.js';
@@ -159,7 +159,7 @@ function initApp() {
   }
   const createType = $('#createContentType');
   if (createType) {
-    createType.addEventListener('change', (event) => renderCreateContentSettings($('#createChannel').value, event.target.value));
+    createType.addEventListener('change', (event) => renderCreateContentSettings(fieldValue($('#createChannel')), event.target.value));
   }
 
   const generateForm = $('#generateForm');
