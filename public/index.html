@@ -60,13 +60,17 @@
               <datalist id="godSuggestions"></datalist>
             </div>
             <div class="field">
-              <label for="postType" class="field-label-group">
-                <span class="field-label">貼文類型</span>
-              </label>
-              <select id="postType" name="postType">
-                <option value="work">作品介紹</option>
-                <option value="birthday">聖誕祝壽</option>
-              </select>
+              <span class="field-label">貼文類型</span>
+              <div class="radio-pill-group">
+                <label class="radio-pill">
+                  <input type="radio" name="postType" value="work" checked />
+                  <span>🎨 作品介紹</span>
+                </label>
+                <label class="radio-pill">
+                  <input type="radio" name="postType" value="birthday" />
+                  <span>🎂 聖誕祝壽</span>
+                </label>
+              </div>
             </div>
           </div>
 

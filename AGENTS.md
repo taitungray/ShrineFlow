@@ -14,6 +14,7 @@
 
 1. **標準表單結構與防重疊 (Form Structure & Anti-Overlap Rules)**
    - **獨立 Div 容器**：表單欄位必須採用 `<div class="field">` 作為外層容器，搭配獨立 `<label for="xxx" class="field-label">` 與輸入框 (`<input>`, `<select>`, `<textarea>`)。**嚴禁以 `<label>` 直接包裹整組 `<div>` 與輸入框**，避免瀏覽器將原生 `label` 視為 inline 元素導致文字與輸入框重疊。
+   - **少項選項禁用下拉選單 (Segmented Radio Pills > Dropdowns)**：選項只有 2~4 個時（如貼文類型：作品介紹 / 聖誕祝壽），**嚴禁使用下拉選單 `<select>`**。必須一律採用按鈕切換卡/分段按鈕組 (`.radio-pill-group`) 直接平舖顯示在畫面上，點擊一次即可切換，減少二次點擊與選單覆蓋。
    - **雙欄對齊與間距**：`.field-row` 雙欄佈局中，兩側必須為同等高度與結構的 `.field` 區塊，禁止在欄位側邊直接放置無 label 的浮動說明文字，避免欄位對齊錯位與文字撞字。
    - **預覽區塊縱向對齊**：預覽區域 (`.review-preview`) 中的平台頁籤 (`.platform-tabs`)、描述文字 (`.platform-status`) 與媒體預覽框 (`.preview-image-wrap`) 必須使用 `display: flex; flex-direction: column; gap: 12px;` 確保垂直順序排列，嚴禁使用 `position: absolute` 或負 margin 導致元素重疊。
    - **全展開頁籤無滾動條 (No Horizontal Scrollbars)**：所有分頁導覽與平台切換按鈕 (`.platform-tabs`) 必須完全平舖展示 (`flex-wrap: wrap`)，**禁止設定 `overflow-x: auto`**，避免出現擠壓與水平滑動條。

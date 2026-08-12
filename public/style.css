@@ -334,6 +334,58 @@ select:focus, textarea:focus, input:focus {
   box-shadow: 0 0 0 3px rgba(194, 94, 64, 0.12);
 }
 
+/* Radio Segmented Pills */
+.radio-pill-group {
+  display: flex;
+  gap: 8px;
+}
+
+.radio-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.radio-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-pill span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  font-size: 0.84rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.radio-pill input[type="radio"]:checked + span {
+  color: #ffffff;
+  border-color: var(--brand);
+  background: var(--brand);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(194, 94, 64, 0.2);
+}
+
+.radio-pill:hover input[type="radio"]:not(:checked) + span {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
 /* Upload Zone */
 .upload-zone {
   display: flex;
