@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=20260813-13" />
+    <link rel="stylesheet" href="/style.css?v=20260813-14" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -41,56 +41,69 @@
             </div>
           </div>
 
-          <label class="upload-zone" id="uploadZone" for="imageInput">
+          <div class="upload-zone" id="uploadZone">
             <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple />
-            <div class="upload-prompt">
+            <label for="imageInput" class="upload-prompt">
               <span class="upload-icon">↥</span>
               <strong>拖曳或點擊上傳素材</strong>
               <small>JPG / PNG / MP4（單檔 ≤ 20MB）</small>
-            </div>
+            </label>
             <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
-          </label>
+          </div>
 
           <div class="field-row">
-            <label class="field">
-              <div class="field-label-group">
+            <div class="field">
+              <label for="godName" class="field-label-group">
                 <span class="field-label">神明名稱 <span class="field-required">*</span></span>
-              </div>
+              </label>
               <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="例：天上聖母、關聖帝君" autocomplete="off" required />
               <datalist id="godSuggestions"></datalist>
-            </label>
-            <label class="field">
-              <div class="field-label-group">
+            </div>
+            <div class="field">
+              <label for="postType" class="field-label-group">
                 <span class="field-label">貼文類型</span>
-              </div>
+              </label>
               <select id="postType" name="postType">
                 <option value="work">作品介紹</option>
                 <option value="birthday">聖誕祝壽</option>
               </select>
-            </label>
+            </div>
           </div>
 
-          <label class="field">
-            <div class="field-label-group">
+          <div class="field">
+            <label for="extraNotes" class="field-label-group">
               <span class="field-label">補充說明 <span class="field-optional">(選填)</span></span>
-            </div>
+            </label>
             <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
-          </label>
-
-          <label class="field">
-            <div class="field-label-group">
-              <span class="field-label">Hashtag</span>
-            </div>
-            <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
-          </label>
-
-          <div class="field-row">
-            <label class="field"><span class="field-label">發布平台</span><select id="createChannel" name="channel"></select></label>
-            <label class="field"><span class="field-label">發布帳號</span><select id="createAccount" name="accountId"></select></label>
           </div>
+
+          <div class="field">
+            <label for="defaultHashtags" class="field-label-group">
+              <span class="field-label">Hashtag</span>
+            </label>
+            <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
+          </div>
+
           <div class="field-row">
-            <label class="field"><span class="field-label">發布格式</span><select id="createContentType" name="contentType"></select></label>
-            <div id="createContentSettings" class="content-settings"></div>
+            <div class="field">
+              <label for="createChannel" class="field-label">發布平台</label>
+              <select id="createChannel" name="channel"></select>
+            </div>
+            <div class="field">
+              <label for="createAccount" class="field-label">發布帳號</label>
+              <select id="createAccount" name="accountId"></select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="createContentType" class="field-label">發布格式</label>
+              <select id="createContentType" name="contentType"></select>
+            </div>
+            <div class="field">
+              <label class="field-label">格式說明</label>
+              <div id="createContentSettings" class="content-settings"></div>
+            </div>
           </div>
 
           <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
@@ -109,26 +122,30 @@
 
           <div class="review-layout">
             <div class="review-editor">
-              <label class="field">
-                <span class="field-label">Facebook 文案</span>
+              <div class="field">
+                <label for="facebookText" class="field-label">Facebook 文案</label>
                 <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入"></textarea>
-              </label>
-              <label class="field">
-                <span class="field-label">Reel 短影音文案</span>
+              </div>
+              <div class="field">
+                <label for="reelText" class="field-label">Reel 短影音文案</label>
                 <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
-              </label>
-              <label class="field">
-                <span class="field-label">Hashtag</span>
+              </div>
+              <div class="field">
+                <label for="hashtagsText" class="field-label">Hashtag</label>
                 <input id="hashtagsText" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
-              </label>
+              </div>
               <div class="action-row">
                 <button class="btn-secondary" id="saveButton" type="button" disabled>💾 儲存草稿</button>
                 <button class="btn-dark" id="scheduleButton" type="button" disabled>📅 排程發布</button>
               </div>
               <p class="form-hint" id="previewMessage"></p>
             </div>
+
             <div class="review-preview">
-              <div id="previewPlatformTabs" class="platform-tabs" role="tablist"></div>
+              <div class="field">
+                <span class="field-label">預覽平台切換</span>
+                <div id="previewPlatformTabs" class="platform-tabs" role="tablist"></div>
+              </div>
               <p id="previewPlatformStatus" class="platform-status"></p>
               <div class="preview-image-wrap empty" id="previewImageWrap">
                 <div class="preview-empty">
@@ -161,23 +178,23 @@
               <span class="settings-section-desc">產文用的 AI 引擎</span>
             </div>
 
-            <label class="field">
+            <div class="field">
               <div class="field-label-group">
-                <span class="field-label">API Key <span class="field-required">*</span></span>
+                <label for="settingGeminiApiKey" class="field-label">API Key <span class="field-required">*</span></label>
                 <a class="field-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">免費取得 Key →</a>
               </div>
               <div class="input-action">
                 <input id="settingGeminiApiKey" type="password" placeholder="AIzaSy..." />
                 <button type="button" id="toggleGeminiKey" class="btn-icon">顯示</button>
               </div>
-            </label>
+            </div>
 
             <details class="disclosure compact">
               <summary><span>模型設定</span><span class="chevron">›</span></summary>
               <div class="disclosure-body">
                 <div class="field-row">
-                  <label class="field"><span class="field-label">主要模型</span><input id="settingGeminiModel" type="text" placeholder="gemini-3.6-flash" /></label>
-                  <label class="field"><span class="field-label">備援模型</span><input id="settingGeminiFallbackModels" type="text" placeholder="gemini-2.5-flash" /></label>
+                  <div class="field"><label for="settingGeminiModel" class="field-label">主要模型</label><input id="settingGeminiModel" type="text" placeholder="gemini-3.6-flash" /></div>
+                  <div class="field"><label for="settingGeminiFallbackModels" class="field-label">備援模型</label><input id="settingGeminiFallbackModels" type="text" placeholder="gemini-2.5-flash" /></div>
                 </div>
               </div>
             </details>
@@ -194,26 +211,26 @@
               <span class="settings-section-desc">自動發文用 <span class="field-optional">(選填)</span></span>
             </div>
 
-            <label class="field">
-              <span class="field-label">粉專 ID</span>
+            <div class="field">
+              <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
-            </label>
+            </div>
 
-            <label class="field">
+            <div class="field">
               <div class="field-label-group">
-                <span class="field-label">Page Access Token</span>
+                <label for="settingFacebookPageAccessToken" class="field-label">Page Access Token</label>
                 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
               </div>
               <div class="input-action">
                 <input id="settingFacebookPageAccessToken" type="password" placeholder="EAA..." />
                 <button type="button" id="toggleFbToken" class="btn-icon">顯示</button>
               </div>
-            </label>
+            </div>
 
             <details class="disclosure compact">
               <summary><span>API 設定</span><span class="chevron">›</span></summary>
               <div class="disclosure-body">
-                <label class="field"><span class="field-label">Graph API 版本</span><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></label>
+                <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
               </div>
             </details>
 
@@ -266,30 +283,30 @@
         <button class="close-button" value="cancel" aria-label="關閉">×</button>
         <p class="section-tag">PUBLISH</p>
         <h3>排程發布</h3>
-        <label class="field"><span class="field-label">平台</span>
+        <div class="field"><label for="scheduleChannel" class="field-label">平台</label>
           <select id="scheduleChannel">
             <option value="facebook">Facebook</option>
             <option value="instagram" disabled>Instagram（即將支援）</option>
             <option value="threads" disabled>Threads（即將支援）</option>
             <option value="line" disabled>LINE VOOM（即將支援）</option>
           </select>
-        </label>
-        <label class="field"><span class="field-label">帳號</span>
+        </div>
+        <div class="field"><label for="scheduleAccount" class="field-label">帳號</label>
           <select id="scheduleAccount">
             <option value="facebook:default">預設帳號</option>
           </select>
-        </label>
-        <label class="field"><span class="field-label">格式</span>
+        </div>
+        <div class="field"><label for="scheduleContentType" class="field-label">格式</label>
           <select id="scheduleContentType">
             <option value="post">貼文</option>
           </select>
-        </label>
+        </div>
         <div id="scheduleContentSettings" class="content-settings"></div>
-        <label class="field"><span class="field-label">發布時間</span><input id="scheduledAt" type="datetime-local" required /></label>
+        <div class="field"><label for="scheduledAt" class="field-label">發布時間</label><input id="scheduledAt" type="datetime-local" required /></div>
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit">確認排程</button>
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=20260813-13" type="module"></script>
+    <script src="/app.js?v=20260813-14" type="module"></script>
   </body>
 </html>

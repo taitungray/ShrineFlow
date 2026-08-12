@@ -10,14 +10,19 @@
    - **單欄動態排版**：手機螢幕 (小於 768px) 下自動轉為單欄佈局，導覽分頁支援水平滑動不溢出。
    - **防止縮放錯亂**：確保 `<meta name="viewport" content="width=device-width, initial-scale=1" />` 正確設定。
 
-## 🎨 UI/UX 設計與視覺層級準則
+## 🎨 UI/UX 設計與版面排版準則
 
-1. **視覺層級 (Visual Hierarchy)**
+1. **標準表單結構與防重疊 (Form Structure & Anti-Overlap Rules)**
+   - **獨立 Div 容器**：表單欄位必須採用 `<div class="field">` 作為外層容器，搭配獨立 `<label for="xxx" class="field-label">` 與輸入框 (`<input>`, `<select>`, `<textarea>`)。**嚴禁以 `<label>` 直接包裹整組 `<div>` 與輸入框**，避免瀏覽器將原生 `label` 視為 inline 元素導致文字與輸入框重疊。
+   - **雙欄對齊與間距**：`.field-row` 雙欄佈局中，兩側必須為同等高度與結構的 `.field` 區塊，禁止在欄位側邊直接放置無 label 的浮動說明文字，避免欄位對齊錯位與文字撞字。
+   - **預覽區塊縱向對齊**：預覽區域 (`.review-preview`) 中的平台頁籤 (`.platform-tabs`)、描述文字 (`.platform-status`) 與媒體預覽框 (`.preview-image-wrap`) 必須使用 `display: flex; flex-direction: column; gap: 12px;` 確保垂直順序排列，嚴禁使用 `position: absolute` 或負 margin 導致元素重疊。
+
+2. **視覺層級 (Visual Hierarchy)**
    - **文字輕重分明**：透過字體大小 (font-size)、字重 (font-weight: 700/800 vs 400)、顏色對比度（主標/主要標籤高對比 `#1e1917`，次要說明中對比 `#5c504a`，輔助說明/Placeholder 低對比 `#8c7b73`）引導視覺。
-   - **標記標示**：必填欄位使用醒目的紅星 (`*` / `#d32f2f`)，選填欄位使用優雅的灰色標記 `(選填)`，一眼就能區分欄位優先度。
-   - **簡潔不雜亂**：不要在畫面上寫滿大段說明文字。說明應以 Placeholder 暗示、提示文字或 Tooltip 呈現，維持版面極簡透氣。
+   - **醒目欄示標記**：必填欄位使用醒目的紅星 (`*` / `#d32f2f`)，選填欄位使用優雅的灰色標記 `(選填)`，一眼就能區分欄位優先度。
+   - **簡潔不雜亂**：說明應以 Placeholder 暗示、提示文字或 Tooltip 呈現，維持版面極簡透氣。
 
-2. **操作方便性與佈局 (Usability & Layout)**
+3. **操作方便性與佈局 (Usability & Layout)**
    - **避免過度折疊與嵌套**：不要盲目將所有東西縮起來或做成選單/折疊選單 (`<details>`)。常用的重要操作（如媒體上傳、神明名稱、發布平台與格式）必須直接展開在畫面上，減少點擊層級與步驟。
    - **直覺預覽與動作**：編輯區與預覽區並排呈現，按鈕具備明確的主次階層（Primary CTA: 漸變主色按鈕、Secondary: 邊框按鈕、Dark: 暗色按鈕）。
 
