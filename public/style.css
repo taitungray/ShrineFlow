@@ -590,11 +590,10 @@ select:focus, textarea:focus, input:focus {
 
 .platform-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
   margin-bottom: 4px;
-  overflow-x: auto;
-  padding-bottom: 2px;
 }
 
 .platform-tab {
@@ -830,8 +829,8 @@ select:focus, textarea:focus, input:focus {
 @media (max-width: 860px) { .review-layout, .bottom-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) {
   .topbar, .shell { width: min(100% - 20px, 960px); }
-  .view-tabs { overflow-x: auto; }
-  .view-tab { flex: 0 0 auto; }
+  .view-tabs { flex-wrap: wrap; }
+  .view-tab { flex: 1 1 auto; }
   .field-row { grid-template-columns: 1fr; }
   .panel { padding: 20px; }
 }

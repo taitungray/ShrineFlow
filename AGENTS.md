@@ -7,7 +7,7 @@
 
 2. **行動端響應式 UI (Mobile Responsive & Touch Usability)**
    - **觸控親和性**：按鈕、頁籤與輸入框必須符合手機觸控最小尺寸限制 (≥ 44×44px 觸控區域)。
-   - **單欄動態排版**：手機螢幕 (小於 768px) 下自動轉為單欄佈局，導覽分頁支援水平滑動不溢出。
+   - **單欄動態排版**：手機螢幕 (小於 768px) 下自動轉為單欄佈局，導覽分頁支援水平換行不溢出與不產生無謂捲軸。
    - **防止縮放錯亂**：確保 `<meta name="viewport" content="width=device-width, initial-scale=1" />` 正確設定。
 
 ## 🎨 UI/UX 設計與版面排版準則
@@ -16,6 +16,7 @@
    - **獨立 Div 容器**：表單欄位必須採用 `<div class="field">` 作為外層容器，搭配獨立 `<label for="xxx" class="field-label">` 與輸入框 (`<input>`, `<select>`, `<textarea>`)。**嚴禁以 `<label>` 直接包裹整組 `<div>` 與輸入框**，避免瀏覽器將原生 `label` 視為 inline 元素導致文字與輸入框重疊。
    - **雙欄對齊與間距**：`.field-row` 雙欄佈局中，兩側必須為同等高度與結構的 `.field` 區塊，禁止在欄位側邊直接放置無 label 的浮動說明文字，避免欄位對齊錯位與文字撞字。
    - **預覽區塊縱向對齊**：預覽區域 (`.review-preview`) 中的平台頁籤 (`.platform-tabs`)、描述文字 (`.platform-status`) 與媒體預覽框 (`.preview-image-wrap`) 必須使用 `display: flex; flex-direction: column; gap: 12px;` 確保垂直順序排列，嚴禁使用 `position: absolute` 或負 margin 導致元素重疊。
+   - **全展開頁籤無滾動條 (No Horizontal Scrollbars)**：所有分頁導覽與平台切換按鈕 (`.platform-tabs`) 必須完全平舖展示 (`flex-wrap: wrap`)，**禁止設定 `overflow-x: auto`**，避免出現擠壓與水平滑動條。
 
 2. **視覺層級 (Visual Hierarchy)**
    - **文字輕重分明**：透過字體大小 (font-size)、字重 (font-weight: 700/800 vs 400)、顏色對比度（主標/主要標籤高對比 `#1e1917`，次要說明中對比 `#5c504a`，輔助說明/Placeholder 低對比 `#8c7b73`）引導視覺。
