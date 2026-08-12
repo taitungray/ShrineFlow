@@ -3,82 +3,86 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>神像 AI 社群小編</title>
+    <title>ShrineFlow · 神像 AI 社群小編</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=20260813-7" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css?v=20260813-8" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
+
     <header class="topbar">
-      <div>
-        <p class="eyebrow">LOCAL CONTENT STUDIO</p>
+      <div class="brand-group">
+        <span class="brand-badge">✦ SHRINEFLOW</span>
         <h1>神像 AI 社群小編</h1>
       </div>
-      <div class="status-pill" id="apiStatus">檢查 AI 連線中…</div>
+      <div class="status-pill" id="apiStatus">檢查連線中…</div>
     </header>
 
     <main class="shell">
       <nav class="view-tabs" aria-label="工作區分頁">
-        <button class="view-tab active" type="button" data-view-target="create">產生文案</button>
-        <button class="view-tab" type="button" data-view-target="review">編輯預覽</button>
-        <button class="view-tab" type="button" data-view-target="drafts">草稿</button>
-        <button class="view-tab" type="button" data-view-target="schedule">排程</button>
+        <button class="view-tab active" type="button" data-view-target="create"><span>✦</span> 產生文案</button>
+        <button class="view-tab" type="button" data-view-target="review"><span>✏️</span> 編輯與預覽</button>
+        <button class="view-tab" type="button" data-view-target="drafts"><span>📁</span> 草稿列表</button>
+        <button class="view-tab" type="button" data-view-target="schedule"><span>📅</span> 排程佇列</button>
       </nav>
 
       <section class="workspace-grid">
+        <!-- 產生文案頁面 -->
         <form class="panel form-panel" id="generateForm" data-view-panel="create">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">01 / CREATE</p>
-              <h3>產生新文案</h3>
+              <p class="section-tag">STEP 01</p>
+              <h2>產生新社群文案</h2>
+              <p class="panel-desc">填入神明名稱與補充說明，選擇素材後即可由 Gemini 自動產生社群文案。</p>
             </div>
-            <span class="step-number">01</span>
           </div>
 
           <label class="upload-zone" id="uploadZone" for="imageInput">
             <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple />
-            <span class="upload-icon">↥</span>
-            <strong>拖曳圖片或影片到這裡，或點擊選擇</strong>
-            <small>素材選填；最多 10 個檔案，單檔最大 20MB；可拖曳卡片調整順序</small>
+            <div class="upload-prompt">
+              <span class="upload-icon">↥</span>
+              <strong>拖曳圖片或影片到這裡，或點擊選擇</strong>
+              <small>素材選填；最多 10 個檔案，單檔最大 20MB；可拖曳卡片調整順序</small>
+            </div>
             <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
           </label>
 
           <div class="field-row">
             <label class="field">
-              <span>神明名稱</span>
-              <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="請輸入神明名稱" autocomplete="off" required>
+              <span>神明名稱 <em>必填</em></span>
+              <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="例如：天上聖母、關聖帝君" autocomplete="off" required />
               <datalist id="godSuggestions"></datalist>
             </label>
             <label class="field">
               <span>貼文類型</span>
               <select id="postType" name="postType">
-                <option value="work">作品介紹</option>
-                <option value="birthday">聖誕／祝壽</option>
+                <option value="work">作品介紹（工藝/彩繪）</option>
+                <option value="birthday">聖誕／祝壽慶典</option>
               </select>
             </label>
           </div>
 
-          <section class="publish-spec-card" aria-label="發布規格">
-            <div class="publish-spec-heading">
-              <div>
-                <span class="section-label">發布規格</span>
-                <p class="publish-spec-hint">先選擇平台與發布格式，產出的文案會依照格式準備。</p>
+          <details class="publish-spec-disclosure">
+            <summary class="publish-spec-summary">
+              <span>⚙️ 發布規格與平台設定（選填）</span>
+              <span class="disclosure-arrow">›</span>
+            </summary>
+            <div class="publish-spec-card">
+              <div class="field-row">
+                <label class="field"><span>發布平台</span><select id="createChannel" name="channel"></select></label>
+                <label class="field"><span>發布帳號</span><select id="createAccount" name="accountId"></select></label>
               </div>
+              <label class="field"><span>發布格式</span><select id="createContentType" name="contentType"></select></label>
+              <div id="createContentSettings" class="content-settings"></div>
             </div>
-            <div class="field-row">
-              <label class="field"><span>發布平台</span><select id="createChannel" name="channel"></select></label>
-              <label class="field"><span>發布帳號</span><select id="createAccount" name="accountId"></select></label>
-            </div>
-            <label class="field"><span>發布格式</span><select id="createContentType" name="contentType"></select></label>
-            <div id="createContentSettings" class="content-settings"></div>
-          </section>
+          </details>
 
           <label class="field">
             <span>補充說明 <em>選填</em></span>
-            <textarea id="extraNotes" name="extraNotes" rows="4" placeholder="例如：這次想要比較喜氣，請帶到金箔在燈光下的層次。"></textarea>
+            <textarea id="extraNotes" name="extraNotes" rows="3" placeholder="例如：這次想要喜氣氛圍，帶到金箔在光影下的典雅層次感。"></textarea>
           </label>
 
           <label class="field">
@@ -87,45 +91,49 @@
           </label>
 
           <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
-          <p class="helper" id="formMessage">第一次使用前，請在專案的 .env 填入 GEMINI_API_KEY。</p>
+          <p class="helper" id="formMessage">提示：第一次使用前請確認 .env 已填入 GEMINI_API_KEY。</p>
         </form>
 
+        <!-- 編輯與預覽頁面 -->
         <section class="panel preview-panel is-hidden" data-view-panel="review">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">02 / REVIEW</p>
-              <h3>編輯與預覽</h3>
+              <p class="section-tag">STEP 02</p>
+              <h2>編輯與多平台預覽</h2>
             </div>
             <span class="draft-badge" id="draftState">尚未產生</span>
           </div>
 
           <div class="review-layout">
             <div class="review-editor">
-              <p class="section-label">編輯內容</p>
+              <p class="section-label">內文編輯</p>
               <label class="field">
-                <span>Facebook 粉專文案（已自動分段）</span>
-                <textarea id="facebookText" rows="8" placeholder="AI 產生的 Facebook 文案會出現在這裡…"></textarea>
+                <span>Facebook 粉專文案</span>
+                <textarea id="facebookText" rows="7" placeholder="AI 產生的 Facebook 文案會顯示在這裡…"></textarea>
               </label>
               <label class="field">
-                <span>Reel 文案（含影片祝福與分段）</span>
-                <textarea id="reelText" rows="5" placeholder="AI 產生的 Reel 文案與多句影片祝福會出現在這裡…"></textarea>
+                <span>Reel 短影音文案（含祝福）</span>
+                <textarea id="reelText" rows="5" placeholder="AI 產生的 Reel 文案與影片祝福會顯示在這裡…"></textarea>
               </label>
               <label class="field">
-                <span>Hashtag</span>
+                <span>Hashtag 標籤</span>
                 <input id="hashtagsText" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" placeholder="#神像彩繪 #宮廟藝術" />
               </label>
               <div class="action-row">
-                <button class="secondary-button" id="saveButton" type="button" disabled>儲存草稿</button>
-                <button class="dark-button" id="scheduleButton" type="button" disabled>排程發布</button>
+                <button class="secondary-button" id="saveButton" type="button" disabled>💾 儲存草稿</button>
+                <button class="dark-button" id="scheduleButton" type="button" disabled>📅 排程發布</button>
               </div>
-              <p class="helper" id="previewMessage">建議先檢查神明名稱、典故與標籤，再儲存。</p>
+              <p class="helper" id="previewMessage">建議檢查神明典故與文案後再進行儲存。</p>
             </div>
             <div class="review-preview">
-              <p class="section-label">即時預覽</p>
+              <p class="section-label">即時效果預覽</p>
               <div id="previewPlatformTabs" class="platform-tabs" role="tablist" aria-label="平台預覽"></div>
               <p id="previewPlatformStatus" class="platform-preview-status"></p>
               <div class="preview-image-wrap empty" id="previewImageWrap">
-                <div class="preview-empty"><span>◌</span><p>有圖片或影片時會在這裡顯示；純文字也可以產生文案</p></div>
+                <div class="preview-empty">
+                  <span class="preview-empty-icon">🖼️</span>
+                  <p>媒體預覽區域<br><small>有圖片/影片時呈現，純文字文案亦可獨立發布</small></p>
+                </div>
                 <div id="previewMediaGallery" class="media-gallery preview-media-gallery" aria-label="作品預覽"></div>
               </div>
               <article class="copy-preview-card">
@@ -139,18 +147,37 @@
       </section>
 
       <section class="bottom-grid">
+        <!-- 草稿頁面 -->
         <section class="panel list-panel is-hidden" data-view-panel="drafts">
           <div class="panel-heading compact">
-            <div><p class="eyebrow">03 / DRAFTS</p><h3>最近草稿</h3></div>
+            <div>
+              <p class="section-tag">STEP 03</p>
+              <h3>草稿列表</h3>
+            </div>
             <button class="text-button" id="refreshButton" type="button">重新整理 ↻</button>
           </div>
-          <div id="postsList" class="list-empty">還沒有草稿，先產生一篇吧。</div>
+          <div id="postsList" class="list-empty">
+            <div class="empty-state">
+              <span class="empty-icon">📝</span>
+              <p>還沒有草稿，點擊上方「產生文案」開始創作吧！</p>
+            </div>
+          </div>
         </section>
+
+        <!-- 排程頁面 -->
         <section class="panel list-panel is-hidden" data-view-panel="schedule">
           <div class="panel-heading compact">
-            <div><p class="eyebrow">04 / CALENDAR</p><h3>排程佇列</h3></div>
+            <div>
+              <p class="section-tag">STEP 04</p>
+              <h3>排程佇列</h3>
+            </div>
           </div>
-          <div id="scheduleList" class="list-empty">還沒有排程。</div>
+          <div id="scheduleList" class="list-empty">
+            <div class="empty-state">
+              <span class="empty-icon">📅</span>
+              <p>還沒有排程，產生並儲存草稿後即可排程發布。</p>
+            </div>
+          </div>
         </section>
       </section>
     </main>
@@ -158,9 +185,9 @@
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
         <button class="close-button" value="cancel" aria-label="關閉">×</button>
-        <p class="eyebrow">SCHEDULE</p>
-        <h3>安排發布時間</h3>
-        <p class="dialog-copy">選擇平台與時間後，排程到期會自動發布。尚未串接的平台會先保留在清單中。</p>
+        <p class="section-tag">AUTO PUBLISH</p>
+        <h3>安排自動發布時間</h3>
+        <p class="dialog-copy">設定發布時間與平台帳號，排程到期後將自動張貼至社群。</p>
         <label class="field"><span>發布平台</span>
           <select id="scheduleChannel">
             <option value="facebook">Facebook 粉專</option>
@@ -181,10 +208,10 @@
         </label>
         <div id="scheduleContentSettings" class="content-settings"></div>
         <label class="field"><span>發布時間</span><input id="scheduledAt" type="datetime-local" required /></label>
-        <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit">儲存排程</button>
+        <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit">確認排程</button>
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=20260813-7" type="module"></script>
+    <script src="/app.js?v=20260813-8" type="module"></script>
   </body>
 </html>
