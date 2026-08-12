@@ -1,0 +1,7 @@
+node_modules/
+.env
+uploads/*
+!uploads/.gitkeep
+data/posts.json
+data/schedule.json
+dev-server*.log

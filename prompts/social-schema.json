@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "facebook": {
+      "type": "string",
+      "description": "Facebook 粉專貼文文案"
+    },
+    "reel": {
+      "type": "string",
+      "description": "Reel 短影音說明文案"
+    },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 3,
+      "maxItems": 8,
+      "description": "3 到 8 個以 # 開頭且不重複的標籤"
+    },
+    "imageDescription": {
+      "type": "string",
+      "description": "一句話描述圖片中確認到的視覺重點"
+    }
+  },
+  "required": [
+    "facebook",
+    "reel",
+    "hashtags",
+    "imageDescription"
+  ],
+  "additionalProperties": false
+}

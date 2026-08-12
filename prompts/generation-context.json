@@ -1,0 +1,17 @@
+{
+  "labels": {
+    "godName": "神明名稱：",
+    "intro": "神明資料：",
+    "tags": "相關標籤：",
+    "postType": "貼文類型：",
+    "notes": "補充說明：",
+    "media": "素材狀態："
+  },
+  "fallbacks": {
+    "intro": "目前沒有額外資料，請只描述圖片中可確認的內容。",
+    "tags": "無",
+    "notes": "無",
+    "mediaWithFiles": "已提供 {count} 個圖片／影片素材，請一併參考。",
+    "mediaWithoutFiles": "未提供圖片或影片，請只根據文字資訊產生文案。"
+  }
+}
