@@ -60,7 +60,10 @@
   }
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; }
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
 
 body {
   color: var(--text-secondary);
@@ -289,6 +292,15 @@ h4 {
   background: var(--bg-card);
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-md);
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel:not(.is-hidden) {
+  animation: panelFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panel-heading {
