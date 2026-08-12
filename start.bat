@@ -26,10 +26,10 @@ if not exist "node_modules\" (
 )
 
 set "APP_URL=http://localhost:3000"
-echo Starting application...
+echo Starting application (auto-reload on file changes)...
 echo The browser will open automatically when the server is ready.
 start "" /b powershell.exe -NoProfile -WindowStyle Hidden -Command "$url='%APP_URL%'; for($attempt=0; $attempt -lt 60; $attempt++){ try { $response=Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 1; if($response.StatusCode -ge 200){ Start-Process $url; exit 0 } } catch {}; Start-Sleep -Milliseconds 500 }"
-call npm start
+call npm run dev
 goto :finished
 
 :failed
