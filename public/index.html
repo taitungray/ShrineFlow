@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=20260813-8" />
+    <link rel="stylesheet" href="/style.css?v=20260813-10" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -27,6 +27,7 @@
         <button class="view-tab" type="button" data-view-target="review"><span>✏️</span> 編輯與預覽</button>
         <button class="view-tab" type="button" data-view-target="drafts"><span>📁</span> 草稿列表</button>
         <button class="view-tab" type="button" data-view-target="schedule"><span>📅</span> 排程佇列</button>
+        <button class="view-tab" type="button" data-view-target="settings"><span>⚙️</span> 系統設定</button>
       </nav>
 
       <section class="workspace-grid">
@@ -91,7 +92,7 @@
           </label>
 
           <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
-          <p class="helper" id="formMessage">提示：第一次使用前請確認 .env 已填入 GEMINI_API_KEY。</p>
+          <p class="helper" id="formMessage">提示：未設定 API Key 時，可點選上方「⚙️ 系統設定」填入。</p>
         </form>
 
         <!-- 編輯與預覽頁面 -->
@@ -144,6 +145,69 @@
             </div>
           </div>
         </section>
+
+        <!-- 系統設定頁面 -->
+        <form class="panel form-panel is-hidden" id="settingsForm" data-view-panel="settings">
+          <div class="panel-heading">
+            <div>
+              <p class="section-tag">SETTINGS</p>
+              <h2>系統設定與 API 金鑰</h2>
+              <p class="panel-desc">直接在網頁修改與儲存 API Key 與發布憑證，儲存後即刻重載生效，無需重啟服務。</p>
+            </div>
+          </div>
+
+          <fieldset class="settings-group">
+            <legend><span>🤖 Gemini AI 產文設定</span></legend>
+            <label class="field">
+              <span>Gemini API Key</span>
+              <div class="input-with-action">
+                <input id="settingGeminiApiKey" type="password" placeholder="請填入 Google AI Studio API Key" />
+                <button type="button" id="toggleGeminiKey" class="action-btn">顯示</button>
+              </div>
+            </label>
+            <div class="field-row">
+              <label class="field">
+                <span>主要模型</span>
+                <input id="settingGeminiModel" type="text" placeholder="gemini-3.6-flash" />
+              </label>
+              <label class="field">
+                <span>備援模型 (逗號分隔)</span>
+                <input id="settingGeminiFallbackModels" type="text" placeholder="gemini-2.5-flash" />
+              </label>
+            </div>
+            <div class="settings-action-box">
+              <button type="button" id="btnTestGemini" class="secondary-button">🧪 測試 Gemini 連線</button>
+              <p id="testGeminiResult" class="helper"></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="settings-group">
+            <legend><span>📘 Facebook 自動發布設定</span></legend>
+            <div class="field-row">
+              <label class="field">
+                <span>Facebook Page ID</span>
+                <input id="settingFacebookPageId" type="text" placeholder="例如：100088888888" />
+              </label>
+              <label class="field">
+                <span>Graph API 版本</span>
+                <input id="settingMetaGraphVersion" type="text" placeholder="v25.0" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Page Access Token</span>
+              <div class="input-with-action">
+                <input id="settingFacebookPageAccessToken" type="password" placeholder="EAA..." />
+                <button type="button" id="toggleFbToken" class="action-btn">顯示</button>
+              </div>
+            </label>
+            <div class="settings-action-box">
+              <button type="button" id="btnTestFacebook" class="secondary-button">🧪 測試 Facebook 連線</button>
+              <p id="testFacebookResult" class="helper"></p>
+            </div>
+          </fieldset>
+
+          <button class="primary-button" type="submit" id="saveSettingsBtn">💾 儲存所有設定</button>
+        </form>
       </section>
 
       <section class="bottom-grid">
@@ -212,6 +276,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=20260813-8" type="module"></script>
+    <script src="/app.js?v=20260813-10" type="module"></script>
   </body>
 </html>

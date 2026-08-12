@@ -22,6 +22,7 @@ import {
 } from './modules/editor.js';
 import { renderPosts } from './modules/drafts.js';
 import { renderSchedule, initScheduleDialog } from './modules/schedule.js';
+import { loadSettings, initSettingsListeners } from './modules/settings.js';
 
 async function refreshLists() {
   state.posts = await api('/api/posts');
@@ -85,7 +86,9 @@ async function loadData() {
       ? '上傳圖片或影片送到 Gemini 產生文案，完成後可自動排程發布。'
       : config.facebookConfigured
         ? 'Gemini 已可使用；Facebook 憑證驗證失敗，請查看右上角提示。'
-        : 'Gemini 已可使用；若要自動發布，請在 .env 設定 Facebook 憑證。');
+        : 'Gemini 已可使用；若要自動發布，請在系統設定提供 Facebook 憑證。');
+  } else {
+    setFormMessage('未連線 Gemini；可點擊上方「⚙️ 系統設定」填入 API Key。', 'error');
   }
 }
 
@@ -182,6 +185,10 @@ function initApp() {
 
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
+  initSettingsListeners(async () => {
+    await loadData();
+    await loadSettings();
+  });
 
   const refreshBtn = $('#refreshButton');
   if (refreshBtn) {
@@ -192,6 +199,7 @@ function initApp() {
   }
 
   loadData().catch((error) => showToast(error.message, 'error'));
+  loadSettings().catch((error) => showToast(error.message, 'error'));
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

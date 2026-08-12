@@ -260,6 +260,66 @@ h3 {
   font-size: 0.84rem;
 }
 
+/* Settings Form Fieldset */
+.settings-group {
+  margin: 0 0 24px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.settings-group legend {
+  padding: 0 10px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.input-with-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-action input {
+  padding-right: 70px;
+}
+
+.action-btn {
+  position: absolute;
+  right: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--bg-input);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.action-btn:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.settings-action-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.text-success {
+  color: #2e7d32 !important;
+}
+
+.text-danger {
+  color: #d32f2f !important;
+}
+
 /* Upload Drop Zone */
 .upload-zone {
   position: relative;
@@ -362,6 +422,7 @@ h3 {
 select,
 textarea,
 input[type="text"],
+input[type="password"],
 input[type="datetime-local"] {
   width: 100%;
   padding: 12px 14px;
@@ -495,7 +556,7 @@ input:focus {
 
 /* Helpers & Badges */
 .helper {
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   color: var(--text-muted);
   font-size: 0.78rem;
 }

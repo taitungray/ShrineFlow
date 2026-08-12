@@ -1,0 +1,132 @@
+import { $, setFormMessage, showToast } from './dom.js';
+import { api } from './api.js';
+
+export async function loadSettings() {
+  try {
+    const data = await api('/api/settings');
+    const geminiKey = $('#settingGeminiApiKey');
+    if (geminiKey) geminiKey.value = data.geminiApiKey || '';
+    const geminiModel = $('#settingGeminiModel');
+    if (geminiModel) geminiModel.value = data.geminiModel || 'gemini-3.6-flash';
+    const geminiFallbacks = $('#settingGeminiFallbackModels');
+    if (geminiFallbacks) geminiFallbacks.value = data.geminiFallbackModels || 'gemini-2.5-flash';
+
+    const fbPageId = $('#settingFacebookPageId');
+    if (fbPageId) fbPageId.value = data.facebookPageId || '';
+    const fbToken = $('#settingFacebookPageAccessToken');
+    if (fbToken) fbToken.value = data.facebookPageAccessToken || '';
+    const graphVersion = $('#settingMetaGraphVersion');
+    if (graphVersion) graphVersion.value = data.metaGraphVersion || 'v25.0';
+  } catch (error) {
+    showToast('無法載入系統設定：' + error.message, 'error');
+  }
+}
+
+export function initSettingsListeners(onSettingsSavedFn) {
+  const toggleGeminiKey = $('#toggleGeminiKey');
+  if (toggleGeminiKey) {
+    toggleGeminiKey.addEventListener('click', () => {
+      const input = $('#settingGeminiApiKey');
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      toggleGeminiKey.textContent = isPassword ? '隱藏' : '顯示';
+    });
+  }
+
+  const toggleFbToken = $('#toggleFbToken');
+  if (toggleFbToken) {
+    toggleFbToken.addEventListener('click', () => {
+      const input = $('#settingFacebookPageAccessToken');
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      toggleFbToken.textContent = isPassword ? '隱藏' : '顯示';
+    });
+  }
+
+  const btnTestGemini = $('#btnTestGemini');
+  if (btnTestGemini) {
+    btnTestGemini.addEventListener('click', async () => {
+      const msg = $('#testGeminiResult');
+      if (msg) msg.textContent = '連線測試中…';
+      try {
+        const res = await api('/api/settings/test-gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apiKey: $('#settingGeminiApiKey')?.value || '',
+            model: $('#settingGeminiModel')?.value || '',
+          }),
+        });
+        if (msg) {
+          msg.textContent = res.message;
+          msg.className = 'helper text-success';
+        }
+        showToast(res.message, 'success');
+      } catch (error) {
+        if (msg) {
+          msg.textContent = error.message;
+          msg.className = 'helper text-danger';
+        }
+        showToast(error.message, 'error');
+      }
+    });
+  }
+
+  const btnTestFacebook = $('#btnTestFacebook');
+  if (btnTestFacebook) {
+    btnTestFacebook.addEventListener('click', async () => {
+      const msg = $('#testFacebookResult');
+      if (msg) msg.textContent = '連線測試中…';
+      try {
+        const res = await api('/api/settings/test-facebook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pageId: $('#settingFacebookPageId')?.value || '',
+            pageAccessToken: $('#settingFacebookPageAccessToken')?.value || '',
+            graphVersion: $('#settingMetaGraphVersion')?.value || '',
+          }),
+        });
+        if (msg) {
+          msg.textContent = res.message;
+          msg.className = 'helper text-success';
+        }
+        showToast(res.message, 'success');
+      } catch (error) {
+        if (msg) {
+          msg.textContent = error.message;
+          msg.className = 'helper text-danger';
+        }
+        showToast(error.message, 'error');
+      }
+    });
+  }
+
+  const form = $('#settingsForm');
+  if (form) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const payload = {
+          geminiApiKey: $('#settingGeminiApiKey')?.value || '',
+          geminiModel: $('#settingGeminiModel')?.value || '',
+          geminiFallbackModels: $('#settingGeminiFallbackModels')?.value || '',
+          facebookPageId: $('#settingFacebookPageId')?.value || '',
+          facebookPageAccessToken: $('#settingFacebookPageAccessToken')?.value || '',
+          metaGraphVersion: $('#settingMetaGraphVersion')?.value || '',
+        };
+        const res = await api('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        showToast(res.message, 'success');
+        if (typeof onSettingsSavedFn === 'function') await onSettingsSavedFn();
+      } catch (error) {
+        showToast('儲存失敗：' + error.message, 'error');
+      }
+    });
+  }
+}
