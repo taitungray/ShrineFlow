@@ -93,8 +93,29 @@ app.use((error, _request, response, _next) => {
 
 const processDueSchedules = (now) => scheduler.processDueSchedules(now);
 
-const server = app.listen(port, () => {
-  console.log('Social AI Editor running at http://localhost:' + port);
+import os from 'node:os';
+
+function getLocalIpAddresses() {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name] || []) {
+      if (net.family === 'IPv4' && !net.internal) {
+        addresses.push(net.address);
+      }
+    }
+  }
+  return addresses;
+}
+
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`ShrineFlow server running at:`);
+  console.log(`  - Local:   http://localhost:${port}`);
+  const localIps = getLocalIpAddresses();
+  localIps.forEach((ip) => {
+    console.log(`  - Mobile:  http://${ip}:${port}`);
+  });
+
   if (facebookPublisher.configured) {
     console.log(`Facebook scheduler enabled for Page ${process.env.FACEBOOK_PAGE_ID}.`);
     processDueSchedules().catch((error) => console.error('Facebook scheduler failed:', error));

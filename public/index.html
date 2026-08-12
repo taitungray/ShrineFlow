@@ -84,17 +84,14 @@
             <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
           </label>
 
-          <details class="disclosure">
-            <summary><span>發布平台與格式</span><span class="chevron">›</span></summary>
-            <div class="disclosure-body">
-              <div class="field-row">
-                <label class="field"><span class="field-label">平台</span><select id="createChannel" name="channel"></select></label>
-                <label class="field"><span class="field-label">帳號</span><select id="createAccount" name="accountId"></select></label>
-              </div>
-              <label class="field"><span class="field-label">格式</span><select id="createContentType" name="contentType"></select></label>
-              <div id="createContentSettings" class="content-settings"></div>
-            </div>
-          </details>
+          <div class="field-row">
+            <label class="field"><span class="field-label">發布平台</span><select id="createChannel" name="channel"></select></label>
+            <label class="field"><span class="field-label">發布帳號</span><select id="createAccount" name="accountId"></select></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span class="field-label">發布格式</span><select id="createContentType" name="contentType"></select></label>
+            <div id="createContentSettings" class="content-settings"></div>
+          </div>
 
           <button class="primary-button" type="submit" id="generateButton"><span>✦</span> AI 產生文案</button>
           <p class="form-hint" id="formMessage"></p>
