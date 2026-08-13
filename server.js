@@ -8,7 +8,8 @@ import { createFacebookPublisher } from './lib/facebook.js';
 import { getPublishingPlatforms } from './lib/platforms.js';
 import { getPlatformAccounts } from './lib/platform-accounts.js';
 import { createAiService } from './lib/ai-service.js';
-import { createScheduler } from './lib/scheduler.js';
+import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
+import { ensureDefaultClientFromEnv } from './lib/clients.js';
 
 import { createConfigRouter } from './lib/routes/config.js';
 import { createGodsRouter } from './lib/routes/gods.js';
@@ -17,6 +18,7 @@ import { createGenerateRouter } from './lib/routes/generate.js';
 import { createScheduleRouter } from './lib/routes/schedule.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createSettingsRouter } from './lib/routes/settings.js';
+import { createClientsRouter } from './lib/routes/clients.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +26,8 @@ const app = express();
 const port = Number(process.env.PORT || 3000);
 
 await initStorage();
+await ensureDefaultClientFromEnv();
+await migrateScheduleIntoTargets();
 
 let facebookPublisher;
 let publishingPlatforms;
@@ -80,10 +84,11 @@ app.use('/api', (request, response, next) => {
   })(request, response, next);
 });
 
+app.use('/api', createClientsRouter());
 app.use('/api', createGodsRouter());
 app.use('/api', createPostsRouter());
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));
-app.use('/api', (request, response, next) => createScheduleRouter({ publishingPlatforms, publishingAccounts })(request, response, next));
+app.use('/api', (request, response, next) => createScheduleRouter({ publishingPlatforms })(request, response, next));
 app.use('/api', (request, response, next) => createPublishRouter({ facebookPublisher })(request, response, next));
 
 app.use((error, _request, response, _next) => {
@@ -117,11 +122,21 @@ const server = app.listen(port, '0.0.0.0', () => {
   });
 
   if (facebookPublisher.configured) {
-    console.log(`Facebook scheduler enabled for Page ${process.env.FACEBOOK_PAGE_ID}.`);
-    processDueSchedules().catch((error) => console.error('Facebook scheduler failed:', error));
+    console.log(`Facebook fallback credentials configured for Page ${process.env.FACEBOOK_PAGE_ID}.`);
   } else {
-    console.log('Facebook scheduler disabled: credentials are not configured.');
+    console.log('Global Facebook .env credentials not set; use per-client accounts.');
   }
+  processDueSchedules().catch((error) => console.error('Target scheduler failed:', error));
+});
+
+server.on('error', (error) => {
+  if (error?.code === 'EADDRINUSE') {
+    console.error(`[ERROR] Port ${port} already in use.`);
+    console.error('Close the other ShrineFlow/node window, or kill the process using that port, then retry.');
+  } else {
+    console.error('[ERROR] Failed to start HTTP server:', error);
+  }
+  process.exitCode = 1;
 });
 
 scheduler.startTimer();

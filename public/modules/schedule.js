@@ -14,10 +14,13 @@ export function renderSchedule() {
   container.className = 'record-list';
   const statusLabels = {
     pending: '待發布',
+    scheduled: '已排程',
     publishing: '發布中',
     retrying: '等待重試',
     published: '已發布',
     failed: '發布失敗',
+    skipped_unsupported: '尚未支援',
+    draft: '草稿',
   };
   container.innerHTML = state.schedule.slice(0, 8).map((item) => {
     const post = state.posts.find((record) => record.id === item.postId);
@@ -74,9 +77,10 @@ export function initScheduleDialog(refreshListsFn) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             postId: state.savedPost.id,
+            targetId: state.activeTargetId || undefined,
             scheduledAt: new Date($('#scheduledAt').value).toISOString(),
             channel: fieldValue($('#scheduleChannel')) || 'facebook',
-            accountId: $('#scheduleAccount').value,
+            accountId: $('#scheduleAccount').value || state.activeTargetId,
             contentType: fieldValue($('#scheduleContentType')) || 'post',
             contentSettings: readContentSettings(),
           }),

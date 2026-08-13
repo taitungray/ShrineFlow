@@ -1,0 +1,163 @@
+import { $, escapeHtml } from './dom.js';
+import { state, currentClient, PLATFORM_NAMES } from './state.js';
+
+function selectedAccountIds() {
+  return [...document.querySelectorAll('#targetAccountChecks input[type="checkbox"]:checked')]
+    .map((input) => input.value);
+}
+
+function accountById(accountId) {
+  const client = currentClient();
+  const accounts = client?.accounts || state.accounts || [];
+  return accounts.find((account) => account.id === accountId) || null;
+}
+
+export function syncSelectedTargetAccountIds() {
+  state.selectedTargetAccountIds = selectedAccountIds();
+  if (!state.selectedTargetAccountIds.includes(state.activeTargetId)) {
+    state.activeTargetId = state.selectedTargetAccountIds[0] || '';
+  }
+}
+
+export function syncPreviewPlatformFromActiveTarget() {
+  const account = accountById(state.activeTargetId);
+  if (account?.platformId) state.selectedPlatform = account.platformId;
+}
+
+export function renderTargetAccountControls() {
+  const checks = $('#targetAccountChecks');
+  const tabs = $('#activeTargetTabs');
+  const activeField = $('#activeTargetField');
+  const client = currentClient();
+  const accounts = client?.accounts || state.accounts || [];
+  if (!checks || !tabs) return;
+
+  if (!state.selectedTargetAccountIds.length) {
+    const preferred = state.activeTargetId
+      || accounts.find((account) => account.platformId === 'facebook' && account.configured)?.id
+      || accounts.find((account) => account.platformId === 'facebook')?.id
+      || accounts[0]?.id
+      || '';
+    if (preferred) state.selectedTargetAccountIds = [preferred];
+  }
+
+  checks.innerHTML = accounts.length
+    ? accounts.map((account) => {
+      const checked = state.selectedTargetAccountIds.includes(account.id);
+      const platform = PLATFORM_NAMES[account.platformId] || account.platformId;
+      const name = account.name || platform;
+      // 名稱已含平台字樣時不重複「平台 · 名稱」
+      const label = name.includes(platform) ? name : (platform + ' · ' + name);
+      return '<label class="radio-pill">'
+        + '<input type="checkbox" value="' + escapeHtml(account.id) + '"' + (checked ? ' checked' : '') + ' />'
+        + '<span>' + escapeHtml(label)
+        + (account.configured ? '' : '（未連線）') + '</span>'
+        + '</label>';
+    }).join('')
+    : '<p class="helper">此客戶尚無帳號，請到設定新增。</p>';
+
+  syncSelectedTargetAccountIds();
+  const activeAccounts = accounts.filter((account) => state.selectedTargetAccountIds.includes(account.id));
+
+  if (activeField) {
+    activeField.classList.toggle('is-hidden', activeAccounts.length <= 1);
+  }
+
+  tabs.innerHTML = activeAccounts.map((account) => (
+    '<label class="radio-pill">'
+    + '<input type="radio" name="activeTargetAccount" value="' + escapeHtml(account.id) + '"'
+    + (account.id === state.activeTargetId ? ' checked' : '')
+    + ' />'
+    + '<span>' + escapeHtml(account.name) + '</span>'
+    + '</label>'
+  )).join('');
+
+  if (!state.activeTargetId && activeAccounts[0]) state.activeTargetId = activeAccounts[0].id;
+  syncPreviewPlatformFromActiveTarget();
+}
+
+export function applyActiveTargetToEditor() {
+  const post = state.savedPost || state.generated || {};
+  const targets = Array.isArray(post.targets) ? post.targets : [];
+  const target = targets.find((item) => item.accountId === state.activeTargetId)
+    || targets.find((item) => item.id === state.activeTargetId);
+  const fb = $('#facebookText');
+  const scheduled = $('#targetScheduledAt');
+  if (fb) {
+    if (target?.copyOverride != null && String(target.copyOverride).trim() !== '') {
+      fb.value = target.copyOverride;
+    } else {
+      fb.value = post.facebook || fb.value || '';
+    }
+  }
+  if (scheduled) {
+    if (target?.scheduledAt) {
+      const date = new Date(target.scheduledAt);
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      scheduled.value = local.toISOString().slice(0, 16);
+    } else {
+      scheduled.value = '';
+    }
+  }
+  syncPreviewPlatformFromActiveTarget();
+}
+
+export function buildTargetsPayload(draft) {
+  const client = currentClient();
+  const accounts = client?.accounts || state.accounts || [];
+  const existing = Array.isArray((state.savedPost || state.generated || {}).targets)
+    ? (state.savedPost || state.generated).targets
+    : [];
+  const selectedIds = state.selectedTargetAccountIds.length
+    ? state.selectedTargetAccountIds
+    : [draft.accountId].filter(Boolean);
+
+  return selectedIds.map((accountId) => {
+    const account = accounts.find((item) => item.id === accountId);
+    const previous = existing.find((item) => item.accountId === accountId);
+    const isActive = accountId === state.activeTargetId;
+    const scheduledAtRaw = isActive ? ($('#targetScheduledAt')?.value || '') : (previous?.scheduledAt || '');
+    const scheduledAt = scheduledAtRaw
+      ? (Number.isNaN(new Date(scheduledAtRaw).getTime()) ? previous?.scheduledAt || null : new Date(scheduledAtRaw).toISOString())
+      : null;
+    return {
+      id: previous?.id,
+      accountId,
+      platformId: account?.platformId || previous?.platformId || draft.channel || 'facebook',
+      contentType: isActive ? (draft.contentType || 'post') : (previous?.contentType || draft.contentType || 'post'),
+      contentSettings: isActive ? (draft.contentSettings || {}) : (previous?.contentSettings || {}),
+      copyOverride: isActive
+        ? ($('#facebookText')?.value || '')
+        : (previous?.copyOverride ?? null),
+      mediaPaths: previous?.mediaPaths ?? null,
+      scheduledAt,
+      status: scheduledAt
+        ? (previous?.status === 'published' ? previous.status : 'scheduled')
+        : (previous?.status === 'published' ? previous.status : 'draft'),
+      externalId: previous?.externalId || null,
+      publishedAt: previous?.publishedAt || null,
+      lastError: previous?.lastError || null,
+    };
+  });
+}
+
+export function initTargetListeners({ onActiveTargetChange } = {}) {
+  const checks = $('#targetAccountChecks');
+  if (checks) {
+    checks.addEventListener('change', () => {
+      syncSelectedTargetAccountIds();
+      renderTargetAccountControls();
+      applyActiveTargetToEditor();
+      if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
+    });
+  }
+  const tabs = $('#activeTargetTabs');
+  if (tabs) {
+    tabs.addEventListener('change', (event) => {
+      if (event.target?.name !== 'activeTargetAccount') return;
+      state.activeTargetId = event.target.value;
+      applyActiveTargetToEditor();
+      if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
+    });
+  }
+}

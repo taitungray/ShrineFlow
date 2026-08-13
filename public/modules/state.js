@@ -4,6 +4,10 @@ export const state = {
   posts: [],
   schedule: [],
   config: null,
+  clients: [],
+  currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',
+  activeTargetId: '',
+  selectedTargetAccountIds: [],
   uploadPreviewUrls: [],
   selectedMediaItems: [],
   mediaDragIndex: null,
@@ -31,4 +35,20 @@ export const PLATFORM_DESCRIPTIONS = {
 export function mediaPathsOf(record = {}) {
   if (Array.isArray(record.mediaPaths) && record.mediaPaths.length) return record.mediaPaths;
   return record.imagePath ? [record.imagePath] : [];
+}
+
+export function currentClient() {
+  return state.clients.find((client) => client.id === state.currentClientId) || state.clients[0] || null;
+}
+
+export function setCurrentClientId(clientId) {
+  state.currentClientId = clientId || '';
+  if (clientId) localStorage.setItem('shrineflow.currentClientId', clientId);
+}
+
+export function clientQuery(path) {
+  const clientId = state.currentClientId;
+  if (!clientId) return path;
+  const join = path.includes('?') ? '&' : '?';
+  return path + join + 'clientId=' + encodeURIComponent(clientId);
 }

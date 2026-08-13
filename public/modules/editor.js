@@ -1,7 +1,8 @@
 import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
-import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, PLATFORM_DESCRIPTIONS, mediaPathsOf } from './state.js';
+import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient } from './state.js';
 import { renderCreatePublishSpec, renderCreateContentSettings, readCreateContentSettings } from './platform-ui.js';
 import { api } from './api.js';
+import { buildTargetsPayload, renderTargetAccountControls, applyActiveTargetToEditor } from './targets-ui.js';
 
 export function updateLivePreview() {
   const text = $('#facebookText')?.value?.trim() || '';
@@ -17,36 +18,41 @@ export function updateLivePreview() {
   if (previewCard) {
     previewCard.dataset.platform = state.selectedPlatform;
     const title = previewCard.querySelector('h4');
-    if (title) title.textContent = `${PLATFORM_NAMES[state.selectedPlatform] || '平台'} 貼文預覽`;
+    // 目標帳號已在上方選取；標題不重複平台／帳號名
+    if (title) title.textContent = '貼文預覽';
   }
   const mediaWrap = $('#previewImageWrap');
   if (mediaWrap) mediaWrap.dataset.platform = state.selectedPlatform;
 }
 
 export function renderPreviewPlatformTabs() {
-  const container = $('#previewPlatformTabs');
-  if (!container) return;
+  const status = $('#previewPlatformStatus');
+  if (!status) return;
+
   const platforms = state.platforms.length
     ? state.platforms
     : Object.keys(PLATFORM_NAMES).map((id) => ({ id, name: PLATFORM_NAMES[id], shortName: PLATFORM_NAMES[id], canPublish: id === 'facebook' }));
-  if (!platforms.some((platform) => platform.id === state.selectedPlatform)) state.selectedPlatform = platforms[0]?.id || 'facebook';
-  container.innerHTML = platforms.map((platform) => {
-    const active = platform.id === state.selectedPlatform;
-    const status = platform.canPublish ? '' : '（預覽）';
-    return '<button class="platform-tab' + (active ? ' active' : '') + '" type="button" role="tab" aria-selected="' + active + '" aria-label="' + escapeHtml((platform.shortName || platform.name) + status) + '" data-preview-platform="' + escapeHtml(platform.id) + '">' + escapeHtml(platform.shortName || platform.name) + status + '</button>';
-  }).join('');
-  container.querySelectorAll('[data-preview-platform]').forEach((button) => button.addEventListener('click', () => {
-    state.selectedPlatform = button.dataset.previewPlatform;
-    renderPreviewPlatformTabs();
-    updateLivePreview();
-  }));
-  const selected = platforms.find((platform) => platform.id === state.selectedPlatform);
-  const status = $('#previewPlatformStatus');
-  if (status && selected) {
-    const description = selected.description || PLATFORM_DESCRIPTIONS[selected.id] || '';
-    status.textContent = selected.canPublish ? description : `${description} 目前先提供版型預覽，尚未串接發布。`;
-    status.dataset.ready = String(Boolean(selected.canPublish));
+
+  const accounts = currentClient()?.accounts || state.accounts || [];
+  const activeAccount = accounts.find((account) => account.id === state.activeTargetId);
+  if (activeAccount?.platformId) state.selectedPlatform = activeAccount.platformId;
+  if (!platforms.some((platform) => platform.id === state.selectedPlatform)) {
+    state.selectedPlatform = platforms[0]?.id || 'facebook';
   }
+
+  const selected = platforms.find((platform) => platform.id === state.selectedPlatform);
+  if (!selected) {
+    status.hidden = false;
+    status.textContent = '請先勾選要發的帳號。';
+    status.dataset.ready = 'false';
+    return;
+  }
+
+  // 平台／帳號名已在上方「目標帳號」顯示，此處只補非重複提示
+  const publishHint = selected.canPublish ? '' : '目前僅預覽版型，尚未串接真發';
+  status.textContent = publishHint;
+  status.hidden = !publishHint;
+  status.dataset.ready = String(Boolean(selected.canPublish));
 }
 
 export function renderSavedMedia(items = []) {
@@ -88,15 +94,20 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (generated.extraNotes !== undefined && extraNotes) extraNotes.value = generated.extraNotes;
   const postTypeRadio = document.querySelector('input[name="postType"][value="' + (generated.postType || 'work') + '"]');
   if (postTypeRadio) postTypeRadio.checked = true;
-  if (generated.channel && $('#createChannel')) {
-    setFieldValue($('#createChannel'), generated.channel);
+  if (generated.contentType) {
+    setFieldValue($('#createContentType'), generated.contentType);
     renderCreatePublishSpec();
-    if (generated.accountId) $('#createAccount').value = generated.accountId;
-    if (generated.contentType) {
-      setFieldValue($('#createContentType'), generated.contentType);
-      renderCreateContentSettings(generated.channel, generated.contentType);
-    }
+    renderCreateContentSettings('facebook', generated.contentType);
   }
+  if (Array.isArray(generated.targets) && generated.targets.length) {
+    state.selectedTargetAccountIds = generated.targets.map((target) => target.accountId).filter(Boolean);
+    state.activeTargetId = generated.targets[0].accountId || generated.targets[0].id || '';
+  } else if (generated.accountId) {
+    state.selectedTargetAccountIds = [generated.accountId];
+    state.activeTargetId = generated.accountId;
+  }
+  renderTargetAccountControls();
+  applyActiveTargetToEditor();
   const hashtags = Array.isArray(generated.hashtags) && generated.hashtags.length
     ? generated.hashtags
     : DEFAULT_HASHTAGS;
@@ -112,28 +123,39 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = !state.savedPost;
   renderSavedMedia(mediaPathsOf(generated));
+  renderPreviewPlatformTabs();
   updateLivePreview();
 }
 
 export function currentDraft() {
   const selectedServerPaths = state.selectedMediaItems.map((item) => item.serverPath).filter(Boolean);
   const mediaPaths = selectedServerPaths.length ? selectedServerPaths : mediaPathsOf(state.generated || {});
-  return {
+  const motherFacebook = state.savedPost?.facebook || state.generated?.facebook || '';
+  const accounts = currentClient()?.accounts || state.accounts || [];
+  const activeAccount = accounts.find((account) => account.id === state.activeTargetId)
+    || accounts.find((account) => state.selectedTargetAccountIds.includes(account.id))
+    || accounts.find((account) => account.platformId === 'facebook')
+    || accounts[0]
+    || null;
+  const draft = {
     ...(state.generated || {}),
+    clientId: state.currentClientId || '',
     godName: $('#godName')?.value || '',
     postType: document.querySelector('input[name="postType"]:checked')?.value || 'work',
     extraNotes: $('#extraNotes')?.value || '',
     defaultHashtags: $('#defaultHashtags')?.value || '',
-    channel: fieldValue($('#createChannel')) || 'facebook',
-    accountId: $('#createAccount')?.value || '',
+    channel: activeAccount?.platformId || 'facebook',
+    accountId: state.activeTargetId || activeAccount?.id || '',
     contentType: fieldValue($('#createContentType')) || 'post',
     contentSettings: readCreateContentSettings(),
-    facebook: $('#facebookText')?.value || '',
+    facebook: motherFacebook || $('#facebookText')?.value || '',
     reel: $('#reelText')?.value || '',
     hashtags: $('#hashtagsText')?.value ? $('#hashtagsText').value.split(/\s+/).map((tag) => tag.trim()).filter(Boolean) : [],
     imagePath: mediaPaths[0] || '',
     mediaPaths,
   };
+  draft.targets = buildTargetsPayload(draft);
+  return draft;
 }
 
 export function initEditorListeners(refreshListsFn) {

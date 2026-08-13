@@ -1,4 +1,4 @@
-import { $, escapeHtml, fieldValue, setFieldValue } from './dom.js';
+import { $, escapeHtml, fieldValue } from './dom.js';
 import { state } from './state.js';
 
 export function selectedPlatformDefinition(platformId = fieldValue($('#scheduleChannel')) || 'facebook') {
@@ -67,20 +67,24 @@ export function renderPlatformOptions(platforms = []) {
   if (!group || !platforms.length) return;
   renderRadioPills(group, platforms.map((platform) => ({
     value: platform.id,
-    label: platform.enabled ? (platform.shortName || platform.name) : `${platform.shortName || platform.name}（即將支援）`,
-    disabled: !platform.enabled,
+    label: platform.enabled
+      ? (platform.shortName || platform.name)
+      : `${platform.shortName || platform.name}（可排程／尚未真發）`,
+    disabled: false,
   })), { name: 'scheduleChannel', selected: fieldValue(group) || 'facebook' });
 }
 
 export function renderAccountOptions(platformId = 'facebook') {
+  const accounts = state.accounts.filter((account) => account.platformId === platformId);
   const select = $('#scheduleAccount');
   if (!select) return;
-  const accounts = state.accounts.filter((account) => account.platformId === platformId);
   select.innerHTML = accounts.length
-    ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled ? '' : ' disabled') + '>' + escapeHtml(account.name) + (account.enabled ? '' : '（尚未連接）') + '</option>').join('')
+    ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled === false ? ' disabled' : '') + '>' + escapeHtml(account.name) + (account.configured ? '' : '（尚未連接）') + '</option>').join('')
     : '<option value="" disabled selected>尚未連接帳號</option>';
-  const firstEnabled = accounts.find((account) => account.enabled);
-  if (firstEnabled) select.value = firstEnabled.id;
+  const preferred = accounts.find((account) => account.enabled !== false && account.configured)
+    || accounts.find((account) => account.enabled !== false)
+    || accounts[0];
+  if (preferred) select.value = preferred.id;
 }
 
 export function renderContentSettings(platformId = fieldValue($('#scheduleChannel')) || 'facebook', contentTypeId = fieldValue($('#scheduleContentType')) || 'post') {
@@ -128,48 +132,22 @@ export function renderCreateContentSettings(platformId, contentTypeId) {
 }
 
 export function renderCreatePublishSpec() {
-  const platformGroup = $('#createChannel');
-  const accountSelect = $('#createAccount');
   const typeGroup = $('#createContentType');
-  if (!platformGroup || !accountSelect || !typeGroup) return;
+  if (!typeGroup) return;
 
-  const platforms = state.platforms.length ? state.platforms : [];
-  const currentPlatform = fieldValue(platformGroup);
-
-  if (!platformGroup.querySelector('input[type="radio"]') && platforms.length) {
-    renderRadioPills(platformGroup, platforms.map((platform) => ({
-      value: platform.id,
-      label: platform.shortName || platform.name,
-    })), { name: 'channel', selected: currentPlatform || 'facebook' });
-  } else if (currentPlatform && [...platformGroup.querySelectorAll('input[type="radio"]')].some((opt) => opt.value === currentPlatform)) {
-    setFieldValue(platformGroup, currentPlatform);
-  } else if (!fieldValue(platformGroup) && platforms.length) {
-    setFieldValue(platformGroup, 'facebook');
-  }
-
-  const platformId = fieldValue(platformGroup) || 'facebook';
-  const platform = state.platforms.find((item) => item.id === platformId);
-
-  const accounts = state.accounts.filter((account) => account.platformId === platformId);
-  accountSelect.innerHTML = accounts.length
-    ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled ? '' : ' disabled') + '>' + escapeHtml(account.name) + (account.enabled ? '' : '（尚未連接）') + '</option>').join('')
-    : '<option value="" disabled selected>尚未連接 ' + escapeHtml(platform?.name || '') + ' 帳號</option>';
-
-  const firstAccount = accounts.find((account) => account.enabled);
-  if (firstAccount) accountSelect.value = firstAccount.id;
-
-  const contentTypes = platform?.contentTypes || [];
+  // Mother draft uses Facebook format options (Phase 1 real publish).
+  // Where to post is chosen later in 編輯預覽 via account checkboxes.
+  const platformId = 'facebook';
+  const platform = state.platforms.find((item) => item.id === platformId) || state.platforms[0];
+  const contentTypes = platform?.contentTypes || [{ id: 'post', name: '貼文', canPublish: true }];
   const currentType = fieldValue(typeGroup);
-  if (contentTypes.length) {
-    renderRadioPills(typeGroup, contentTypes.map((contentType) => ({
-      value: contentType.id,
-      label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
-    })), { name: 'contentType', selected: currentType });
-  } else {
-    typeGroup.innerHTML = '';
-  }
 
-  renderCreateContentSettings(platformId, fieldValue(typeGroup));
+  renderRadioPills(typeGroup, contentTypes.map((contentType) => ({
+    value: contentType.id,
+    label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
+  })), { name: 'contentType', selected: currentType });
+
+  renderCreateContentSettings(platform?.id || platformId, fieldValue(typeGroup));
 }
 
 export function readCreateContentSettings() {

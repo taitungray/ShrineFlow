@@ -1,5 +1,7 @@
 import { $, setFormMessage, showToast } from './dom.js';
 import { api } from './api.js';
+import { currentClient } from './state.js';
+import { loadClientFacebookFields } from './clients-ui.js';
 
 export async function loadSettings() {
   try {
@@ -10,13 +12,9 @@ export async function loadSettings() {
     if (geminiModel) geminiModel.value = data.geminiModel || 'gemini-3.6-flash';
     const geminiFallbacks = $('#settingGeminiFallbackModels');
     if (geminiFallbacks) geminiFallbacks.value = data.geminiFallbackModels || 'gemini-2.5-flash';
-
-    const fbPageId = $('#settingFacebookPageId');
-    if (fbPageId) fbPageId.value = data.facebookPageId || '';
-    const fbToken = $('#settingFacebookPageAccessToken');
-    if (fbToken) fbToken.value = data.facebookPageAccessToken || '';
     const graphVersion = $('#settingMetaGraphVersion');
     if (graphVersion) graphVersion.value = data.metaGraphVersion || 'v25.0';
+    loadClientFacebookFields();
   } catch (error) {
     showToast('無法載入系統設定：' + error.message, 'error');
   }
@@ -80,6 +78,23 @@ export function initSettingsListeners(onSettingsSavedFn) {
       const msg = $('#testFacebookResult');
       if (msg) msg.textContent = '連線測試中…';
       try {
+        const client = currentClient();
+        const facebook = (client?.accounts || []).find((account) => account.platformId === 'facebook');
+        if (client && facebook?.id) {
+          const res = await api('/api/clients/' + client.id + '/accounts/' + encodeURIComponent(facebook.id) + '/test', {
+            method: 'POST',
+          });
+          const message = res.connected
+            ? ('連線成功' + (res.page?.name ? '：' + res.page.name : ''))
+            : (res.error || '連線失敗');
+          if (msg) {
+            msg.textContent = message;
+            msg.className = res.connected ? 'helper text-success' : 'helper text-danger';
+          }
+          showToast(message, res.connected ? 'success' : 'error');
+          return;
+        }
+
         const res = await api('/api/settings/test-facebook', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -113,8 +128,6 @@ export function initSettingsListeners(onSettingsSavedFn) {
           geminiApiKey: $('#settingGeminiApiKey')?.value || '',
           geminiModel: $('#settingGeminiModel')?.value || '',
           geminiFallbackModels: $('#settingGeminiFallbackModels')?.value || '',
-          facebookPageId: $('#settingFacebookPageId')?.value || '',
-          facebookPageAccessToken: $('#settingFacebookPageAccessToken')?.value || '',
           metaGraphVersion: $('#settingMetaGraphVersion')?.value || '',
         };
         const res = await api('/api/settings', {
@@ -122,7 +135,7 @@ export function initSettingsListeners(onSettingsSavedFn) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        showToast(res.message, 'success');
+        showToast(res.message || 'Gemini 設定已儲存', 'success');
         if (typeof onSettingsSavedFn === 'function') await onSettingsSavedFn();
       } catch (error) {
         showToast('儲存失敗：' + error.message, 'error');

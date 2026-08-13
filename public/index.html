@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.2.1" />
+    <link rel="stylesheet" href="/style.css?v=0.3.5" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -16,19 +16,25 @@
     <header class="app-header-fixed">
       <div class="topbar">
         <div class="brand-group">
-          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.2.1</em></span>
+          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.5</em></span>
           <h1>神像 AI 社群小編</h1>
         </div>
-        <div class="status-pill" id="apiStatus">檢查連線中…</div>
+        <div class="topbar-actions">
+          <div class="field client-switcher">
+            <label for="currentClientSelect" class="field-label">目前客戶</label>
+            <select id="currentClientSelect" aria-label="切換客戶"></select>
+          </div>
+          <div class="status-pill" id="apiStatus">檢查連線中…</div>
+        </div>
       </div>
 
       <div class="nav-wrapper">
         <nav class="view-tabs" role="tablist" aria-label="工作區分頁">
-          <button class="view-tab active" type="button" id="viewTabCreate" role="tab" aria-selected="true" aria-controls="generateForm" aria-label="產生文案" data-view-target="create"><span>✦</span> 產生文案</button>
-          <button class="view-tab" type="button" id="viewTabReview" role="tab" aria-selected="false" aria-controls="reviewPanel" aria-label="編輯預覽" data-view-target="review"><span>✏️</span> 編輯預覽</button>
-          <button class="view-tab" type="button" id="viewTabDrafts" role="tab" aria-selected="false" aria-controls="draftsPanel" aria-label="草稿" data-view-target="drafts"><span>📁</span> 草稿</button>
-          <button class="view-tab" type="button" id="viewTabSchedule" role="tab" aria-selected="false" aria-controls="schedulePanel" aria-label="排程" data-view-target="schedule"><span>📅</span> 排程</button>
-          <button class="view-tab" type="button" id="viewTabSettings" role="tab" aria-selected="false" aria-controls="settingsForm" aria-label="設定" data-view-target="settings"><span>⚙️</span> 設定</button>
+          <button class="view-tab active" type="button" id="viewTabCreate" role="tab" aria-selected="true" aria-controls="generateForm" aria-label="產生文案" data-view-target="create"><span class="view-tab-icon" aria-hidden="true">✦</span><span class="view-tab-label">產生文案</span><span class="view-tab-label-short" aria-hidden="true">產生</span></button>
+          <button class="view-tab" type="button" id="viewTabReview" role="tab" aria-selected="false" aria-controls="reviewPanel" aria-label="編輯預覽" data-view-target="review"><span class="view-tab-icon" aria-hidden="true">✏️</span><span class="view-tab-label">編輯預覽</span><span class="view-tab-label-short" aria-hidden="true">預覽</span></button>
+          <button class="view-tab" type="button" id="viewTabDrafts" role="tab" aria-selected="false" aria-controls="draftsPanel" aria-label="草稿" data-view-target="drafts"><span class="view-tab-icon" aria-hidden="true">📁</span><span class="view-tab-label">草稿</span><span class="view-tab-label-short" aria-hidden="true">草稿</span></button>
+          <button class="view-tab" type="button" id="viewTabSchedule" role="tab" aria-selected="false" aria-controls="schedulePanel" aria-label="排程" data-view-target="schedule"><span class="view-tab-icon" aria-hidden="true">📅</span><span class="view-tab-label">排程</span><span class="view-tab-label-short" aria-hidden="true">排程</span></button>
+          <button class="view-tab" type="button" id="viewTabSettings" role="tab" aria-selected="false" aria-controls="settingsForm" aria-label="設定" data-view-target="settings"><span class="view-tab-icon" aria-hidden="true">⚙️</span><span class="view-tab-label">設定</span><span class="view-tab-label-short" aria-hidden="true">設定</span></button>
         </nav>
       </div>
     </header>
@@ -46,26 +52,17 @@
             </div>
           </div>
 
-          <!-- STEP 1：發布平台與帳號設定 -->
+          <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾帳號） -->
           <fieldset class="form-group-card">
-            <legend class="group-title">🚀 1. 發布平台與格式</legend>
+            <legend class="group-title">🚀 1. 發布格式</legend>
+            <p class="helper">產文先定貼文／Reel 格式。要發到哪些帳號，到「編輯預覽」再勾選。</p>
             <div class="field">
-              <span id="createChannelLabel" class="field-label">發布平台</span>
-              <div class="radio-pill-group" id="createChannel" role="radiogroup" aria-labelledby="createChannelLabel"></div>
-            </div>
-            <div class="field">
-              <span id="createContentTypeLabel" class="field-label">發布格式</span>
+              <span id="createContentTypeLabel" class="field-label">格式</span>
               <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
             </div>
-            <div class="field-row">
-              <div class="field">
-                <label for="createAccount" class="field-label">發布帳號</label>
-                <select id="createAccount" name="accountId" aria-label="發布帳號"></select>
-              </div>
-              <div class="field">
-                <span id="createContentSettingsLabel" class="field-label">格式說明</span>
-                <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
-              </div>
+            <div class="field">
+              <span id="createContentSettingsLabel" class="field-label">格式說明</span>
+              <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
             </div>
           </fieldset>
 
@@ -136,9 +133,24 @@
 
           <div class="review-layout">
             <div class="review-editor">
+              <fieldset class="form-group-card">
+                <legend class="group-title">🎯 要發到哪裡</legend>
+                <div class="field">
+                  <span id="targetAccountsLabel" class="field-label">目標帳號（可多選）</span>
+                  <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
+                </div>
+                <div class="field" id="activeTargetField">
+                  <span id="activeTargetLabel" class="field-label">目前編輯哪一個</span>
+                  <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
+                </div>
+                <div class="field">
+                  <label for="targetScheduledAt" class="field-label">此帳號排程時間 <span class="field-optional">(選填)</span></label>
+                  <input id="targetScheduledAt" type="datetime-local" />
+                </div>
+              </fieldset>
               <div class="field">
-                <label for="facebookText" class="field-label">Facebook 文案</label>
-                <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入"></textarea>
+                <label for="facebookText" class="field-label">此帳號文案</label>
+                <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依帳號覆寫"></textarea>
               </div>
               <div class="field">
                 <label for="reelText" class="field-label">Reel 短影音文案</label>
@@ -156,11 +168,7 @@
             </div>
 
             <div class="review-preview">
-              <div class="field">
-                <span class="field-label">預覽平台切換</span>
-                <div id="previewPlatformTabs" class="platform-tabs" role="tablist"></div>
-              </div>
-              <p id="previewPlatformStatus" class="platform-status"></p>
+              <p id="previewPlatformStatus" class="platform-status" aria-live="polite"></p>
               <div class="preview-image-wrap empty" id="previewImageWrap">
                 <div class="preview-empty">
                   <span>🖼️</span>
@@ -216,7 +224,25 @@
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">📘 Facebook 發布設定 <span class="field-optional">(選填)</span></legend>
+            <legend class="group-title">👥 客戶管理</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="newClientName" class="field-label">新增客戶名稱</label>
+                <input id="newClientName" type="text" placeholder="例：大甲鎮瀾宮" />
+              </div>
+              <div class="field">
+                <label for="newClientNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+                <input id="newClientNotes" type="text" placeholder="聯絡人或備註" />
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnCreateClient" class="btn-secondary" aria-label="新增客戶">＋ 新增客戶</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-group-card">
+            <legend class="group-title">📘 目前客戶的 Facebook 帳號</legend>
+            <p class="helper">金鑰只存在此客戶底下，不會跟其他客戶混用。</p>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
@@ -234,19 +260,37 @@
             </div>
 
             <details class="disclosure compact">
-              <summary><span>API 設定</span><span class="chevron">›</span></summary>
+              <summary><span>API 設定（全站）</span><span class="chevron">›</span></summary>
               <div class="disclosure-body">
                 <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
               </div>
             </details>
 
             <div class="action-box">
-              <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試 Facebook 連線</button>
+              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存客戶 Facebook 帳號">💾 儲存此客戶 FB 帳號</button>
+              <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
           </fieldset>
 
-          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存設定">💾 儲存設定</button>
+          <fieldset class="form-group-card">
+            <legend class="group-title">🌐 其他平台帳號（即將支援）</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="placeholderIgName" class="field-label">Instagram 顯示名稱</label>
+                <input id="placeholderIgName" type="text" placeholder="例：宮廟 IG" />
+              </div>
+              <div class="field">
+                <label for="placeholderLineName" class="field-label">LINE VOOM 顯示名稱</label>
+                <input id="placeholderLineName" type="text" placeholder="例：宮廟 LINE" />
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnSavePlaceholderAccounts" class="btn-secondary" aria-label="儲存預留帳號">儲存預留帳號</button>
+            </div>
+          </fieldset>
+
+          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 設定">💾 儲存 Gemini 設定</button>
         </form>
       </section>
 
@@ -311,6 +355,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.2.1" type="module"></script>
+    <script src="/app.js?v=0.3.5" type="module"></script>
   </body>
 </html>

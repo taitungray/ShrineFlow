@@ -1,5 +1,5 @@
 import { $, escapeHtml, setFormMessage, showToast, fieldValue } from './modules/dom.js';
-import { state } from './modules/state.js';
+import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js';
 import { api } from './modules/api.js';
 import { initTabs, setActiveView } from './modules/tabs.js';
 import {
@@ -23,12 +23,32 @@ import {
 import { renderPosts } from './modules/drafts.js';
 import { renderSchedule, initScheduleDialog } from './modules/schedule.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
+import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
+import { renderTargetAccountControls, initTargetListeners } from './modules/targets-ui.js';
 
 async function refreshLists() {
-  state.posts = await api('/api/posts');
-  state.schedule = await api('/api/schedule');
+  state.posts = await api(clientQuery('/api/posts'));
+  state.schedule = await api(clientQuery('/api/schedule'));
   renderPosts();
   renderSchedule();
+}
+
+function applyClientAccounts() {
+  const client = currentClient();
+  state.accounts = (client?.accounts || []).map((account) => ({
+    id: account.id,
+    platformId: account.platformId,
+    name: account.name,
+    configured: Boolean(account.configured),
+    enabled: account.enabled !== false,
+  }));
+  if (!state.accounts.length) {
+    state.accounts = state.config?.publishingAccounts || [];
+  }
+  renderAccountOptions('facebook');
+  renderTargetAccountControls();
+  renderPreviewPlatformTabs();
+  updateLivePreview();
 }
 
 function setLoading(isLoading) {
@@ -39,12 +59,23 @@ function setLoading(isLoading) {
 }
 
 async function loadData() {
-  const [gods, posts, schedule, config] = await Promise.all([
+  const [gods, config] = await Promise.all([
     api('/api/gods'),
-    api('/api/posts'),
-    api('/api/schedule'),
     api('/api/config'),
   ]);
+
+  state.config = config;
+  state.clients = config.clients || [];
+  if (!state.currentClientId || !state.clients.some((client) => client.id === state.currentClientId)) {
+    setCurrentClientId(state.clients[0]?.id || '');
+  }
+  renderClientSwitcher();
+
+  const [posts, schedule] = await Promise.all([
+    api(clientQuery('/api/posts')),
+    api(clientQuery('/api/schedule')),
+  ]);
+
   const facebookStatus = await api('/api/facebook/status').catch((error) => ({
     configured: config.facebookConfigured,
     connected: false,
@@ -60,7 +91,8 @@ async function loadData() {
   state.schedule = schedule;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
-  state.accounts = config.publishingAccounts || [];
+  applyClientAccounts();
+  loadClientFacebookFields();
 
   if (config.version && $('#appVersion')) {
     $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
@@ -68,7 +100,6 @@ async function loadData() {
 
   renderPreviewPlatformTabs();
   renderPlatformOptions(config.publishingPlatforms);
-  renderAccountOptions('facebook');
   renderContentTypeOptions('facebook');
   renderCreatePublishSpec();
   renderPosts();
@@ -76,23 +107,28 @@ async function loadData() {
 
   const status = $('#apiStatus');
   if (status) {
-    const aiStatus = config.aiConfigured ? config.provider + ' 已連線' : 'Gemini 未連線';
-    const facebookLabel = facebookStatus.connected
-      ? 'Facebook 已連線' + (facebookStatus.page?.name ? '：' + facebookStatus.page.name : '')
-      : config.facebookConfigured ? 'Facebook 驗證失敗' : 'Facebook 未設定';
-    status.textContent = aiStatus + ' · ' + facebookLabel;
-    status.title = facebookStatus.error || '';
-    status.dataset.ready = config.aiConfigured && facebookStatus.connected ? 'true' : 'false';
+    const client = currentClient();
+    const clientLabel = client ? client.name : '未選客戶';
+    const aiOk = Boolean(config.aiConfigured);
+    const facebookAccount = (client?.accounts || []).find((account) => account.platformId === 'facebook' && account.configured);
+    const fbOk = Boolean(facebookAccount) || Boolean(facebookStatus.connected);
+    const compact = window.matchMedia('(max-width: 768px)').matches;
+    status.textContent = compact
+      ? ((aiOk ? 'AI✓' : 'AI✗') + ' · ' + (fbOk ? 'FB✓' : 'FB✗'))
+      : (clientLabel + ' · ' + (aiOk ? config.provider + ' 已連線' : 'Gemini 未連線') + ' · ' + (facebookAccount ? 'FB 帳號已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定')));
+    status.title = [
+      clientLabel,
+      aiOk ? (config.provider + ' 已連線') : 'Gemini 未連線',
+      facebookAccount ? 'FB 帳號已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定'),
+      facebookStatus.error || '',
+    ].filter(Boolean).join('\n');
+    status.dataset.ready = config.aiConfigured ? 'true' : 'false';
   }
 
   if (config.aiConfigured) {
-    setFormMessage(facebookStatus.connected
-      ? '上傳圖片或影片送到 Gemini 產生文案，完成後可自動排程發布。'
-      : config.facebookConfigured
-        ? 'Gemini 已可使用；Facebook 憑證驗證失敗，請查看右上角提示。'
-        : 'Gemini 已可使用；若要自動發布，請在系統設定提供 Facebook 憑證。');
+    setFormMessage('先選客戶，再產文；編輯預覽可為多個帳號各寫各的、各排時間。');
   } else {
-    setFormMessage('未連線 Gemini；可點擊上方「⚙️ 系統設定」填入 API Key。', 'error');
+    setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
   }
 }
 
@@ -153,13 +189,9 @@ function initApp() {
   renderPreviewPlatformTabs();
   updateLivePreview();
 
-  const createChannel = $('#createChannel');
-  if (createChannel) {
-    createChannel.addEventListener('change', () => renderCreatePublishSpec());
-  }
   const createType = $('#createContentType');
   if (createType) {
-    createType.addEventListener('change', (event) => renderCreateContentSettings(fieldValue($('#createChannel')), event.target.value));
+    createType.addEventListener('change', (event) => renderCreateContentSettings('facebook', event.target.value));
   }
 
   const generateForm = $('#generateForm');
@@ -189,6 +221,25 @@ function initApp() {
 
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
+  initTargetListeners({
+    onActiveTargetChange: () => {
+      renderPreviewPlatformTabs();
+      updateLivePreview();
+    },
+  });
+  initClientListeners({
+    onClientChanged: async () => {
+      applyClientAccounts();
+      await refreshLists();
+      loadClientFacebookFields();
+    },
+    onClientsUpdated: async () => {
+      state.clients = await api('/api/clients');
+      renderClientSwitcher();
+      applyClientAccounts();
+      await refreshLists();
+    },
+  });
   initSettingsListeners(async () => {
     await loadData();
     await loadSettings();

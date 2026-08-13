@@ -1,8 +1,10 @@
 # 神像 AI 社群小編
 
-這是第一版的本機工具，不使用資料庫，資料放在 data JSON，圖片放在 uploads/。
+這是本機工具，資料放在 data JSON，圖片放在 uploads/。
 
-完整的已完成項目、未完成項目、資料結構與後續規劃請參考 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
+**v0.3.0 起支援多客戶代操**：頂欄切換客戶；一則貼文可掛多個平台帳號目標（文案／時間可不同）；真正發布仍只有 Facebook。
+
+完整狀態請參考 [PROJECT_STATUS.md](PROJECT_STATUS.md)。設計規格：`docs/superpowers/specs/2026-08-13-multi-client-publishing-design.md`。
 
 ## 啟動
 
