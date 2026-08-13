@@ -3,6 +3,25 @@ import { state, PLATFORM_NAMES } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api } from './api.js';
 
+let reschedulingItem = null;
+
+function toLocalDateTimeValue(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function scheduleActions(item) {
+  if (item.channel !== 'facebook' || item.status !== 'scheduled') return '';
+  return '<div class="schedule-actions">'
+    + '<button class="btn-text schedule-action" type="button" data-schedule-action="reschedule" data-target-id="'
+    + escapeHtml(item.targetId) + '">改時間</button>'
+    + '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
+    + escapeHtml(item.targetId) + '">取消</button>'
+    + '</div>';
+}
+
 export function renderSchedule() {
   const container = $('#scheduleList');
   if (!container) return;
@@ -34,14 +53,53 @@ export function renderSchedule() {
     const platform = state.platforms.find((entry) => entry.id === item.channel);
     const contentType = platform?.contentTypes?.find((entry) => entry.id === item.contentType);
     const format = contentType?.name || item.contentType || '貼文';
-    return '<div class="schedule-card"' + error + '><span class="calendar-icon">' + new Date(item.scheduledAt).getDate() + '</span><span><strong>' + name + '</strong><small>' + escapeHtml(channel) + ' ・ ' + escapeHtml(accountName) + ' ・ ' + escapeHtml(format) + ' ・ ' + formatDate(item.scheduledAt) + attempts + '</small></span><em data-status="' + escapeHtml(item.status) + '">' + escapeHtml(status) + '</em></div>';
+    return '<div class="schedule-card"' + error + '><span class="calendar-icon">' + new Date(item.scheduledAt).getDate() + '</span><span><strong>' + name + '</strong><small>' + escapeHtml(channel) + ' ・ ' + escapeHtml(accountName) + ' ・ ' + escapeHtml(format) + ' ・ ' + formatDate(item.scheduledAt) + attempts + '</small></span><em data-status="' + escapeHtml(item.status) + '">' + escapeHtml(status) + '</em>' + scheduleActions(item) + '</div>';
   }).join('');
 }
 
 export function initScheduleDialog(refreshListsFn) {
+  const dialog = $('#scheduleDialog');
+  if (dialog) {
+    dialog.addEventListener('close', () => {
+      reschedulingItem = null;
+    });
+  }
+  const list = $('#scheduleList');
+  if (list) {
+    list.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-schedule-action]');
+      if (!button) return;
+      const item = state.schedule.find((entry) => entry.targetId === button.dataset.targetId);
+      if (!item) return;
+      if (button.dataset.scheduleAction === 'cancel') {
+        if (!window.confirm('確定取消此 Facebook 原生排程？')) return;
+        try {
+          await api('/api/schedule/' + encodeURIComponent(item.targetId), { method: 'DELETE' });
+          if (typeof refreshListsFn === 'function') await refreshListsFn();
+          showToast('已取消 Facebook 排程。', 'success');
+        } catch (error) {
+          showToast(error.message, 'error');
+        }
+        return;
+      }
+      reschedulingItem = item;
+      const dialog = $('#scheduleDialog');
+      const timeInput = $('#scheduledAt');
+      if (!dialog || !timeInput) return;
+      timeInput.value = toLocalDateTimeValue(item.scheduledAt);
+      setFieldValue($('#scheduleChannel'), item.channel);
+      renderAccountOptions(item.channel);
+      renderContentTypeOptions(item.channel);
+      setFieldValue($('#scheduleContentType'), item.contentType);
+      renderContentSettings(item.channel, item.contentType);
+      dialog.showModal();
+    });
+  }
+
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) {
     scheduleBtn.addEventListener('click', () => {
+      reschedulingItem = null;
       if (!state.savedPost) return setPreviewMessage('請先儲存草稿，再安排時間。', 'error');
       const dialog = $('#scheduleDialog');
       const now = new Date(Date.now() + 60 * 60 * 1000);
@@ -72,26 +130,35 @@ export function initScheduleDialog(refreshListsFn) {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       try {
-        await api('/api/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            postId: state.savedPost.id,
-            targetId: state.activeTargetId || undefined,
-            scheduledAt: new Date($('#scheduledAt').value).toISOString(),
-            channel: fieldValue($('#scheduleChannel')) || 'facebook',
-            accountId: $('#scheduleAccount').value || state.activeTargetId,
-            contentType: fieldValue($('#scheduleContentType')) || 'post',
-            contentSettings: readContentSettings(),
-          }),
-        });
+        const scheduledAt = new Date($('#scheduledAt').value).toISOString();
+        const isRescheduling = Boolean(reschedulingItem);
+        if (isRescheduling) {
+          await api('/api/schedule/' + encodeURIComponent(reschedulingItem.targetId), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduledAt }),
+          });
+        } else {
+          await api('/api/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              postId: state.savedPost.id,
+              targetId: state.activeTargetId || undefined,
+              scheduledAt,
+              channel: fieldValue($('#scheduleChannel')) || 'facebook',
+              accountId: $('#scheduleAccount').value || state.activeTargetId,
+              contentType: fieldValue($('#scheduleContentType')) || 'post',
+              contentSettings: readContentSettings(),
+            }),
+          });
+        }
         $('#scheduleDialog').close();
+        reschedulingItem = null;
         if (typeof refreshListsFn === 'function') await refreshListsFn();
-        const message = state.config?.facebookConnected
-          ? '排程已儲存，到期後會自動發布到 Facebook。'
-          : '排程已儲存；設定 Facebook 憑證後才會自動發布。';
-        setPreviewMessage(message, state.config?.facebookConnected ? 'success' : '');
-        showToast(message, state.config?.facebookConnected ? 'success' : 'info');
+        const message = isRescheduling ? 'Facebook 排程時間已更新。' : '已送入 Facebook 原生排程，到期後由 Facebook 自動發布。';
+        setPreviewMessage(message, 'success');
+        showToast(message, 'success');
       } catch (error) {
         setPreviewMessage(error.message, 'error');
       }

@@ -1,6 +1,11 @@
 import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient } from './state.js';
-import { renderCreatePublishSpec, renderCreateContentSettings, readCreateContentSettings } from './platform-ui.js';
+import {
+  renderCreatePublishSpec,
+  renderCreateContentSettings,
+  readCreateContentSettings,
+  readTargetContentSettings,
+} from './platform-ui.js';
 import { api } from './api.js';
 import { buildTargetsPayload, renderTargetAccountControls, applyActiveTargetToEditor } from './targets-ui.js';
 
@@ -146,8 +151,10 @@ export function currentDraft() {
     defaultHashtags: $('#defaultHashtags')?.value || '',
     channel: activeAccount?.platformId || 'facebook',
     accountId: state.activeTargetId || activeAccount?.id || '',
-    contentType: fieldValue($('#createContentType')) || 'post',
-    contentSettings: readCreateContentSettings(),
+    contentType: fieldValue($('#targetContentType')) || fieldValue($('#createContentType')) || 'post',
+    contentSettings: Object.keys(readTargetContentSettings()).length
+      ? readTargetContentSettings()
+      : readCreateContentSettings(),
     facebook: motherFacebook || $('#facebookText')?.value || '',
     reel: $('#reelText')?.value || '',
     hashtags: $('#hashtagsText')?.value ? $('#hashtagsText').value.split(/\s+/).map((tag) => tag.trim()).filter(Boolean) : [],

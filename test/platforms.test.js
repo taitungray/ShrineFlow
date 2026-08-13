@@ -8,5 +8,6 @@ test('exposes the planned social platforms while only Facebook is publish-enable
   assert.deepEqual(platforms.map((platform) => platform.enabled), [true, false, false, false]);
   assert.deepEqual(platforms[0].contentTypes.map((contentType) => contentType.id), ['post', 'reel', 'story']);
   assert.equal(platforms[0].contentTypes[0].canPublish, true);
-  assert.equal(platforms[0].contentTypes[1].canPublish, false);
+  assert.equal(platforms[0].contentTypes[1].canPublish, true);
+  assert.equal(platforms[0].contentTypes[2].canPublish, true);
 });

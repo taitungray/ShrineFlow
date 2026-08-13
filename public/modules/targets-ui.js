@@ -1,5 +1,6 @@
-import { $, escapeHtml } from './dom.js';
+import { $, escapeHtml, fieldValue } from './dom.js';
 import { state, currentClient, PLATFORM_NAMES } from './state.js';
+import { renderTargetContentTypeControls, readTargetContentSettings, updateTargetScheduleAvailability } from './platform-ui.js';
 
 function selectedAccountIds() {
   return [...document.querySelectorAll('#targetAccountChecks input[type="checkbox"]:checked')]
@@ -74,6 +75,7 @@ export function renderTargetAccountControls() {
 
   if (!state.activeTargetId && activeAccounts[0]) state.activeTargetId = activeAccounts[0].id;
   syncPreviewPlatformFromActiveTarget();
+  applyActiveTargetToEditor();
 }
 
 export function applyActiveTargetToEditor() {
@@ -81,6 +83,7 @@ export function applyActiveTargetToEditor() {
   const targets = Array.isArray(post.targets) ? post.targets : [];
   const target = targets.find((item) => item.accountId === state.activeTargetId)
     || targets.find((item) => item.id === state.activeTargetId);
+  const account = accountById(state.activeTargetId);
   const fb = $('#facebookText');
   const scheduled = $('#targetScheduledAt');
   if (fb) {
@@ -99,6 +102,14 @@ export function applyActiveTargetToEditor() {
       scheduled.value = '';
     }
   }
+
+  const selectedType = target?.contentType
+    || fieldValue($('#createContentType'))
+    || 'post';
+  renderTargetContentTypeControls({
+    platformId: account?.platformId || target?.platformId || 'facebook',
+    selected: selectedType,
+  });
   syncPreviewPlatformFromActiveTarget();
 }
 
@@ -120,12 +131,16 @@ export function buildTargetsPayload(draft) {
     const scheduledAt = scheduledAtRaw
       ? (Number.isNaN(new Date(scheduledAtRaw).getTime()) ? previous?.scheduledAt || null : new Date(scheduledAtRaw).toISOString())
       : null;
+    const activeContentType = fieldValue($('#targetContentType')) || draft.contentType || 'post';
+    const activeContentSettings = Object.keys(readTargetContentSettings()).length
+      ? readTargetContentSettings()
+      : (draft.contentSettings || {});
     return {
       id: previous?.id,
       accountId,
       platformId: account?.platformId || previous?.platformId || draft.channel || 'facebook',
-      contentType: isActive ? (draft.contentType || 'post') : (previous?.contentType || draft.contentType || 'post'),
-      contentSettings: isActive ? (draft.contentSettings || {}) : (previous?.contentSettings || {}),
+      contentType: isActive ? activeContentType : (previous?.contentType || draft.contentType || 'post'),
+      contentSettings: isActive ? activeContentSettings : (previous?.contentSettings || {}),
       copyOverride: isActive
         ? ($('#facebookText')?.value || '')
         : (previous?.copyOverride ?? null),
@@ -147,7 +162,6 @@ export function initTargetListeners({ onActiveTargetChange } = {}) {
     checks.addEventListener('change', () => {
       syncSelectedTargetAccountIds();
       renderTargetAccountControls();
-      applyActiveTargetToEditor();
       if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
     });
   }
@@ -157,6 +171,13 @@ export function initTargetListeners({ onActiveTargetChange } = {}) {
       if (event.target?.name !== 'activeTargetAccount') return;
       state.activeTargetId = event.target.value;
       applyActiveTargetToEditor();
+      if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
+    });
+  }
+  const contentType = $('#targetContentType');
+  if (contentType) {
+    contentType.addEventListener('change', () => {
+      updateTargetScheduleAvailability();
       if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
     });
   }

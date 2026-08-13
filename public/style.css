@@ -989,6 +989,11 @@ select:focus, textarea:focus, input:focus {
 }
 .schedule-card em[data-status="published"] { color: #2e7d32; background: #e8f5e9; }
 .schedule-card em[data-status="failed"] { color: #c62828; background: #ffebee; }
+.schedule-card > span:nth-of-type(2) { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.schedule-card > span:nth-of-type(2) small { color: var(--text-secondary); font-size: 0.7rem; }
+.schedule-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.schedule-actions .btn-text { min-height: 44px; padding: 8px; color: var(--brand); }
+.schedule-actions .schedule-action-danger { color: #b42318; }
 
 .calendar-icon {
   display: grid; flex: 0 0 36px; place-items: center;

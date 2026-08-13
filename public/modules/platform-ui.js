@@ -101,8 +101,11 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
     + settings.map((setting) => renderSettingField(setting, 'data-content-setting', 'schedule-setting')).join('');
   const submit = $('#scheduleSubmitButton');
   if (submit) {
-    submit.disabled = !contentType.canPublish;
-    submit.title = contentType.canPublish ? '' : '此格式尚未串接發布功能';
+    const blocked = !contentType.canPublish || contentType.id === 'story';
+    submit.disabled = blocked;
+    submit.title = contentType.id === 'story'
+      ? 'Facebook 限時動態無法排程，請改用貼文或 Reel'
+      : (contentType.canPublish ? '' : '此格式尚未串接發布功能');
   }
 }
 
@@ -152,4 +155,47 @@ export function renderCreatePublishSpec() {
 
 export function readCreateContentSettings() {
   return readDataSettings('create-content-setting');
+}
+
+export function renderTargetContentTypeControls({
+  platformId = 'facebook',
+  selected = 'post',
+} = {}) {
+  const typeGroup = $('#targetContentType');
+  const settings = $('#targetContentSettings');
+  if (!typeGroup) return;
+
+  const platform = state.platforms.find((item) => item.id === platformId)
+    || state.platforms.find((item) => item.id === 'facebook')
+    || state.platforms[0];
+  const contentTypes = platform?.contentTypes || [{ id: 'post', name: '貼文', canPublish: true }];
+
+  renderRadioPills(typeGroup, contentTypes.map((contentType) => ({
+    value: contentType.id,
+    label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
+    disabled: !contentType.canPublish && platform?.id !== 'facebook',
+  })), { name: 'targetContentType', selected });
+
+  const active = contentTypes.find((item) => item.id === fieldValue(typeGroup)) || contentTypes[0];
+  if (settings) {
+    settings.innerHTML = active
+      ? ('<p class="content-type-description">' + escapeHtml(active.description || '') + '</p>'
+        + (active.settings || []).map((setting) => renderSettingField(setting, 'data-target-content-setting', 'target-setting')).join(''))
+      : '';
+  }
+  updateTargetScheduleAvailability();
+}
+
+export function readTargetContentSettings() {
+  return readDataSettings('target-content-setting');
+}
+
+export function updateTargetScheduleAvailability() {
+  const scheduled = $('#targetScheduledAt');
+  if (!scheduled) return;
+  const contentType = fieldValue($('#targetContentType'));
+  const blocked = contentType === 'story';
+  scheduled.disabled = blocked;
+  scheduled.title = blocked ? 'Facebook 限時動態無法排程' : '';
+  if (blocked) scheduled.value = '';
 }

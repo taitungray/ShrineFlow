@@ -9,7 +9,7 @@ import { getPublishingPlatforms } from './lib/platforms.js';
 import { getPlatformAccounts } from './lib/platform-accounts.js';
 import { createAiService } from './lib/ai-service.js';
 import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
-import { ensureDefaultClientFromEnv } from './lib/clients.js';
+import { ensureDefaultClientFromEnv, getClientRaw, findAccount } from './lib/clients.js';
 
 import { createConfigRouter } from './lib/routes/config.js';
 import { createGodsRouter } from './lib/routes/gods.js';
@@ -88,7 +88,22 @@ app.use('/api', createClientsRouter());
 app.use('/api', createGodsRouter());
 app.use('/api', createPostsRouter());
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));
-app.use('/api', (request, response, next) => createScheduleRouter({ publishingPlatforms })(request, response, next));
+app.use('/api', (request, response, next) => createScheduleRouter({
+  publishingPlatforms,
+  resolveFacebookPublisher: async ({ clientId, accountId }) => {
+    const client = await getClientRaw(clientId);
+    const account = findAccount(client, accountId);
+    if (account?.credentials?.pageId && account?.credentials?.pageAccessToken) {
+      return createFacebookPublisher({
+        pageId: account.credentials.pageId,
+        pageAccessToken: account.credentials.pageAccessToken,
+        graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
+        graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
+      });
+    }
+    return facebookPublisher;
+  },
+})(request, response, next));
 app.use('/api', (request, response, next) => createPublishRouter({ facebookPublisher })(request, response, next));
 
 app.use((error, _request, response, _next) => {
