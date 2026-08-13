@@ -5,3 +5,4 @@ uploads/*
 data/posts.json
 data/schedule.json
 dev-server*.log
+.superpowers/
