@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.3.7" />
+    <link rel="stylesheet" href="/style.css?v=0.3.8" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -16,7 +16,7 @@
     <header class="app-header-fixed">
       <div class="topbar">
         <div class="brand-group">
-          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.7</em></span>
+          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.8</em></span>
           <h1>神像 AI 社群小編</h1>
         </div>
         <div class="topbar-actions">
@@ -268,6 +268,11 @@
               <summary><span>API 設定（全站）</span><span class="chevron">›</span></summary>
               <div class="disclosure-body">
                 <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
+                <div class="field">
+                  <label for="settingPublicMediaBaseUrl" class="field-label">公開媒體基底網址 <span class="field-optional">(IG／Threads 媒體發布用)</span></label>
+                  <input id="settingPublicMediaBaseUrl" type="url" placeholder="https://your-public-host.example" />
+                  <p class="helper">填入 Meta 可公開讀取本站上傳媒體的 HTTPS 網址，不含 <code>/uploads</code>。</p>
+                </div>
               </div>
             </details>
 
@@ -279,23 +284,51 @@
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">🌐 其他平台帳號（即將支援）</legend>
-            <div class="field-row">
-              <div class="field">
-                <label for="placeholderIgName" class="field-label">Instagram 顯示名稱</label>
-                <input id="placeholderIgName" type="text" placeholder="例：宮廟 IG" />
+            <legend class="group-title">📸 目前客戶的 Instagram 帳號</legend>
+            <p class="helper">使用 Instagram Graph API 專業帳號的 User ID 與 Access Token。</p>
+            <div class="field">
+              <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
+              <input id="settingInstagramUserId" type="text" placeholder="17841400000000000" />
+            </div>
+            <div class="field">
+              <div class="field-label-group">
+                <label for="settingInstagramAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
               </div>
-              <div class="field">
-                <label for="placeholderLineName" class="field-label">LINE VOOM 顯示名稱</label>
-                <input id="placeholderLineName" type="text" placeholder="例：宮廟 LINE" />
+              <div class="input-action">
+                <input id="settingInstagramAccessToken" type="password" placeholder="EAA..." />
+                <button type="button" id="toggleInstagramToken" class="btn-icon" aria-label="顯示或隱藏 Instagram Access Token">顯示</button>
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnSavePlaceholderAccounts" class="btn-secondary" aria-label="儲存預留帳號">儲存預留帳號</button>
+              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存客戶 Instagram 帳號">💾 儲存此客戶 IG 帳號</button>
+              <button type="button" id="btnTestInstagram" class="btn-test" aria-label="測試 Instagram 連線">🧪 測試連線</button>
+              <span id="testInstagramResult" class="test-result"></span>
             </div>
           </fieldset>
 
-          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 設定">💾 儲存 Gemini 設定</button>
+          <fieldset class="form-group-card">
+            <legend class="group-title">🧵 目前客戶的 Threads 帳號</legend>
+            <p class="helper">使用 Threads API 帳號的 User ID 與 Access Token。</p>
+            <div class="field">
+              <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
+              <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
+            </div>
+            <div class="field">
+              <label for="settingThreadsAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+              <div class="input-action">
+                <input id="settingThreadsAccessToken" type="password" placeholder="THQVJ..." />
+                <button type="button" id="toggleThreadsToken" class="btn-icon" aria-label="顯示或隱藏 Threads Access Token">顯示</button>
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存客戶 Threads 帳號">💾 儲存此客戶 Threads 帳號</button>
+              <button type="button" id="btnTestThreads" class="btn-test" aria-label="測試 Threads 連線">🧪 測試連線</button>
+              <span id="testThreadsResult" class="test-result"></span>
+            </div>
+          </fieldset>
+
+          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
         </form>
       </section>
 
@@ -360,6 +393,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.3.7" type="module"></script>
+    <script src="/app.js?v=0.3.8" type="module"></script>
   </body>
 </html>

@@ -13,13 +13,18 @@ function toLocalDateTimeValue(isoDate) {
 }
 
 function scheduleActions(item) {
-  if (item.channel !== 'facebook' || item.status !== 'scheduled') return '';
+  if (!['facebook', 'instagram', 'threads'].includes(item.channel) || item.status !== 'scheduled') return '';
   return '<div class="schedule-actions">'
     + '<button class="btn-text schedule-action" type="button" data-schedule-action="reschedule" data-target-id="'
     + escapeHtml(item.targetId) + '">改時間</button>'
     + '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
     + escapeHtml(item.targetId) + '">取消</button>'
     + '</div>';
+}
+
+function scheduleQueueLabel(channel) {
+  if (channel === 'facebook') return 'Facebook 平台佇列';
+  return `${PLATFORM_NAMES[channel] || channel} 本機排程`;
 }
 
 export function renderSchedule() {
@@ -72,11 +77,12 @@ export function initScheduleDialog(refreshListsFn) {
       const item = state.schedule.find((entry) => entry.targetId === button.dataset.targetId);
       if (!item) return;
       if (button.dataset.scheduleAction === 'cancel') {
-        if (!window.confirm('確定取消此 Facebook 原生排程？')) return;
+        const queueLabel = scheduleQueueLabel(item.channel);
+        if (!window.confirm(`確定取消「${queueLabel}」？`)) return;
         try {
           await api('/api/schedule/' + encodeURIComponent(item.targetId), { method: 'DELETE' });
           if (typeof refreshListsFn === 'function') await refreshListsFn();
-          showToast('已取消 Facebook 排程。', 'success');
+          showToast(`已取消 ${queueLabel}。`, 'success');
         } catch (error) {
           showToast(error.message, 'error');
         }
@@ -132,6 +138,7 @@ export function initScheduleDialog(refreshListsFn) {
       try {
         const scheduledAt = new Date($('#scheduledAt').value).toISOString();
         const isRescheduling = Boolean(reschedulingItem);
+        const channel = fieldValue($('#scheduleChannel')) || 'facebook';
         if (isRescheduling) {
           await api('/api/schedule/' + encodeURIComponent(reschedulingItem.targetId), {
             method: 'PATCH',
@@ -146,7 +153,7 @@ export function initScheduleDialog(refreshListsFn) {
               postId: state.savedPost.id,
               targetId: state.activeTargetId || undefined,
               scheduledAt,
-              channel: fieldValue($('#scheduleChannel')) || 'facebook',
+              channel,
               accountId: $('#scheduleAccount').value || state.activeTargetId,
               contentType: fieldValue($('#scheduleContentType')) || 'post',
               contentSettings: readContentSettings(),
@@ -156,7 +163,11 @@ export function initScheduleDialog(refreshListsFn) {
         $('#scheduleDialog').close();
         reschedulingItem = null;
         if (typeof refreshListsFn === 'function') await refreshListsFn();
-        const message = isRescheduling ? 'Facebook 排程時間已更新。' : '已送入 Facebook 原生排程，到期後由 Facebook 自動發布。';
+        const message = isRescheduling
+          ? `${scheduleQueueLabel(channel)}時間已更新。`
+          : channel === 'facebook'
+            ? '已交 Facebook 排程佇列'
+            : '已加入本機排程（到期時需服務運行中）';
         setPreviewMessage(message, 'success');
         showToast(message, 'success');
       } catch (error) {

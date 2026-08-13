@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { maskClient, buildDefaultClientFromEnv, findAccount } from '../lib/clients.js';
+import {
+  maskClient,
+  buildDefaultClientFromEnv,
+  findAccount,
+  normalizeAccountInput,
+} from '../lib/clients.js';
 
 test('maskClient hides pageAccessToken', () => {
   const masked = maskClient({
@@ -42,4 +47,32 @@ test('findAccount matches by id', () => {
   };
   assert.equal(findAccount(client, 'instagram:default').platformId, 'instagram');
   assert.equal(findAccount(client, 'missing'), null);
+});
+
+test('normalizes Instagram credentials and requires user ID plus token', () => {
+  const configured = normalizeAccountInput({
+    platformId: 'instagram',
+    credentials: { userId: ' ig-123 ', accessToken: ' token-123 ' },
+  });
+  assert.equal(configured.id, 'instagram:ig-123');
+  assert.equal(configured.credentials.userId, 'ig-123');
+  assert.equal(configured.credentials.accessToken, 'token-123');
+  assert.equal(configured.configured, true);
+
+  const missingUser = normalizeAccountInput({
+    platformId: 'instagram',
+    credentials: { accessToken: 'token-123' },
+  });
+  assert.equal(missingUser.configured, false);
+});
+
+test('normalizes Threads credentials and omits masked access token updates', () => {
+  const account = normalizeAccountInput({
+    platformId: 'threads',
+    credentials: { userId: 'threads-456', accessToken: 'abcd...wxyz' },
+  });
+  assert.equal(account.id, 'threads:threads-456');
+  assert.equal(account.credentials.userId, 'threads-456');
+  assert.equal(Object.hasOwn(account.credentials, 'accessToken'), false);
+  assert.equal(account.configured, false);
 });

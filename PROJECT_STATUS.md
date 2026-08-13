@@ -14,7 +14,8 @@
 - [x] 非 Facebook 到期標 `skipped_unsupported`；僅 FB 真發布
 - [x] 設計規格：`docs/superpowers/specs/2026-08-13-multi-client-publishing-design.md`
 - [x] 手機優化（v0.3.3／v0.3.4）：頂欄精簡、導覽／pill 依文字縮寬
-- [x] UX（v0.3.5）：產生頁不再選平台／帳號（只留格式）；「要發哪裡」只在編輯預覽勾帳號；預覽版型跟目前帳號走，拿掉重複的預覽平台切換
+- [x] UX（v0.3.5）：產生頁不再選平台／帳號（只留格式）；「要發哪裡」只在編輯預覽勾帳號；預覽版型跟目前帳號走
+- [x] Facebook 發布格式（v0.3.6）：貼文＋Reel（`video_reels`）＋限時動態（`photo_stories`／`video_stories`）皆可真發；編輯預覽可選此帳號格式
 
 ## 已完成
 

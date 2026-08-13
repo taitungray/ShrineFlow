@@ -28,12 +28,16 @@ export function loadClientFacebookFields() {
   if (pageId) pageId.value = facebook?.credentials?.pageId || '';
   if (token) token.value = facebook?.credentials?.pageAccessToken || '';
 
-  const ig = (client?.accounts || []).find((account) => account.platformId === 'instagram');
-  const line = (client?.accounts || []).find((account) => account.platformId === 'line');
-  const igName = $('#placeholderIgName');
-  const lineName = $('#placeholderLineName');
-  if (igName) igName.value = ig?.name || '';
-  if (lineName) lineName.value = line?.name || '';
+  [
+    ['instagram', 'settingInstagramUserId', 'settingInstagramAccessToken'],
+    ['threads', 'settingThreadsUserId', 'settingThreadsAccessToken'],
+  ].forEach(([platformId, userIdField, tokenField]) => {
+    const account = (client?.accounts || []).find((item) => item.platformId === platformId);
+    const userId = $('#' + userIdField);
+    const accessToken = $('#' + tokenField);
+    if (userId) userId.value = account?.credentials?.userId || '';
+    if (accessToken) accessToken.value = account?.credentials?.accessToken || '';
+  });
 }
 
 export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) {
@@ -103,48 +107,51 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
     });
   }
 
-  const savePlaceholders = $('#btnSavePlaceholderAccounts');
-  if (savePlaceholders) {
-    savePlaceholders.addEventListener('click', async () => {
+  [
+    {
+      platformId: 'instagram',
+      label: 'Instagram',
+      buttonId: 'btnSaveClientInstagram',
+      userIdField: 'settingInstagramUserId',
+      tokenField: 'settingInstagramAccessToken',
+    },
+    {
+      platformId: 'threads',
+      label: 'Threads',
+      buttonId: 'btnSaveClientThreads',
+      userIdField: 'settingThreadsUserId',
+      tokenField: 'settingThreadsAccessToken',
+    },
+  ].forEach(({ platformId, label, buttonId, userIdField, tokenField }) => {
+    const saveButton = $('#' + buttonId);
+    if (!saveButton) return;
+    saveButton.addEventListener('click', async () => {
       const client = currentClient();
       if (!client) return showToast('請先選擇客戶', 'error');
       try {
-        const igName = $('#placeholderIgName')?.value?.trim();
-        const lineName = $('#placeholderLineName')?.value?.trim();
-        if (igName) {
-          await api('/api/clients/' + client.id + '/accounts', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: 'instagram:default',
-              platformId: 'instagram',
-              name: igName,
-              configured: false,
-              enabled: false,
-              credentials: {},
-            }),
-          });
-        }
-        if (lineName) {
-          await api('/api/clients/' + client.id + '/accounts', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: 'line:default',
-              platformId: 'line',
-              name: lineName,
-              configured: false,
-              enabled: false,
-              credentials: {},
-            }),
-          });
-        }
-        state.clients = await api('/api/clients');
-        showToast('預留帳號已儲存', 'success');
+        const existing = (client.accounts || []).find((account) => account.platformId === platformId);
+        const userId = $('#' + userIdField)?.value?.trim() || '';
+        const updated = await api('/api/clients/' + client.id + '/accounts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...(existing?.id ? { id: existing.id } : {}),
+            platformId,
+            name: userId ? `${label} 帳號（${userId}）` : `${label} 帳號`,
+            credentials: {
+              userId,
+              accessToken: $('#' + tokenField)?.value || '',
+            },
+          }),
+        });
+        state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
+        if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
+        loadClientFacebookFields();
+        showToast(`客戶 ${label} 帳號已儲存`, 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');
       }
     });
-  }
+  });
 }

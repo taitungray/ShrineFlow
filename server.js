@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 
 import { initStorage, directories } from './lib/store.js';
 import { createFacebookPublisher } from './lib/facebook.js';
-import { getPublishingPlatforms } from './lib/platforms.js';
-import { getPlatformAccounts } from './lib/platform-accounts.js';
+import { createInstagramPublisher } from './lib/instagram.js';
+import { createThreadsPublisher } from './lib/threads.js';
+import { buildPublishingState } from './lib/platforms.js';
 import { createAiService } from './lib/ai-service.js';
 import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
-import { ensureDefaultClientFromEnv, getClientRaw, findAccount } from './lib/clients.js';
+import { ensureDefaultClientFromEnv, getClientRaw, findAccount, listClientsRaw } from './lib/clients.js';
 
 import { createConfigRouter } from './lib/routes/config.js';
 import { createGodsRouter } from './lib/routes/gods.js';
@@ -34,7 +35,57 @@ let publishingPlatforms;
 let publishingAccounts;
 let scheduler;
 
-function initServices() {
+async function resolveAccount({ clientId, accountId, account }) {
+  if (account) return account;
+  return findAccount(await getClientRaw(clientId), accountId);
+}
+
+async function resolveFacebookPublisher(context) {
+  const account = await resolveAccount(context);
+  if (account?.credentials?.pageId && account?.credentials?.pageAccessToken) {
+    return createFacebookPublisher({
+      pageId: account.credentials.pageId,
+      pageAccessToken: account.credentials.pageAccessToken,
+      graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
+      graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
+    });
+  }
+  return facebookPublisher;
+}
+
+async function resolveInstagramPublisher(context) {
+  const account = await resolveAccount(context);
+  return createInstagramPublisher({
+    userId: account?.credentials?.userId,
+    accessToken: account?.credentials?.accessToken,
+    graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
+    graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
+    publicMediaBaseUrl: process.env.PUBLIC_MEDIA_BASE_URL,
+  });
+}
+
+async function resolveThreadsPublisher(context) {
+  const account = await resolveAccount(context);
+  return createThreadsPublisher({
+    userId: account?.credentials?.userId,
+    accessToken: account?.credentials?.accessToken,
+    graphVersion: process.env.THREADS_GRAPH_VERSION || 'v1.0',
+    graphBaseUrl: process.env.THREADS_GRAPH_BASE_URL || 'https://graph.threads.net',
+    publicMediaBaseUrl: process.env.PUBLIC_MEDIA_BASE_URL,
+  });
+}
+
+async function refreshPublishingState() {
+  const state = buildPublishingState({
+    facebookConfigured: facebookPublisher.configured,
+    facebookPageId: process.env.FACEBOOK_PAGE_ID || '',
+    clients: await listClientsRaw(),
+  });
+  publishingPlatforms = state.platforms;
+  publishingAccounts = state.accounts;
+}
+
+async function initServices() {
   facebookPublisher = createFacebookPublisher({
     pageId: process.env.FACEBOOK_PAGE_ID,
     pageAccessToken: process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
@@ -42,16 +93,17 @@ function initServices() {
     graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
   });
 
-  publishingPlatforms = getPublishingPlatforms(facebookPublisher.configured);
-  publishingAccounts = getPlatformAccounts({
-    facebookPageId: process.env.FACEBOOK_PAGE_ID || '',
-    facebookConfigured: facebookPublisher.configured,
-  });
+  await refreshPublishingState();
 
-  scheduler = createScheduler({ facebookPublisher });
+  scheduler = createScheduler({
+    facebookPublisher,
+    createInstagramPublisher,
+    createThreadsPublisher,
+    resolvePublicMediaBaseUrl: () => process.env.PUBLIC_MEDIA_BASE_URL || '',
+  });
 }
 
-initServices();
+await initServices();
 const aiService = createAiService();
 
 app.use(express.json({ limit: '2mb' }));
@@ -69,7 +121,7 @@ app.use('/uploads', express.static(directories.uploads, staticOptions));
 
 app.use('/api', createSettingsRouter({
   onReloadSettings: async () => {
-    initServices();
+    await initServices();
     aiService.reloadConfig();
   },
 }));
@@ -84,27 +136,22 @@ app.use('/api', (request, response, next) => {
   })(request, response, next);
 });
 
-app.use('/api', createClientsRouter());
+app.use('/api', createClientsRouter({
+  onAccountsChanged: refreshPublishingState,
+}));
 app.use('/api', createGodsRouter());
 app.use('/api', createPostsRouter());
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));
 app.use('/api', (request, response, next) => createScheduleRouter({
   publishingPlatforms,
-  resolveFacebookPublisher: async ({ clientId, accountId }) => {
-    const client = await getClientRaw(clientId);
-    const account = findAccount(client, accountId);
-    if (account?.credentials?.pageId && account?.credentials?.pageAccessToken) {
-      return createFacebookPublisher({
-        pageId: account.credentials.pageId,
-        pageAccessToken: account.credentials.pageAccessToken,
-        graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
-        graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
-      });
-    }
-    return facebookPublisher;
-  },
+  resolveFacebookPublisher,
 })(request, response, next));
-app.use('/api', (request, response, next) => createPublishRouter({ facebookPublisher })(request, response, next));
+app.use('/api', (request, response, next) => createPublishRouter({
+  facebookPublisher,
+  resolveFacebookPublisher,
+  resolveInstagramPublisher,
+  resolveThreadsPublisher,
+})(request, response, next));
 
 app.use((error, _request, response, _next) => {
   console.error(error);

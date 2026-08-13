@@ -25,8 +25,10 @@ test('formatEnvContent builds valid env file content', () => {
   const env = {
     GEMINI_API_KEY: 'test_key',
     GEMINI_MODEL: 'gemini-3.6-flash',
+    PUBLIC_MEDIA_BASE_URL: 'https://media.example',
   };
   const formatted = formatEnvContent(env);
   assert.match(formatted, /GEMINI_API_KEY=test_key/);
   assert.match(formatted, /GEMINI_MODEL=gemini-3.6-flash/);
+  assert.match(formatted, /PUBLIC_MEDIA_BASE_URL=https:\/\/media\.example/);
 });

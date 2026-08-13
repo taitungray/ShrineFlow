@@ -1,9 +1,15 @@
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import express from 'express';
 
-import { rejectScheduleContentType } from '../lib/schedule-policy.js';
+import {
+  assertLocalScheduleWindow,
+  rejectLocalScheduleTooSoon,
+  rejectScheduleContentType,
+} from '../lib/schedule-policy.js';
 import {
   cancelFacebookTarget,
   rescheduleFacebookTarget,
@@ -13,9 +19,48 @@ import { createScheduleRouter } from '../lib/routes/schedule.js';
 import { getPublishingPlatforms } from '../lib/platforms.js';
 import { jsonFiles, readJson, writeJson } from '../lib/store.js';
 
+const originalJsonFiles = { ...jsonFiles };
+let temporaryDataDirectory;
+
+before(async () => {
+  temporaryDataDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-schedule-native-'));
+  Object.assign(jsonFiles, {
+    posts: path.join(temporaryDataDirectory, 'posts.json'),
+    schedule: path.join(temporaryDataDirectory, 'schedule.json'),
+    clients: path.join(temporaryDataDirectory, 'clients.json'),
+  });
+  await Promise.all([
+    writeJson(jsonFiles.posts, []),
+    writeJson(jsonFiles.schedule, []),
+    writeJson(jsonFiles.clients, []),
+  ]);
+});
+
+after(async () => {
+  Object.assign(jsonFiles, originalJsonFiles);
+  await fs.rm(temporaryDataDirectory, { recursive: true, force: true });
+});
+
 test('rejects Facebook story scheduling', () => {
   assert.match(rejectScheduleContentType('facebook', 'story'), /Story|限時動態/);
   assert.equal(rejectScheduleContentType('facebook', 'post'), null);
+});
+
+test('local schedules require at least a one minute buffer', () => {
+  const now = new Date('2026-08-13T08:00:00.000Z');
+  assert.match(
+    rejectLocalScheduleTooSoon('2026-08-13T08:00:59.999Z', now),
+    /至少是 1 分鐘後/,
+  );
+  assert.equal(rejectLocalScheduleTooSoon('2026-08-13T08:01:00.000Z', now), null);
+  assert.equal(
+    assertLocalScheduleWindow('2026-08-13T08:01:00.000Z', now).toISOString(),
+    '2026-08-13T08:01:00.000Z',
+  );
+  assert.throws(
+    () => assertLocalScheduleWindow('not-a-date', now),
+    /格式不正確/,
+  );
 });
 
 test('publishes Facebook target immediately with scheduledAt', async () => {
@@ -107,8 +152,6 @@ test('cancel clears local schedule after deleteScheduled', async () => {
 });
 
 test('POST /schedule calls Facebook before persisting scheduled target', async () => {
-  const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
-  const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
   let publishCalls = 0;
   const app = express();
   app.use(express.json());
@@ -155,14 +198,10 @@ test('POST /schedule calls Facebook before persisting scheduled target', async (
     assert.equal(posts[0].targets[0].externalId, 'graph-1');
   } finally {
     await new Promise((resolve) => server.close(resolve));
-    await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
-    await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
   }
 });
 
 test('POST /schedule reschedules when target already has externalId', async () => {
-  const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
-  const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
   const calls = [];
   const app = express();
   app.use(express.json());
@@ -220,14 +259,10 @@ test('POST /schedule reschedules when target already has externalId', async () =
     assert.equal((await readJson(jsonFiles.posts, []))[0].targets[0].externalId, 'graph-new');
   } finally {
     await new Promise((resolve) => server.close(resolve));
-    await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
-    await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
   }
 });
 
 test('POST /schedule rejects targetId when platform or contentType mismatch', async () => {
-  const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
-  const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
   let publishCalls = 0;
   const app = express();
   app.use(express.json());
@@ -279,8 +314,6 @@ test('POST /schedule rejects targetId when platform or contentType mismatch', as
     assert.equal(posts[0].targets[0].status, 'draft');
   } finally {
     await new Promise((resolve) => server.close(resolve));
-    await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
-    await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
   }
 });
 
@@ -318,9 +351,83 @@ test('POST /schedule rejects Facebook story before publisher call', async () => 
   }
 });
 
+test('Instagram schedule lifecycle stays local and never calls Facebook publisher', async () => {
+  let facebookResolverCalls = 0;
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => {
+      facebookResolverCalls += 1;
+      throw new Error('Instagram 不應呼叫 Facebook publisher');
+    },
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'instagram:1', platformId: 'instagram', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-instagram',
+      clientId: 'client-1',
+      facebook: 'Instagram 本機排程',
+      mediaPaths: ['/uploads/instagram.jpg'],
+      targets: [{
+        id: 'target-instagram',
+        accountId: 'instagram:1',
+        platformId: 'instagram',
+        contentType: 'feed',
+        status: 'draft',
+        externalId: 'stale-id',
+      }],
+    }]);
+
+    const baseUrl = `http://127.0.0.1:${server.address().port}/api/schedule`;
+    const firstScheduledAt = new Date(Date.now() + 120_000).toISOString();
+    const postResponse = await fetch(baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'post-instagram',
+        targetId: 'target-instagram',
+        accountId: 'instagram:1',
+        channel: 'instagram',
+        contentType: 'feed',
+        scheduledAt: firstScheduledAt,
+      }),
+    });
+
+    assert.equal(postResponse.status, 201);
+    assert.equal(facebookResolverCalls, 0);
+    const scheduled = await postResponse.json();
+    assert.equal(scheduled.status, 'scheduled');
+    assert.equal(scheduled.externalId, null);
+
+    const secondScheduledAt = new Date(Date.now() + 180_000).toISOString();
+    const patchResponse = await fetch(`${baseUrl}/target-instagram`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scheduledAt: secondScheduledAt }),
+    });
+    assert.equal(patchResponse.status, 200);
+    assert.equal((await patchResponse.json()).scheduledAt, secondScheduledAt);
+    assert.equal(facebookResolverCalls, 0);
+
+    const deleteResponse = await fetch(`${baseUrl}/target-instagram`, { method: 'DELETE' });
+    assert.equal(deleteResponse.status, 200);
+    assert.equal(facebookResolverCalls, 0);
+    const cancelled = await deleteResponse.json();
+    assert.equal(cancelled.status, 'draft');
+    assert.equal(cancelled.scheduledAt, null);
+    assert.equal(cancelled.externalId, null);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('PATCH and DELETE /schedule/:targetId synchronize Facebook and local target', async () => {
-  const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
-  const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
   const calls = [];
   const app = express();
   app.use(express.json());
@@ -374,14 +481,10 @@ test('PATCH and DELETE /schedule/:targetId synchronize Facebook and local target
     assert.equal(target.externalId, null);
   } finally {
     await new Promise((resolve) => server.close(resolve));
-    await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
-    await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
   }
 });
 
 test('PATCH marks target failed when Facebook delete succeeds but create fails', async () => {
-  const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
-  const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
   const app = express();
   app.use(express.json());
   app.use('/api', createScheduleRouter({
@@ -425,7 +528,5 @@ test('PATCH marks target failed when Facebook delete succeeds but create fails',
     assert.equal(target.lastError.message, '建立新 Facebook 排程失敗');
   } finally {
     await new Promise((resolve) => server.close(resolve));
-    await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
-    await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
   }
 });
