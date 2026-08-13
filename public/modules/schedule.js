@@ -13,13 +13,25 @@ function toLocalDateTimeValue(isoDate) {
 }
 
 function scheduleActions(item) {
-  if (!['facebook', 'instagram', 'threads'].includes(item.channel) || item.status !== 'scheduled') return '';
-  return '<div class="schedule-actions">'
-    + '<button class="btn-text schedule-action" type="button" data-schedule-action="reschedule" data-target-id="'
-    + escapeHtml(item.targetId) + '">改時間</button>'
-    + '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
-    + escapeHtml(item.targetId) + '">取消</button>'
-    + '</div>';
+  if (!['facebook', 'instagram', 'threads'].includes(item.channel)) return '';
+  const buttons = [];
+  if (item.status === 'scheduled') {
+    buttons.push(
+      '<button class="btn-text schedule-action" type="button" data-schedule-action="reschedule" data-target-id="'
+      + escapeHtml(item.targetId) + '">改時間</button>',
+      '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
+      + escapeHtml(item.targetId) + '">取消</button>',
+    );
+  }
+  if (item.status === 'failed' || item.status === 'retrying') {
+    buttons.push(
+      '<button class="btn-text schedule-action" type="button" data-schedule-action="retry" data-target-id="'
+      + escapeHtml(item.targetId) + '" data-post-id="'
+      + escapeHtml(item.postId) + '">重發</button>',
+    );
+  }
+  if (!buttons.length) return '';
+  return '<div class="schedule-actions">' + buttons.join('') + '</div>';
 }
 
 function scheduleQueueLabel(channel) {
@@ -54,7 +66,7 @@ export function renderSchedule() {
     const attempts = item.attempts > 1 ? ' · 第 ' + item.attempts + ' 次' : '';
     const channel = PLATFORM_NAMES[item.channel] || item.channel || '未指定平台';
     const account = state.accounts.find((entry) => entry.id === item.accountId);
-    const accountName = account?.name || item.accountId || '未指定帳號';
+    const accountName = account?.name || PLATFORM_NAMES[item.channel] || item.channel || '未指定平台';
     const platform = state.platforms.find((entry) => entry.id === item.channel);
     const contentType = platform?.contentTypes?.find((entry) => entry.id === item.contentType);
     const format = contentType?.name || item.contentType || '貼文';
@@ -85,6 +97,27 @@ export function initScheduleDialog(refreshListsFn) {
           showToast(`已取消 ${queueLabel}。`, 'success');
         } catch (error) {
           showToast(error.message, 'error');
+        }
+        return;
+      }
+      if (button.dataset.scheduleAction === 'retry') {
+        const platformName = PLATFORM_NAMES[item.channel] || item.channel;
+        if (!window.confirm(`確定立刻重發「${platformName}」？`)) return;
+        try {
+          showToast('重發中…', 'info');
+          await api('/api/publish/target', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              postId: item.postId || button.dataset.postId,
+              targetId: item.targetId,
+            }),
+          });
+          if (typeof refreshListsFn === 'function') await refreshListsFn();
+          showToast(`${platformName} 已重發成功。`, 'success');
+        } catch (error) {
+          if (typeof refreshListsFn === 'function') await refreshListsFn();
+          showToast(error.message || '重發失敗。', 'error');
         }
         return;
       }

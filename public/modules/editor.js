@@ -10,7 +10,10 @@ import { api } from './api.js';
 import { buildTargetsPayload, renderTargetAccountControls, applyActiveTargetToEditor } from './targets-ui.js';
 
 export function updateLivePreview() {
-  const text = $('#facebookText')?.value?.trim() || '';
+  const contentType = fieldValue($('#targetContentType')) || 'post';
+  const text = contentType === 'reel'
+    ? ($('#reelText')?.value?.trim() || $('#facebookText')?.value?.trim() || '')
+    : ($('#facebookText')?.value?.trim() || '');
   const preview = $('#facebookPreview');
   if (preview) {
     preview.innerHTML = text
@@ -23,8 +26,13 @@ export function updateLivePreview() {
   if (previewCard) {
     previewCard.dataset.platform = state.selectedPlatform;
     const title = previewCard.querySelector('h4');
-    // 目標帳號已在上方選取；標題不重複平台／帳號名
-    if (title) title.textContent = '貼文預覽';
+    if (title) {
+      title.textContent = contentType === 'reel'
+        ? 'Reel 預覽'
+        : contentType === 'story'
+          ? '限時預覽'
+          : '貼文預覽';
+    }
   }
   const mediaWrap = $('#previewImageWrap');
   if (mediaWrap) mediaWrap.dataset.platform = state.selectedPlatform;
@@ -48,12 +56,12 @@ export function renderPreviewPlatformTabs() {
   const selected = platforms.find((platform) => platform.id === state.selectedPlatform);
   if (!selected) {
     status.hidden = false;
-    status.textContent = '請先勾選要發的帳號。';
+    status.textContent = '請先勾選要發的平台。';
     status.dataset.ready = 'false';
     return;
   }
 
-  // 平台／帳號名已在上方「目標帳號」顯示，此處只補非重複提示
+  // 平台名已在上方「目標平台」顯示，此處只補非重複提示
   const publishHint = selected.canPublish ? '' : '目前僅預覽版型，尚未串接真發';
   status.textContent = publishHint;
   status.hidden = !publishHint;
@@ -151,7 +159,7 @@ export function currentDraft() {
     defaultHashtags: $('#defaultHashtags')?.value || '',
     channel: activeAccount?.platformId || 'facebook',
     accountId: state.activeTargetId || activeAccount?.id || '',
-    contentType: fieldValue($('#targetContentType')) || fieldValue($('#createContentType')) || 'post',
+    contentType: fieldValue($('#createContentType')) || fieldValue($('#targetContentType')) || 'post',
     contentSettings: Object.keys(readTargetContentSettings()).length
       ? readTargetContentSettings()
       : readCreateContentSettings(),
@@ -168,6 +176,8 @@ export function currentDraft() {
 export function initEditorListeners(refreshListsFn) {
   const fbText = $('#facebookText');
   if (fbText) fbText.addEventListener('input', updateLivePreview);
+  const reelText = $('#reelText');
+  if (reelText) reelText.addEventListener('input', updateLivePreview);
   const tagsText = $('#hashtagsText');
   if (tagsText) tagsText.addEventListener('input', updateLivePreview);
 

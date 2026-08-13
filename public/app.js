@@ -24,7 +24,7 @@ import { renderPosts } from './modules/drafts.js';
 import { renderSchedule, initScheduleDialog } from './modules/schedule.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
-import { renderTargetAccountControls, initTargetListeners } from './modules/targets-ui.js';
+import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
 async function refreshLists() {
   state.posts = await api(clientQuery('/api/posts'));
@@ -115,18 +115,18 @@ async function loadData() {
     const compact = window.matchMedia('(max-width: 768px)').matches;
     status.textContent = compact
       ? ((aiOk ? 'AI✓' : 'AI✗') + ' · ' + (fbOk ? 'FB✓' : 'FB✗'))
-      : (clientLabel + ' · ' + (aiOk ? config.provider + ' 已連線' : 'Gemini 未連線') + ' · ' + (facebookAccount ? 'FB 帳號已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定')));
+      : (clientLabel + ' · ' + (aiOk ? config.provider + ' 已連線' : 'Gemini 未連線') + ' · ' + (facebookAccount ? 'FB 已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定')));
     status.title = [
       clientLabel,
       aiOk ? (config.provider + ' 已連線') : 'Gemini 未連線',
-      facebookAccount ? 'FB 帳號已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定'),
+      facebookAccount ? 'FB 已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定'),
       facebookStatus.error || '',
     ].filter(Boolean).join('\n');
     status.dataset.ready = config.aiConfigured ? 'true' : 'false';
   }
 
   if (config.aiConfigured) {
-    setFormMessage('先選客戶，再產文；編輯預覽可為多個帳號各寫各的、各排時間。');
+    setFormMessage('先選客戶，再產文；編輯預覽可為多個平台各寫各的、各排時間。');
   } else {
     setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
   }
@@ -191,7 +191,13 @@ function initApp() {
 
   const createType = $('#createContentType');
   if (createType) {
-    createType.addEventListener('change', (event) => renderCreateContentSettings('facebook', event.target.value));
+    createType.addEventListener('change', (event) => {
+      renderCreateContentSettings('facebook', event.target.value);
+      // A：產文格式一改，預覽鎖定同步
+      applyActiveTargetToEditor();
+      renderPreviewPlatformTabs();
+      updateLivePreview();
+    });
   }
 
   const generateForm = $('#generateForm');

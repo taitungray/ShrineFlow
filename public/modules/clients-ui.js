@@ -99,7 +99,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         });
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
         if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
-        showToast('客戶 Facebook 帳號已儲存', 'success');
+        showToast('客戶 Facebook 連線已儲存', 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');
@@ -137,7 +137,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
           body: JSON.stringify({
             ...(existing?.id ? { id: existing.id } : {}),
             platformId,
-            name: userId ? `${label} 帳號（${userId}）` : `${label} 帳號`,
+            name: userId ? `${label}（${userId}）` : label,
             credentials: {
               userId,
               accessToken: $('#' + tokenField)?.value || '',
@@ -147,7 +147,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
         if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
         loadClientFacebookFields();
-        showToast(`客戶 ${label} 帳號已儲存`, 'success');
+        showToast(`客戶 ${label} 連線已儲存`, 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');

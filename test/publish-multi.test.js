@@ -229,6 +229,41 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
       });
 
       assert.equal(response.status, 502);
+      const posts = await readJson(jsonFiles.posts, []);
+      const target = posts[0].targets[0];
+      assert.equal(target.status, 'failed');
+      assert.match(target.lastError?.message || '', /Graph API|rejected/i);
+    });
+
+    await t.test('manual republish of failed target can succeed', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-instagram-retry',
+        clientId: 'client-1',
+        facebook: '重發測試',
+        mediaPaths: ['/uploads/retry.jpg'],
+        targets: [{
+          id: 'target-instagram-retry',
+          accountId: 'instagram:1',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'failed',
+          lastError: { message: '先前失敗', at: '2026-08-13T00:00:00.000Z' },
+        }],
+      }]);
+
+      const response = await publish({
+        postId: 'post-instagram-retry',
+        targetId: 'target-instagram-retry',
+      });
+
+      assert.equal(response.status, 200);
+      const posts = await readJson(jsonFiles.posts, []);
+      const target = posts[0].targets[0];
+      assert.equal(target.status, 'published');
+      assert.equal(target.externalId, 'ig-media-1');
+      assert.equal(target.lastError, null);
+      assert.equal(calls.length, 1);
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));

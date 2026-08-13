@@ -79,8 +79,8 @@ export function renderAccountOptions(platformId = 'facebook') {
   const select = $('#scheduleAccount');
   if (!select) return;
   select.innerHTML = accounts.length
-    ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled === false ? ' disabled' : '') + '>' + escapeHtml(account.name) + (account.configured ? '' : '（尚未連接）') + '</option>').join('')
-    : '<option value="" disabled selected>尚未連接帳號</option>';
+    ? accounts.map((account) => '<option value="' + escapeHtml(account.id) + '"' + (account.enabled === false ? ' disabled' : '') + '>' + escapeHtml(account.name)               + (account.configured ? '' : '（未連線）') + '</option>').join('')
+    : '<option value="" disabled selected>尚未連接平台</option>';
   const preferred = accounts.find((account) => account.enabled !== false && account.configured)
     || accounts.find((account) => account.enabled !== false)
     || accounts[0];
@@ -157,9 +157,42 @@ export function readCreateContentSettings() {
   return readDataSettings('create-content-setting');
 }
 
+/** 產文母稿格式 → 各平台預設 contentType（IG post→feed；Threads 僅 post）。 */
+export function resolveLockedContentType(platformId = 'facebook', motherType = 'post') {
+  const mother = motherType || 'post';
+  if (platformId === 'instagram') return mother === 'post' ? 'feed' : mother;
+  if (platformId === 'threads') return mother === 'post' ? 'post' : null;
+  return mother;
+}
+
+export function renderTargetContentSettings(platformId, contentTypeId, values = null) {
+  const container = $('#targetContentSettings');
+  if (!container) return;
+  const platform = state.platforms.find((item) => item.id === platformId)
+    || state.platforms.find((item) => item.id === 'facebook')
+    || state.platforms[0];
+  const active = platform?.contentTypes?.find((item) => item.id === contentTypeId);
+  if (!active) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = '<p class="content-type-description">' + escapeHtml(active.description || '') + '</p>'
+    + (active.settings || []).map((setting) => renderSettingField(setting, 'data-target-content-setting', 'target-setting')).join('');
+  if (values && typeof values === 'object') {
+    Object.entries(values).forEach(([key, value]) => {
+      document.querySelectorAll('[data-target-content-setting="' + key + '"]').forEach((field) => {
+        if (field.type === 'radio') field.checked = field.value === value;
+        else field.value = value ?? '';
+      });
+    });
+  }
+}
+
 export function renderTargetContentTypeControls({
   platformId = 'facebook',
-  selected = 'post',
+  motherType = fieldValue($('#createContentType')) || 'post',
+  selectedType = null,
+  contentSettings = null,
 } = {}) {
   const typeGroup = $('#targetContentType');
   const settings = $('#targetContentSettings');
@@ -169,31 +202,62 @@ export function renderTargetContentTypeControls({
     || state.platforms.find((item) => item.id === 'facebook')
     || state.platforms[0];
   const contentTypes = platform?.contentTypes || [{ id: 'post', name: '貼文', canPublish: true }];
+  const mapped = resolveLockedContentType(platform?.id || platformId, motherType);
+  const preferred = (selectedType && contentTypes.some((item) => item.id === selectedType))
+    ? selectedType
+    : mapped;
+  const supported = Boolean(preferred && contentTypes.some((item) => item.id === preferred));
+
+  if (!supported) {
+    typeGroup.innerHTML = '';
+    typeGroup.title = '此平台不支援目前產文格式';
+    const motherLabel = motherType === 'reel' ? 'Reel' : motherType === 'story' ? '限時動態' : '貼文';
+    if (settings) {
+      settings.innerHTML = '<p class="content-type-description">'
+        + '此平台不支援母稿格式「' + escapeHtml(motherLabel) + '」。'
+        + '請改產文格式，或取消勾選此平台。</p>';
+    }
+    updateTargetFormatDependentUi(mapped || motherType || 'post');
+    return;
+  }
 
   renderRadioPills(typeGroup, contentTypes.map((contentType) => ({
     value: contentType.id,
     label: contentType.name + (contentType.canPublish ? '' : '（規劃中）'),
-    disabled: !contentType.canPublish && platform?.id !== 'facebook',
-  })), { name: 'targetContentType', selected });
+    disabled: !contentType.canPublish,
+  })), { name: 'targetContentType', selected: preferred });
 
-  const active = contentTypes.find((item) => item.id === fieldValue(typeGroup)) || contentTypes[0];
-  if (settings) {
-    settings.innerHTML = active
-      ? ('<p class="content-type-description">' + escapeHtml(active.description || '') + '</p>'
-        + (active.settings || []).map((setting) => renderSettingField(setting, 'data-target-content-setting', 'target-setting')).join(''))
-      : '';
-  }
-  updateTargetScheduleAvailability();
+  typeGroup.title = '可依平台調整；下方選項會跟著格式變動';
+  renderTargetContentSettings(platform?.id || platformId, preferred, contentSettings);
+  updateTargetFormatDependentUi(preferred);
 }
 
 export function readTargetContentSettings() {
   return readDataSettings('target-content-setting');
 }
 
-export function updateTargetScheduleAvailability() {
+/** 依發布格式顯示／隱藏相關欄位（Reel 文案、排程等）。 */
+export function updateTargetFormatDependentUi(contentTypeId = fieldValue($('#targetContentType')) || 'post') {
+  const type = contentTypeId || 'post';
+  const reelField = $('#reelTextField');
+  if (reelField) reelField.classList.toggle('is-hidden', type !== 'reel');
+
+  const copyLabel = $('#accountCopyLabel');
+  if (copyLabel) {
+    copyLabel.textContent = type === 'reel'
+      ? '此平台文案（貼文母稿，選填）'
+      : type === 'story'
+        ? '此平台文案（限時）'
+        : '此平台文案';
+  }
+
+  updateTargetScheduleAvailability(type);
+}
+
+export function updateTargetScheduleAvailability(contentTypeId = fieldValue($('#targetContentType'))) {
   const scheduled = $('#targetScheduledAt');
   if (!scheduled) return;
-  const contentType = fieldValue($('#targetContentType'));
+  const contentType = contentTypeId || fieldValue($('#targetContentType'));
   const blocked = contentType === 'story';
   scheduled.disabled = blocked;
   scheduled.title = blocked ? 'Facebook 限時動態無法排程' : '';

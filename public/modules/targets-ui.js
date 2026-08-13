@@ -1,6 +1,16 @@
 import { $, escapeHtml, fieldValue } from './dom.js';
 import { state, currentClient, PLATFORM_NAMES } from './state.js';
-import { renderTargetContentTypeControls, readTargetContentSettings, updateTargetScheduleAvailability } from './platform-ui.js';
+import {
+  renderTargetContentTypeControls,
+  renderTargetContentSettings,
+  readTargetContentSettings,
+  updateTargetFormatDependentUi,
+  resolveLockedContentType,
+} from './platform-ui.js';
+
+function motherContentType() {
+  return fieldValue($('#createContentType')) || 'post';
+}
 
 function selectedAccountIds() {
   return [...document.querySelectorAll('#targetAccountChecks input[type="checkbox"]:checked')]
@@ -46,16 +56,13 @@ export function renderTargetAccountControls() {
     ? accounts.map((account) => {
       const checked = state.selectedTargetAccountIds.includes(account.id);
       const platform = PLATFORM_NAMES[account.platformId] || account.platformId;
-      const name = account.name || platform;
-      // 名稱已含平台字樣時不重複「平台 · 名稱」
-      const label = name.includes(platform) ? name : (platform + ' · ' + name);
       return '<label class="radio-pill">'
         + '<input type="checkbox" value="' + escapeHtml(account.id) + '"' + (checked ? ' checked' : '') + ' />'
-        + '<span>' + escapeHtml(label)
+        + '<span>' + escapeHtml(platform)
         + (account.configured ? '' : '（未連線）') + '</span>'
         + '</label>';
     }).join('')
-    : '<p class="helper">此客戶尚無帳號，請到設定新增。</p>';
+    : '<p class="helper">此客戶尚未設定平台連線，請到設定新增。</p>';
 
   syncSelectedTargetAccountIds();
   const activeAccounts = accounts.filter((account) => state.selectedTargetAccountIds.includes(account.id));
@@ -64,14 +71,15 @@ export function renderTargetAccountControls() {
     activeField.classList.toggle('is-hidden', activeAccounts.length <= 1);
   }
 
-  tabs.innerHTML = activeAccounts.map((account) => (
-    '<label class="radio-pill">'
+  tabs.innerHTML = activeAccounts.map((account) => {
+    const platform = PLATFORM_NAMES[account.platformId] || account.name || account.platformId;
+    return '<label class="radio-pill">'
     + '<input type="radio" name="activeTargetAccount" value="' + escapeHtml(account.id) + '"'
     + (account.id === state.activeTargetId ? ' checked' : '')
     + ' />'
-    + '<span>' + escapeHtml(account.name) + '</span>'
-    + '</label>'
-  )).join('');
+    + '<span>' + escapeHtml(platform) + '</span>'
+    + '</label>';
+  }).join('');
 
   if (!state.activeTargetId && activeAccounts[0]) state.activeTargetId = activeAccounts[0].id;
   syncPreviewPlatformFromActiveTarget();
@@ -103,12 +111,11 @@ export function applyActiveTargetToEditor() {
     }
   }
 
-  const selectedType = target?.contentType
-    || fieldValue($('#createContentType'))
-    || 'post';
   renderTargetContentTypeControls({
     platformId: account?.platformId || target?.platformId || 'facebook',
-    selected: selectedType,
+    motherType: motherContentType(),
+    selectedType: target?.contentType || null,
+    contentSettings: target?.contentSettings || null,
   });
   syncPreviewPlatformFromActiveTarget();
 }
@@ -131,15 +138,22 @@ export function buildTargetsPayload(draft) {
     const scheduledAt = scheduledAtRaw
       ? (Number.isNaN(new Date(scheduledAtRaw).getTime()) ? previous?.scheduledAt || null : new Date(scheduledAtRaw).toISOString())
       : null;
-    const activeContentType = fieldValue($('#targetContentType')) || draft.contentType || 'post';
+    const platformId = account?.platformId || previous?.platformId || draft.channel || 'facebook';
+    const defaultType = resolveLockedContentType(platformId, motherContentType())
+      || motherContentType()
+      || draft.contentType
+      || 'post';
+    const contentType = isActive
+      ? (fieldValue($('#targetContentType')) || defaultType)
+      : (previous?.contentType || defaultType);
     const activeContentSettings = Object.keys(readTargetContentSettings()).length
       ? readTargetContentSettings()
       : (draft.contentSettings || {});
     return {
       id: previous?.id,
       accountId,
-      platformId: account?.platformId || previous?.platformId || draft.channel || 'facebook',
-      contentType: isActive ? activeContentType : (previous?.contentType || draft.contentType || 'post'),
+      platformId,
+      contentType,
       contentSettings: isActive ? activeContentSettings : (previous?.contentSettings || {}),
       copyOverride: isActive
         ? ($('#facebookText')?.value || '')
@@ -177,7 +191,11 @@ export function initTargetListeners({ onActiveTargetChange } = {}) {
   const contentType = $('#targetContentType');
   if (contentType) {
     contentType.addEventListener('change', () => {
-      updateTargetScheduleAvailability();
+      const account = accountById(state.activeTargetId);
+      const platformId = account?.platformId || 'facebook';
+      const selected = fieldValue($('#targetContentType')) || 'post';
+      renderTargetContentSettings(platformId, selected);
+      updateTargetFormatDependentUi(selected);
       if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
     });
   }

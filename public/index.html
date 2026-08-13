@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ShrineFlow · 神像 AI 社群小編</title>
+    <title>ShrineFlow · AI社群小編</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.3.8" />
+    <link rel="stylesheet" href="/style.css?v=0.3.18" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -16,8 +16,8 @@
     <header class="app-header-fixed">
       <div class="topbar">
         <div class="brand-group">
-          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.8</em></span>
-          <h1>神像 AI 社群小編</h1>
+          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.18</em></span>
+          <h1>AI社群小編</h1>
         </div>
         <div class="topbar-actions">
           <div class="field client-switcher">
@@ -52,10 +52,10 @@
             </div>
           </div>
 
-          <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾帳號） -->
+          <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾平台） -->
           <fieldset class="form-group-card">
             <legend class="group-title">🚀 1. 發布格式</legend>
-            <p class="helper">產文先定貼文／Reel 格式。要發到哪些帳號，到「編輯預覽」再勾選。</p>
+            <p class="helper">產文先定貼文／Reel／限時格式。編輯預覽預設沿用，但可依平台改；改格式後下方說明與選項會跟著變。要發到哪些平台，到編輯預覽再勾選。</p>
             <div class="field">
               <span id="createContentTypeLabel" class="field-label">格式</span>
               <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
@@ -78,6 +78,7 @@
               </label>
               <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
             </div>
+            <p class="helper">若發 <strong>Reel</strong>：直式 <strong>9:16</strong>、約 3–90 秒、常見 mp4。規格不符平台可能拒發。<strong>IG／Threads</strong> 有圖影時還需設定公開媒體網址；其排程為本機到點發（服務需開著），與 FB 粉專原生排程不同。</p>
 
             <div class="field-row">
               <div class="field">
@@ -136,30 +137,33 @@
               <fieldset class="form-group-card">
                 <legend class="group-title">🎯 要發到哪裡</legend>
                 <div class="field">
-                  <span id="targetAccountsLabel" class="field-label">目標帳號（可多選）</span>
+                  <span id="targetAccountsLabel" class="field-label">目標平台（可多選）</span>
                   <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
+                  <p class="helper">勾要發出去的平台。每個客戶在同一平台只會有一個連線。</p>
                 </div>
                 <div class="field" id="activeTargetField">
-                  <span id="activeTargetLabel" class="field-label">目前編輯哪一個</span>
+                  <span id="activeTargetLabel" class="field-label">目前編輯哪個平台</span>
                   <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
                 </div>
                 <div class="field">
-                  <span id="targetContentTypeLabel" class="field-label">此帳號發布格式</span>
+                  <span id="targetContentTypeLabel" class="field-label">此平台發布格式</span>
                   <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
+                  <p class="helper">預設跟產文相同，可依平台調整；下方選項會跟著格式變（貼文才有媒體排列，Reel／限時則不同）。</p>
                   <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
                 </div>
                 <div class="field">
-                  <label for="targetScheduledAt" class="field-label">此帳號排程時間 <span class="field-optional">(選填)</span></label>
+                  <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
                   <input id="targetScheduledAt" type="datetime-local" />
                 </div>
               </fieldset>
               <div class="field">
-                <label for="facebookText" class="field-label">此帳號文案</label>
-                <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依帳號覆寫"></textarea>
+                <label for="facebookText" class="field-label" id="accountCopyLabel">此平台文案</label>
+                <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依平台覆寫"></textarea>
               </div>
-              <div class="field">
+              <div class="field is-hidden" id="reelTextField">
                 <label for="reelText" class="field-label">Reel 短影音文案</label>
                 <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
+                <p class="helper">Reel 影片請維持 9:16、長度適中（約 3–90 秒）、mp4；規格不符時 Meta 可能拒發。</p>
               </div>
               <div class="field">
                 <label for="hashtagsText" class="field-label">Hashtag</label>
@@ -246,7 +250,7 @@
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">📘 目前客戶的 Facebook 帳號</legend>
+            <legend class="group-title">📘 目前客戶的 Facebook</legend>
             <p class="helper">金鑰只存在此客戶底下，不會跟其他客戶混用。</p>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
@@ -271,21 +275,21 @@
                 <div class="field">
                   <label for="settingPublicMediaBaseUrl" class="field-label">公開媒體基底網址 <span class="field-optional">(IG／Threads 媒體發布用)</span></label>
                   <input id="settingPublicMediaBaseUrl" type="url" placeholder="https://your-public-host.example" />
-                  <p class="helper">填入 Meta 可公開讀取本站上傳媒體的 HTTPS 網址，不含 <code>/uploads</code>。</p>
+                  <p class="helper">填 HTTPS 網址（如 tunnel），不含 <code>/uploads</code>。IG／Threads 有媒體時必填；Meta 伺服器要能直接下載檔案。本機 localhost 無效。</p>
                 </div>
               </div>
             </details>
 
             <div class="action-box">
-              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存客戶 Facebook 帳號">💾 儲存此客戶 FB 帳號</button>
+              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存客戶 Facebook 連線">💾 儲存此客戶 FB 連線</button>
               <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">📸 目前客戶的 Instagram 帳號</legend>
-            <p class="helper">使用 Instagram Graph API 專業帳號的 User ID 與 Access Token。</p>
+            <legend class="group-title">📸 目前客戶的 Instagram</legend>
+            <p class="helper">填 Instagram User ID＋Token。有圖／影發布前請確認上方「公開媒體基底網址」可被 Meta 讀取。配額或權限錯誤時請檢查 App 權限與當日發布上限。</p>
             <div class="field">
               <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
               <input id="settingInstagramUserId" type="text" placeholder="17841400000000000" />
@@ -301,15 +305,15 @@
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存客戶 Instagram 帳號">💾 儲存此客戶 IG 帳號</button>
+              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存客戶 Instagram 連線">💾 儲存此客戶 IG 連線</button>
               <button type="button" id="btnTestInstagram" class="btn-test" aria-label="測試 Instagram 連線">🧪 測試連線</button>
               <span id="testInstagramResult" class="test-result"></span>
             </div>
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">🧵 目前客戶的 Threads 帳號</legend>
-            <p class="helper">使用 Threads API 帳號的 User ID 與 Access Token。</p>
+            <legend class="group-title">🧵 目前客戶的 Threads</legend>
+            <p class="helper">Threads User ID＋Token。純文字可不設公開媒體網址；有圖／影則必須。文字請勿過長；影片處理較慢，失敗可稍後再試。</p>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
               <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
@@ -322,7 +326,7 @@
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存客戶 Threads 帳號">💾 儲存此客戶 Threads 帳號</button>
+              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存客戶 Threads 連線">💾 儲存此客戶 Threads 連線</button>
               <button type="button" id="btnTestThreads" class="btn-test" aria-label="測試 Threads 連線">🧪 測試連線</button>
               <span id="testThreadsResult" class="test-result"></span>
             </div>
@@ -330,10 +334,8 @@
 
           <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
         </form>
-      </section>
 
-      <section class="bottom-grid">
-        <!-- 草稿 -->
+        <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
         <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
           <div class="panel-heading compact">
             <div>
@@ -378,9 +380,9 @@
           <div class="radio-pill-group" id="scheduleChannel" role="radiogroup" aria-labelledby="scheduleChannelLabel"></div>
         </div>
         <div class="field">
-          <label for="scheduleAccount" class="field-label">帳號</label>
-          <select id="scheduleAccount" aria-label="排程帳號">
-            <option value="facebook:default">預設帳號</option>
+          <label for="scheduleAccount" class="field-label">平台</label>
+          <select id="scheduleAccount" aria-label="排程平台">
+            <option value="facebook:default">Facebook</option>
           </select>
         </div>
         <div class="field">
@@ -393,6 +395,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.3.8" type="module"></script>
+    <script src="/app.js?v=0.3.18" type="module"></script>
   </body>
 </html>
