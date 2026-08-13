@@ -28,7 +28,7 @@
 | React/Vue/API/Autosave/Upload | `social-publishing-frontend-engineer` |
 | 發布、排程、權限、Regression | `social-publishing-qa` |
 
-路徑皆為：`.agents/skills/<上表名稱>/SKILL.md`。與既有 `ui-ux-pro-max` 並存；做社群發布後台時先讀 ROUTING，再依情境載入對應 Skill。若與 `ui-ux-pro-max` 衝突，**以 `ui-ux-pro-max`（本專案設計系統）為準**。
+路徑皆為：`.agents/skills/<上表名稱>/SKILL.md`。與既有 `ui-ux-pro-max` 並存；做社群發布後台時先讀 ROUTING（含 **ShrineFlow 落地約束**），再依情境載入對應 Skill。若與 `ui-ux-pro-max` 衝突，**以 `ui-ux-pro-max`（本專案設計系統）為準**。前端維持 Express + 靜態頁；進階模組（審核／完整 Calendar／權限矩陣等）僅在明確需求時啟用。
 
 ## 🏷️ 版本號與快取管理準則 (Versioning Rules)
 
