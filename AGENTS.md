@@ -3,6 +3,33 @@
 > [!TIP]
 > 本專案已啟用 **`ui-ux-pro-max`** 設計系統與規範 (.agents/skills/ui-ux-pro-max/SKILL.md)。
 
+## 🔗 多機／多 Agent 共用 Skills（單一真相來源）
+
+> **Cursor / Codex / Gemini 一律讀同一份檔案，禁止複製成三份。**
+
+| Agent | 入口檔（僅指標，不複製內容） | Skills 實體路徑 |
+|---|---|---|
+| Cursor | `.cursorrules` → 本檔 | `.agents/skills/**` |
+| Codex | `AGENTS.md`（本檔） | `.agents/skills/**` |
+| Gemini | `GEMINI.md` → 本檔 | `.agents/skills/**` |
+
+- 所有 Skill 只放在 **`.agents/skills/<skill-name>/SKILL.md`**
+- 路由表：`.agents/skills/social-publishing-ROUTING.md`
+- 總覽：`.agents/skills/social-publishing-README.md`
+- **禁止**再複製到 `~/.codex/skills`、`~/.cursor/skills`、`.cursor/skills`、Gemini 個人目錄等第二／第三份
+
+### Social Publishing Admin Skills
+
+| 需求 | Skill |
+|---|---|
+| 完整社群後台規劃 | `social-publishing-admin-director` |
+| Composer / Calendar / UI / UX | `social-publishing-ui-designer-pro` |
+| 草稿、審核、排程、狀態流程 | `social-content-workflow` |
+| React/Vue/API/Autosave/Upload | `social-publishing-frontend-engineer` |
+| 發布、排程、權限、Regression | `social-publishing-qa` |
+
+路徑皆為：`.agents/skills/<上表名稱>/SKILL.md`。與既有 `ui-ux-pro-max` 並存；做社群發布後台時先讀 ROUTING，再依情境載入對應 Skill。若與 `ui-ux-pro-max` 衝突，**以 `ui-ux-pro-max`（本專案設計系統）為準**。
+
 ## 🏷️ 版本號與快取管理準則 (Versioning Rules)
 
 1. **版號同步 (Version Bumping)**
