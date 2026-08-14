@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+data/*.json
+data/*.bak
+data/backups
+data/insights
+data/post-versions
+data/publish-attempts
+uploads/*
+start-last.log
+test
+docs
+.agents
+.superpowers

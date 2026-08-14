@@ -11,6 +11,7 @@ import { buildPublishingState } from './lib/platforms.js';
 import { createAiService } from './lib/ai-service.js';
 import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
 import { getRepositories } from './lib/repositories.js';
+import { getMediaStorage } from './lib/media-storage.js';
 import { runSchemaMigrations } from './lib/schema-migrations.js';
 import { ensureDefaultClientFromEnv, getClientRaw, findAccount, listClientsRaw } from './lib/clients.js';
 
@@ -33,6 +34,7 @@ import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
 import { createAuthMiddleware, createAuthRouter, createAuthService } from './lib/auth.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
+import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
 import {
   createFacebookInsightsClient,
@@ -50,12 +52,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const repositories = getRepositories();
+const cloudRuntime = repositories.backend === 'firestore'
+  && getMediaStorage().backend === 'r2';
 
-await initStorage();
+if (!cloudRuntime) await initStorage();
 await runSchemaMigrations({ repositories });
 await ensureDefaultClientFromEnv();
 await migrateScheduleIntoTargets({ repositories });
-await cleanupOrphanUploads({ mode: 'automatic' });
+if (!cloudRuntime) await cleanupOrphanUploads({ mode: 'automatic' });
 
 let facebookPublisher;
 let publishingPlatforms;
@@ -230,7 +234,11 @@ app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 
 app.use('/api', createAuthRouter({ authService }));
-app.use('/api', createSchedulerTriggerRouter({ processDueSchedules: (now) => scheduler.processDueSchedules(now) }));
+app.use('/api', createSchedulerTriggerRouter({
+  processDueSchedules: (now) => scheduler.processDueSchedules(now),
+  exportBackup: () => exportFirestoreBackup({ repositories }),
+  cleanupMedia: () => cleanupOrphanMedia({ repositories }),
+}));
 app.use('/api', createAuthMiddleware(authService));
 
 app.use('/api', createSettingsRouter({
@@ -262,6 +270,9 @@ app.use('/api', createSystemRouter({
     schedulerIntervalMs: scheduler.intervalMs,
     schedulerRunning: scheduler.isRunning(),
   }),
+  createBackupImpl: scheduler.mode === 'cloud'
+    ? (options) => exportFirestoreBackup({ repositories, ...options })
+    : undefined,
 }));
 app.use('/api', createWebhookRouter());
 app.use('/api', createMediaRouter({ repositories }));
@@ -349,7 +360,7 @@ server.on('error', (error) => {
 
 scheduler.startTimer();
 
-const uploadCleanupTimer = scheduler.mode === 'cloud' ? null : setInterval(
+const uploadCleanupTimer = cloudRuntime || scheduler.mode === 'cloud' ? null : setInterval(
   () => cleanupOrphanUploads({ mode: 'automatic' }).catch((error) => {
     appendErrorLog({ scope: 'upload_cleanup', error }).catch(() => {});
     console.error('Upload cleanup failed:', error);
