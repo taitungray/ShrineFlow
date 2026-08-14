@@ -25,6 +25,13 @@ export async function loadSettings() {
     if (graphVersion) graphVersion.value = data.metaGraphVersion || 'v25.0';
     const publicMediaBaseUrl = $('#settingPublicMediaBaseUrl');
     if (publicMediaBaseUrl) publicMediaBaseUrl.value = data.publicMediaBaseUrl || '';
+    const secretStatus = $('#secretStorageStatus');
+    if (secretStatus) {
+      secretStatus.textContent = data.secretStorage?.configured
+        ? `已啟用 ${data.secretStorage.algorithm}；新寫入會自動加密。`
+        : '尚未啟用 at-rest encryption；請在伺服器 .env 設定 SHRINEFLOW_MASTER_KEY。';
+      secretStatus.className = data.secretStorage?.configured ? 'helper text-success' : 'helper text-danger';
+    }
     loadClientFacebookFields();
   } catch (error) {
     showToast('無法載入系統設定：' + error.message, 'error');
