@@ -425,6 +425,65 @@ test('POST /schedule rejects targetId when platform or contentType mismatch', as
   }
 });
 
+test('POST /schedule rejects an unknown targetId without creating a new target', async () => {
+  let publishCalls = 0;
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        publishCalls += 1;
+        return { externalId: 'unexpected' };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-unknown-target',
+      clientId: 'client-1',
+      facebook: 'Unknown target',
+      targets: [{
+        id: 'target-existing',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'draft',
+      }],
+    }]);
+
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'post-unknown-target',
+        targetId: 'target-does-not-exist',
+        accountId: 'facebook:1',
+        channel: 'facebook',
+        contentType: 'post',
+        scheduledAt: '2026-08-15T10:00:00.000Z',
+      }),
+    });
+
+    assert.equal(response.status, 404);
+    assert.equal((await response.json()).code, 'SCHEDULE_TARGET_NOT_FOUND');
+    assert.equal(publishCalls, 0);
+    const posts = await readJson(jsonFiles.posts, []);
+    assert.equal(posts[0].targets.length, 1);
+    assert.equal(posts[0].targets[0].id, 'target-existing');
+    assert.equal(posts[0].targets[0].status, 'draft');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('POST /schedule rejects Facebook story before publisher call', async () => {
   let publishCalls = 0;
   const app = express();
