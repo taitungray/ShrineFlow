@@ -366,6 +366,30 @@ h4 {
   margin-top: 10px;
 }
 
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg-app) 92%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.auth-gate.is-hidden { display: none; }
+.auth-required > :not(#authGate) { display: none !important; }
+.auth-card {
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+.auth-card h1 { margin: 6px 0 10px; color: var(--text-primary); font-family: "Noto Serif TC", serif; font-size: 1.8rem; }
+.auth-card .primary-button { width: 100%; min-height: 44px; }
+
 .platform-copy-actions {
   flex-wrap: wrap;
   margin-top: -4px;

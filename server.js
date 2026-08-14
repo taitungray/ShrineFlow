@@ -29,6 +29,7 @@ import { createWebhookRouter } from './lib/routes/webhooks.js';
 import { cleanupOrphanUploads } from './lib/storage-management.js';
 import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
+import { createAuthMiddleware, createAuthRouter, createAuthService } from './lib/auth.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -185,6 +186,7 @@ async function initServices() {
 
 await initServices();
 const aiService = createAiService();
+const authService = createAuthService();
 
 app.use(express.json({
   limit: '2mb',
@@ -218,6 +220,9 @@ const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
 };
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
+
+app.use('/api', createAuthRouter({ authService }));
+app.use('/api', createAuthMiddleware(authService));
 
 app.use('/api', createSettingsRouter({
   onReloadSettings: async () => {

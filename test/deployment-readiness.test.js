@@ -20,6 +20,8 @@ test('deployment readiness is ready when production prerequisites are present', 
     env: {
       NODE_ENV: 'production',
       SHRINEFLOW_MASTER_KEY: 'a-secure-master-key',
+      SHRINEFLOW_OPERATOR_PASSWORD: 'operator-password',
+      SHRINEFLOW_SESSION_SECRET: 'session-secret',
       PUBLIC_MEDIA_BASE_URL: 'https://media.example.test',
     },
     directoriesOverride: { data: 'data', uploads: 'uploads', backups: 'backups' },

@@ -32,6 +32,7 @@ import { renderInsights, initInsightsListeners } from './modules/insights.js';
 import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
+import { initializeAuth, initAuthListeners } from './modules/auth.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
@@ -177,7 +178,9 @@ async function loadData() {
   }
 }
 
-function initApp() {
+async function initApp() {
+  if (!(await initializeAuth())) return;
+  initAuthListeners();
   initTabs();
   initInsightsListeners();
   initInboxListeners();
