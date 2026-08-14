@@ -279,3 +279,62 @@ test('Inbox provider refresh ignores a stale cursor after a webhook sync hint', 
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });
+
+test('Inbox filters only the provider window and preserves manual pending state', async () => {
+  const originalPath = jsonFiles.inboxMetadata;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-inbox-filter-'));
+  jsonFiles.inboxMetadata = path.join(temporaryDirectory, 'inbox-metadata.json');
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createInboxRouter({
+    getClient: async (clientId) => clientId === 'client-filter' ? {
+      id: 'client-filter',
+      accounts: [{ id: 'threads:filter', name: 'Threads', platformId: 'threads', configured: true }],
+    } : null,
+    listClients: async () => [{
+      id: 'client-filter',
+      accounts: [{ id: 'threads:filter', name: 'Threads', platformId: 'threads', configured: true }],
+    }],
+    resolveThreadsInbox: async () => ({
+      configured: true,
+      async fetchRecent() {
+        return {
+          platformId: 'threads',
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-14T00:00:00.000Z',
+          items: [
+            { id: 'unread-item', text: 'Unread', unread: true },
+            { id: 'read-item', text: 'Read', unread: false },
+          ],
+        };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+  try {
+    const base = `http://127.0.0.1:${server.address().port}/api/inbox?clientId=client-filter`;
+    const unread = await fetch(`${base}&unreadOnly=true`);
+    const unreadPayload = await unread.json();
+    assert.equal(unread.status, 200);
+    assert.equal(unreadPayload.dataScope, 'provider_window');
+    assert.equal(unreadPayload.filter.unreadOnly, true);
+    assert.deepEqual(unreadPayload.sources[0].items.map((item) => item.id), ['unread-item']);
+    assert.equal(unreadPayload.sources[0].providerItemCount, 2);
+    assert.equal(unreadPayload.sources[0].filteredOutCount, 1);
+
+    const pendingUpdate = await fetch(`${base.replace('?clientId=client-filter', '')}/items/read-item`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: 'client-filter', accountId: 'threads:filter', platformId: 'threads', needsReply: true }),
+    });
+    assert.equal(pendingUpdate.status, 200);
+    const pending = await fetch(`${base}&needsReplyOnly=true`);
+    const pendingPayload = await pending.json();
+    assert.deepEqual(pendingPayload.sources[0].items.map((item) => item.id), ['read-item']);
+    assert.equal(pendingPayload.sources[0].items[0].needsReply, true);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    jsonFiles.inboxMetadata = originalPath;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});

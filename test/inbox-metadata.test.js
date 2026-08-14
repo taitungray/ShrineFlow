@@ -25,11 +25,13 @@ test('inbox metadata persists unread, tags, notes and one cursor without message
     const identity = { clientId: 'client-1', accountId: 'threads:1', platformId: 'threads', itemId: 'reply-1' };
     await updateInboxItemMetadata(identity, {
       unread: false,
+      needsReply: true,
       tags: '客戶, 待回覆, 客戶',
       note: '只保存工作備註。',
     });
     const items = await applyInboxItemMetadata([{ id: 'reply-1', text: 'provider body' }], identity);
     assert.equal(items[0].unread, false);
+    assert.equal(items[0].needsReply, true);
     assert.deepEqual(items[0].tags, ['客戶', '待回覆']);
     assert.equal(items[0].note, '只保存工作備註。');
 

@@ -16,6 +16,8 @@ export const state = {
   insights: null,
   insightsScope: 'account',
   inbox: null,
+  inboxFilter: 'all',
+  savedReplies: [],
   notifications: [],
   reviewQueue: [],
   config: null,

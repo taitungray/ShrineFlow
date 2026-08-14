@@ -41,7 +41,7 @@ import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './mod
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -49,6 +49,7 @@ async function refreshLists() {
     api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
+    api(clientQuery('/api/saved-replies')).catch(() => []),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -58,6 +59,7 @@ async function refreshLists() {
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
   state.notifications = notifications;
+  state.savedReplies = savedReplies;
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
   renderPosts();
   renderSchedule();
@@ -112,7 +114,7 @@ async function loadData() {
   applyPermissionUi();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -120,6 +122,7 @@ async function loadData() {
     api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
+    api(clientQuery('/api/saved-replies')).catch(() => []),
   ]);
 
   const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
@@ -136,6 +139,7 @@ async function loadData() {
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
   state.notifications = notifications;
+  state.savedReplies = savedReplies;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();

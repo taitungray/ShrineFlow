@@ -3875,6 +3875,69 @@ button.module-summary-card:focus-visible {
   color: var(--text-primary);
 }
 
+.inbox-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
+}
+
+.inbox-toolbar .radio-pill-group {
+  flex: 1 1 420px;
+}
+
+.inbox-toolbar .helper {
+  flex: 1 1 240px;
+  margin: 0;
+}
+
+.saved-replies-card {
+  margin-bottom: 20px;
+}
+
+.saved-reply-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.saved-reply-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+}
+
+.saved-reply-row > span:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.saved-reply-row small {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-reply-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
 .insights-source-note small {
   color: var(--text-tertiary);
   font-size: 0.68rem;
@@ -4009,6 +4072,12 @@ button.module-summary-card:focus-visible {
 .inbox-reply-field .btn-secondary {
   justify-self: start;
   min-height: 44px;
+}
+
+.inbox-reply-field select {
+  min-height: 40px;
+  padding: 8px 34px 8px 10px;
+  font-size: 0.72rem;
 }
 
 .inbox-platform-card[data-error]::after {
