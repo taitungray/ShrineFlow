@@ -15,7 +15,7 @@ function renderItems(source) {
   const items = Array.isArray(source?.items) ? source.items : [];
   if (!items.length) return '<p class="inbox-empty-source">目前沒有讀到最近對話或回覆。</p>';
   return '<ul class="inbox-item-list">' + items.slice(0, 5).map((item, index) => (
-    '<li class="inbox-item" data-inbox-item-id="' + escapeHtml(item.id) + '"><div><strong>' + escapeHtml(item.author || '平台使用者') + '</strong><span>' + (item.unread ? '未讀 · ' : '') + escapeHtml(item.type === 'reply' ? '回覆' : '對話') + '</span></div>'
+    '<li class="inbox-item" data-inbox-item-id="' + escapeHtml(item.id) + '" data-inbox-recipient-id="' + escapeHtml(item.recipientId || '') + '" data-inbox-reply-to-id="' + escapeHtml(item.replyToId || item.id) + '"><div><strong>' + escapeHtml(item.author || '平台使用者') + '</strong><span>' + (item.unread ? '未讀 · ' : '') + escapeHtml(item.type === 'reply' ? '回覆' : '對話') + '</span></div>'
     + '<p>' + escapeHtml(item.text || '（沒有文字內容）') + '</p>'
     + '<small>' + escapeHtml(item.createdAt ? formatDate(item.createdAt) : '時間未提供') + '</small>'
     + '<div class="inbox-item-fields">'
@@ -24,7 +24,7 @@ function renderItems(source) {
     + '</div><div class="inbox-item-actions">'
     + '<button type="button" class="btn-text" data-inbox-toggle="' + (!item.unread) + '">' + (item.unread ? '標記已讀' : '標記未讀') + '</button>'
     + '<button type="button" class="btn-text" data-inbox-save>儲存標籤／備註</button>'
-    + '</div></li>'
+    + '</div><div class="field inbox-reply-field"><label for="inbox-reply-' + index + '" class="field-label">回覆平台使用者</label><textarea id="inbox-reply-' + index + '" data-inbox-reply rows="2" maxlength="2000" placeholder="送出前請確認平台權限與回覆對象。"></textarea><button type="button" class="btn-secondary" data-inbox-reply-send>送出回覆</button></div></li>'
   )).join('') + '</ul>';
 }
 
@@ -54,6 +54,7 @@ export function initInboxListeners() {
     try {
       const toggle = event.target.closest('[data-inbox-toggle]');
       const save = event.target.closest('[data-inbox-save]');
+      const reply = event.target.closest('[data-inbox-reply-send]');
       if (toggle) {
         toggle.disabled = true;
         await api('/api/inbox/items/' + encodeURIComponent(item.dataset.inboxItemId), {
@@ -71,6 +72,20 @@ export function initInboxListeners() {
             ...bodyBase,
             tags: item.querySelector('[data-inbox-tags]')?.value || '',
             note: item.querySelector('[data-inbox-note]')?.value || '',
+          }),
+        });
+        await refreshInbox();
+      } else if (reply) {
+        const replyText = item.querySelector('[data-inbox-reply]')?.value || '';
+        reply.disabled = true;
+        await api('/api/inbox/items/' + encodeURIComponent(item.dataset.inboxItemId) + '/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...bodyBase,
+            recipientId: item.dataset.inboxRecipientId || '',
+            replyToId: item.dataset.inboxReplyToId || item.dataset.inboxItemId,
+            text: replyText,
           }),
         });
         await refreshInbox();

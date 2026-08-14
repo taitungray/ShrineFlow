@@ -74,6 +74,29 @@ test('Threads Inbox adapter expands recent threads into normalized replies', asy
   assert.match(requests[1], /\/v1\.0\/thread-1\/conversation/);
 });
 
+test('Facebook, Instagram and Threads reply adapters use provider write endpoints', async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url: String(url), options });
+    return response({ message_id: 'message-1', id: 'thread-reply-1' });
+  };
+  const facebook = createFacebookInboxClient({ pageId: 'page-1', pageAccessToken: 'page-token', fetchImpl });
+  const instagram = createInstagramInboxClient({ userId: 'ig-1', accessToken: 'ig-token', fetchImpl });
+  const threads = createThreadsInboxClient({ userId: 'threads-1', accessToken: 'threads-token', fetchImpl });
+
+  await facebook.reply({ recipientId: 'psid-1', text: 'Facebook reply' });
+  await instagram.reply({ recipientId: 'igsid-1', text: 'Instagram reply' });
+  await threads.reply({ replyToId: 'thread-1', text: 'Threads reply' });
+
+  assert.equal(calls[0].options.method, 'POST');
+  assert.equal(JSON.parse(calls[0].options.body).recipient.id, 'psid-1');
+  assert.match(calls[0].url, /\/v25\.0\/page-1\/messages/);
+  assert.equal(JSON.parse(calls[1].options.body).recipient.id, 'igsid-1');
+  assert.match(calls[1].url, /\/v25\.0\/ig-1\/messages/);
+  assert.match(calls[2].url, /\/v1\.0\/me\/threads/);
+  assert.match(calls[2].url, /reply_to_id=thread-1/);
+});
+
 test('Inbox adapter classifies provider errors and route keeps provider-backed boundary', async () => {
   const client = createInstagramInboxClient({
     userId: 'ig-1',
@@ -170,5 +193,45 @@ test('Inbox route overlays local metadata and exposes provider cursor state', as
     await new Promise((resolve) => server.close(resolve));
     jsonFiles.inboxMetadata = originalPath;
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});
+
+test('Inbox reply route returns provider sent state and never stores reply body', async () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createInboxRouter({
+    listClients: async () => [],
+    getClient: async () => ({
+      id: 'client-1',
+      accounts: [{ id: 'threads:1', platformId: 'threads', configured: true }],
+    }),
+    resolveThreadsInbox: async () => ({
+      configured: true,
+      async reply({ replyToId, text }) {
+        assert.equal(replyToId, 'reply-1');
+        assert.equal(text, 'provider reply');
+        return { platformId: 'threads', messageId: 'sent-1', replyToId };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+  try {
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/inbox/items/reply-1/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'client-1',
+        accountId: 'threads:1',
+        platformId: 'threads',
+        text: 'provider reply',
+      }),
+    });
+    const payload = await result.json();
+    assert.equal(result.status, 201);
+    assert.equal(payload.status, 'sent');
+    assert.equal(payload.messageId, 'sent-1');
+    assert.equal(JSON.stringify(payload).includes('provider reply'), false);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
   }
 });

@@ -3434,6 +3434,19 @@ button.module-summary-card:focus-visible {
   margin-top: 8px;
 }
 
+.inbox-reply-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.inbox-reply-field .btn-secondary {
+  justify-self: start;
+  min-height: 44px;
+}
+
 .inbox-platform-card[data-error]::after {
   content: attr(data-error);
   display: block;

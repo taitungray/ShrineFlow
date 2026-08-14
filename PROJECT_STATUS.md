@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.14）
+更新日期：2026-08-14（v0.5.15）
 
 ## 專案定位
 
@@ -70,7 +70,8 @@
 - [x] Insights 按 post target 保存，並補齊各平台貼文 Insights endpoint；可在成效頁切換平台總覽／已發布內容，歷史快照按月份保存且每次查詢最多回傳 100 筆。
 - [x] Inbox 第一階段接入 Facebook／Instagram 對話與 Threads 回覆，只讀 provider-backed 資料，不建立永久訊息倉儲。
 - [x] Inbox 未讀／標籤／備註與同步 cursor：只保存本機 metadata，不保存訊息全文；無註記暫存狀態最多 2,000 筆，cursor 每個平台連線只留一份。
-- [ ] Inbox provider 回覆、webhook 與更完整同步 cursor 流程。
+- [x] Inbox provider 回覆：Facebook／Instagram／Threads 只在 capability 與識別資料具備時送出；不保存回覆全文。
+- [ ] Inbox webhook 簽章驗證、事件接收與同步 cursor 完整流程。
 - [x] 備份／匯出、還原與媒體清理策略：備份不含秘密、還原自動先建立安全備份，未使用素材必須明確確認才刪除；備份最多 30 份／180 天，完整事件歷史按月份保留。
 - [x] 平台 Token 健康檢查與到期提示：保存最後驗證／失敗狀態，設定頁支援選填到期日；未提供日期時不猜測。
 
