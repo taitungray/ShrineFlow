@@ -38,10 +38,11 @@ import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListe
 import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
 import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
 import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
+import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -50,6 +51,7 @@ async function refreshLists() {
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
+    api(clientQuery('/api/crisis-pause')).catch(() => null),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -60,6 +62,7 @@ async function refreshLists() {
   state.inbox = inbox;
   state.notifications = notifications;
   state.savedReplies = savedReplies;
+  state.crisisPause = crisisPause;
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
   renderPosts();
   renderSchedule();
@@ -68,6 +71,7 @@ async function refreshLists() {
   renderPublishingLogs();
   renderPlatformConnections();
   renderQueueSettings();
+  renderCrisisPause();
   renderTemplates();
   renderCampaigns();
   renderInsights();
@@ -114,7 +118,7 @@ async function loadData() {
   applyPermissionUi();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -123,6 +127,7 @@ async function loadData() {
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
+    api(clientQuery('/api/crisis-pause')).catch(() => null),
   ]);
 
   const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
@@ -140,10 +145,12 @@ async function loadData() {
   state.inbox = inbox;
   state.notifications = notifications;
   state.savedReplies = savedReplies;
+  state.crisisPause = crisisPause;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
   await loadQueueSettings();
+  await loadCrisisPause();
   loadClientFacebookFields();
 
   if (config.version && $('#appVersion')) {
@@ -161,6 +168,7 @@ async function loadData() {
   renderPublishingLogs();
   renderPlatformConnections();
   renderQueueSettings();
+  renderCrisisPause();
   renderTemplates();
   renderCampaigns();
   renderInsights();
@@ -301,6 +309,7 @@ async function initApp() {
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
   initQueueSettings();
+  initCrisisPause(refreshLists);
   initPublishingLogs(refreshLists);
   initCampaignManager(loadData);
   initTeamListeners();
@@ -314,6 +323,7 @@ async function initApp() {
     onClientChanged: async () => {
       applyClientAccounts();
       await loadQueueSettings();
+      await loadCrisisPause();
       renderUserIdentity();
       applyPermissionUi();
       await refreshLists();
@@ -325,6 +335,7 @@ async function initApp() {
       renderClientSwitcher();
       applyClientAccounts();
       await loadQueueSettings();
+      await loadCrisisPause();
       renderUserIdentity();
       applyPermissionUi();
       await refreshLists();

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.52" />
+    <link rel="stylesheet" href="/style.css?v=0.5.53" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -604,6 +604,31 @@
               <p>還沒有排程</p>
             </div>
           </div>
+          <fieldset class="form-group-card crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
+            <legend class="group-title">⛔ 危機暫停</legend>
+            <p class="helper">只處理 ShrineFlow 管理的排程；Facebook 遠端排程會逐筆嘗試取消。取消失敗會明確標示，恢復時再處理，不會假裝已安全停止。</p>
+            <form id="crisisPauseForm">
+              <div class="field">
+                <span class="field-label">暫停範圍</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停範圍">
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="client" checked /><span>目前品牌</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="account" /><span>單一帳號</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="platform" /><span>單一平台</span></label>
+                </div>
+              </div>
+              <div class="field is-hidden" id="crisisPauseAccountField"><label for="crisisPauseAccount" class="field-label">平台連線</label><select id="crisisPauseAccount"></select></div>
+              <div class="field is-hidden" id="crisisPausePlatformField">
+                <span class="field-label">平台</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停平台">
+                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="facebook" checked /><span>Facebook</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="instagram" /><span>Instagram</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="threads" /><span>Threads</span></label>
+                </div>
+              </div>
+              <div class="field"><label for="crisisPauseReason" class="field-label">原因 <span class="field-optional">(選填)</span></label><input id="crisisPauseReason" type="text" maxlength="500" placeholder="例：活動內容需要全面檢查" /></div>
+              <div class="action-box"><button class="btn-secondary crisis-pause-button" id="crisisPauseButton" type="submit">立即暫停發布</button><span class="test-result" id="crisisPauseStatus" aria-live="polite"></span></div>
+            </form>
+          </fieldset>
         </section>
 
         <!-- ========== 素材庫 ========== -->
@@ -988,6 +1013,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.52" type="module"></script>
+    <script src="/app.js?v=0.5.53" type="module"></script>
   </body>
 </html>

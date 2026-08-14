@@ -20,6 +20,7 @@ import { createGodsRouter } from './lib/routes/gods.js';
 import { createPostsRouter } from './lib/routes/posts.js';
 import { createGenerateRouter } from './lib/routes/generate.js';
 import { createScheduleRouter } from './lib/routes/schedule.js';
+import { createCrisisPauseRouter } from './lib/routes/crisis-pause.js';
 import { createQueuesRouter } from './lib/routes/queues.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createInsightsRouter } from './lib/routes/insights.js';
@@ -317,6 +318,10 @@ app.use('/api', (request, response, next) => createScheduleRouter({
   resolveFacebookPublisher,
   repositories,
 })(request, response, next));
+app.use('/api', createCrisisPauseRouter({
+  resolveFacebookPublisher,
+  repositories,
+}));
 app.use('/api', (request, response, next) => createPublishRouter({
   facebookPublisher,
   resolveFacebookPublisher,

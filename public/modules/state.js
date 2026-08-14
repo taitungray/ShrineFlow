@@ -18,6 +18,7 @@ export const state = {
   inbox: null,
   inboxFilter: 'all',
   savedReplies: [],
+  crisisPause: null,
   notifications: [],
   reviewQueue: [],
   config: null,
