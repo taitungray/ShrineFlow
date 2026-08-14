@@ -74,6 +74,21 @@ test('claims due Instagram and Threads targets for local publishing', () => {
   }
 });
 
+test('does not claim targets paused by the scheduling safety valve', () => {
+  const now = new Date('2026-08-13T08:00:00.000Z');
+  for (const pauseState of ['paused', 'remote_cancel_failed']) {
+    assert.equal(
+      shouldClaimTargetForLocalPublish({
+        platformId: 'instagram',
+        status: 'scheduled',
+        scheduledAt: '2026-08-13T07:59:00.000Z',
+        pauseState,
+      }, now),
+      false,
+    );
+  }
+});
+
 test('processDueSchedules dispatches Instagram and Threads with web media paths', async () => {
   const calls = [];
   const factories = [];

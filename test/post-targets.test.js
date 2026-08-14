@@ -127,4 +127,35 @@ test('normalizeTarget fills defaults', () => {
   assert.equal(target.status, 'draft');
   assert.equal(target.copyOverride, null);
   assert.equal(target.mediaPaths, null);
+  assert.equal(target.scheduleMode, 'manual');
+  assert.equal(target.scheduleSource, null);
+  assert.equal(target.pauseState, 'none');
+  assert.equal(target.notificationState, 'none');
+  assert.equal(target.delivery.firstComment.status, 'disabled');
+});
+
+test('normalizeTarget preserves queue, pause and child delivery metadata', () => {
+  const target = normalizeTarget({
+    accountId: 'instagram:1',
+    platformId: 'instagram',
+    scheduleMode: 'queue',
+    scheduleSource: 'local',
+    queueId: 'queue-1',
+    queueSlotId: 'slot-1',
+    queueSequence: 3,
+    pauseState: 'paused',
+    pauseReason: 'temporary stop',
+    notificationState: 'notification_required',
+    delivery: {
+      firstComment: { status: 'failed', text: '補充內容', lastError: { code: 'COMMENT_FAILED' } },
+    },
+  });
+  assert.equal(target.scheduleMode, 'queue');
+  assert.equal(target.scheduleSource, 'local');
+  assert.equal(target.queueSequence, 3);
+  assert.equal(target.pauseState, 'paused');
+  assert.equal(target.pauseReason, 'temporary stop');
+  assert.equal(target.notificationState, 'notification_required');
+  assert.equal(target.delivery.firstComment.status, 'failed');
+  assert.equal(target.delivery.firstComment.text, '補充內容');
 });
