@@ -26,6 +26,7 @@ import { createClientsRouter } from './lib/routes/clients.js';
 import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
 import { createWebhookRouter } from './lib/routes/webhooks.js';
+import { cleanupOrphanUploads } from './lib/storage-management.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -45,6 +46,7 @@ const port = Number(process.env.PORT || 3000);
 await initStorage();
 await ensureDefaultClientFromEnv();
 await migrateScheduleIntoTargets();
+await cleanupOrphanUploads({ mode: 'automatic' });
 
 let facebookPublisher;
 let publishingPlatforms;
@@ -297,5 +299,11 @@ server.on('error', (error) => {
 });
 
 scheduler.startTimer();
+
+const uploadCleanupTimer = setInterval(
+  () => cleanupOrphanUploads({ mode: 'automatic' }).catch((error) => console.error('Upload cleanup failed:', error)),
+  24 * 60 * 60 * 1000,
+);
+uploadCleanupTimer.unref?.();
 
 export { app, server, processDueSchedules };

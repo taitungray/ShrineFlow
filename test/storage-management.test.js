@@ -6,8 +6,10 @@ import path from 'node:path';
 
 import {
   BACKUP_RETENTION_POLICY,
+  UPLOAD_RETENTION_POLICY,
   cleanupOrphanUploads,
   createBackup,
+  getUploadQuotaStatus,
   listBackups,
   restoreBackup,
   scanStorageHealth,
@@ -62,6 +64,20 @@ test('backup, restore and orphan media cleanup preserve data without secrets', a
     const cleaned = await cleanupOrphanUploads({ confirm: true });
     assert.deepEqual(cleaned.deleted, ['orphan.jpg']);
     assert.equal((await fs.readdir(directories.uploads)).includes('orphan.jpg'), false);
+
+    await fs.writeFile(path.join(directories.uploads, 'old-orphan.jpg'), 'old');
+    await fs.writeFile(path.join(directories.uploads, 'fresh-orphan.jpg'), 'fresh');
+    const oldTime = new Date(Date.now() - (UPLOAD_RETENTION_POLICY.orphanMaxAgeDays + 1) * 24 * 60 * 60 * 1000);
+    await fs.utimes(path.join(directories.uploads, 'old-orphan.jpg'), oldTime, oldTime);
+    const autoHealth = await scanStorageHealth();
+    assert.equal(autoHealth.uploads.eligibleOrphanFileCount, 1);
+    const autoCleaned = await cleanupOrphanUploads({ mode: 'automatic' });
+    assert.deepEqual(autoCleaned.deleted, ['old-orphan.jpg']);
+    assert.equal((await fs.readdir(directories.uploads)).includes('fresh-orphan.jpg'), true);
+
+    const quota = await getUploadQuotaStatus({ incomingBytes: 1, incomingFiles: 1 });
+    assert.equal(quota.allowed, true);
+    assert.equal(quota.policy.maxFileCount, 1000);
 
     for (let index = 0; index < BACKUP_RETENTION_POLICY.maxCount + 3; index += 1) {
       await createBackup();
