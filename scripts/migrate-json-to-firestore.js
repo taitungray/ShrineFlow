@@ -13,6 +13,7 @@ const collectionNames = [
   'inboxMetadata',
   'notifications',
   'errorLog',
+  'mediaAssets',
   'postVersions',
   'publishAttempts',
   'insightsSnapshots',
