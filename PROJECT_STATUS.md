@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.36）
+更新日期：2026-08-14（v0.5.37）
 
 ## 專案定位
 
@@ -152,7 +152,7 @@ npm test         # 執行全部測試
 | `data/schedule.json` | 排程資料 |
 | `data/templates.json` | 可重用內容模板 |
 | `data/campaigns.json` | Campaign 與內容關聯 |
-## 版本歷程與保留機制（v0.5.36）
+## 版本歷程與保留機制（v0.5.37）
 
 - [x] 內容版本以月份分檔保存於 `data/post-versions/YYYY-MM.json`，不使用資料庫。
 - [x] 保留貼文內容、平台覆寫、素材路徑與平台設定；排除 Token、發布嘗試、外部 ID 與暫態錯誤。
@@ -164,4 +164,5 @@ npm test         # 執行全部測試
 - [x] 封存中的貼文不可直接編輯、排程或發布；若任一平台 target 處於 scheduled、pending、publishing 或 retrying，封存會被阻擋。
 - [x] Content 列表提供封存、還原、複製與 archived 篩選，手機版動作按鈕保留觸控尺寸。
 - [x] readiness 已加入 Meta webhook 設定檢查，會提示 `META_APP_SECRET` 與 `META_WEBHOOK_VERIFY_TOKEN` 缺漏或不完整；`.env.example` 與部署手冊同步補齊單一操作員、公開媒體網址與 webhook 變數。
+- [x] readiness 會檢查最新備份是否在 7 天內；過舊或缺少有效時間的備份只會產生 warning，不會被誤判為最新可用備份。
 - [x] `npm test` 完整測試 161/161 通過。

@@ -20,7 +20,7 @@
 1. 啟動服務後讀取 `/api/system/health`，確認 JSON 檔案都是 `ok`、排程器運作中。
 2. 在設定頁建立一份不含素材的備份，確認備份出現在清單。
 3. 用測試資料演練還原；還原前會自動建立 safety backup。
-4. 檢查 `/api/system/readiness`：`blocked` 不可上線；`warning` 必須逐項確認。
+4. 檢查 `/api/system/readiness`：`blocked` 不可上線；`warning` 必須逐項確認。 最新備份超過 7 天或缺少建立時間時會列為 warning。
 5. 檢查 `data/error-log.json`、發布事件與 Insights 歷史是否依保留策略運作；不可直接把這些 JSON 暴露成靜態檔案。
 
 ## 安全邊界
