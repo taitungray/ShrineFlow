@@ -2,28 +2,15 @@ import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { state, PLATFORM_NAMES } from './state.js';
 import { api } from './api.js';
 import { loadPost } from './drafts.js';
+import { publishingStatusGroup, targetStatusLabel } from './status.js';
 
 const filters = { status: 'all', platform: 'all' };
-const STATUS_LABELS = {
-  pending: '待發布',
-  scheduled: '已排程',
-  publishing: '發布中',
-  retrying: '等待重試',
-  published: '已發布',
-  failed: '發布失敗',
-  skipped_unsupported: '尚未支援',
-  draft: '草稿',
-};
-
 function postTitle(post) {
   return post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
 }
 
 function groupOf(status) {
-  if (['pending', 'scheduled', 'publishing'].includes(status)) return 'queue';
-  if (status === 'published') return 'success';
-  if (['failed', 'retrying'].includes(status)) return 'attention';
-  return 'other';
+  return publishingStatusGroup(status);
 }
 
 function platformLabel(platformId) {
@@ -73,7 +60,7 @@ export function renderPublishingLogs() {
         : '';
     return '<article class="publishing-log-card" data-status="' + escapeHtml(status) + '">'
       + '<span class="publishing-log-icon" data-status="' + escapeHtml(status) + '" aria-hidden="true">' + (status === 'published' ? '✓' : status === 'failed' ? '!' : '↗') + '</span>'
-      + '<div class="publishing-log-main"><div class="publishing-log-heading"><strong>' + escapeHtml(postTitle(post)) + '</strong><em class="content-status" data-status="' + escapeHtml(status) + '">' + escapeHtml(STATUS_LABELS[status] || status) + '</em></div>'
+      + '<div class="publishing-log-main"><div class="publishing-log-heading"><strong>' + escapeHtml(postTitle(post)) + '</strong><em class="content-status" data-status="' + escapeHtml(status) + '">' + escapeHtml(targetStatusLabel(status)) + '</em></div>'
       + '<p>' + escapeHtml(platformLabel(item.channel)) + ' · ' + escapeHtml(item.contentType || '貼文') + ' · ' + escapeHtml(item.scheduledAt ? formatDate(item.scheduledAt) : '未指定時間') + (item.attempts > 1 ? ' · 第 ' + escapeHtml(item.attempts) + ' 次' : '') + '</p>' + error + '</div>'
       + '<div class="publishing-log-actions"><button class="btn-text" type="button" data-publishing-action="view" data-post-id="' + escapeHtml(item.postId || '') + '">查看內容</button>' + action + '</div>'
       + '</article>';

@@ -2,18 +2,12 @@ import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage } from './dom
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { renderGenerated } from './editor.js';
 import { setActiveView } from './tabs.js';
+import { postStatusLabel, targetStatusSummary } from './status.js';
 
 const filters = {
   query: '',
   status: 'all',
   platform: 'all',
-};
-
-const STATUS_LABELS = {
-  draft: '草稿',
-  scheduled: '已排程',
-  published: '已發布',
-  failed: '需處理',
 };
 
 function targetsOf(post) {
@@ -40,7 +34,7 @@ function matchesFilters(post) {
 }
 
 function statusLabel(status) {
-  return STATUS_LABELS[status] || status || '草稿';
+  return postStatusLabel(status);
 }
 
 function platformLabel(platformId) {
@@ -92,6 +86,7 @@ export function renderPosts() {
     const platformChips = targets.slice(0, 3).map((target) => '<span class="platform-chip" data-platform="' + escapeHtml(target.platformId) + '">' + escapeHtml(platformLabel(target.platformId)) + '</span>').join('');
     const morePlatforms = targets.length > 3 ? '<span class="platform-chip platform-chip-more">+' + (targets.length - 3) + '</span>' : '';
     const status = String(post.status || 'draft');
+    const targetSummary = targetStatusSummary(targets, PLATFORM_NAMES);
     const updated = post.updatedAt || post.createdAt;
     const meta = [
       updated ? formatDate(updated) : '',
@@ -99,7 +94,7 @@ export function renderPosts() {
     ].filter(Boolean).join(' · ');
     return '<button class="record-card content-card" id="draft-' + escapeHtml(post.id) + '" data-post-id="' + escapeHtml(post.id) + '" data-status="' + escapeHtml(status) + '" type="button" aria-label="載入內容 ' + escapeHtml(postTitle(post)) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
-      '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '剛剛') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span></span>' +
+      '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '剛剛') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>' +
       '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">' + escapeHtml(statusLabel(status)) + '</em><span class="record-arrow">›</span></span></button>';
   }).join('');
   container.querySelectorAll('[data-post-id]').forEach((button) => button.addEventListener('click', () => loadPost(button.dataset.postId)));

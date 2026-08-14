@@ -2213,8 +2213,15 @@ select:focus, textarea:focus, input:focus {
 }
 
 .content-status[data-status="published"] { color: #2e7d32; background: #e8f5e9; }
+.content-status[data-status="partial_success"] { color: #9a5b00; background: #fff4d6; }
 .content-status[data-status="failed"] { color: #c62828; background: #ffebee; }
 .content-status[data-status="draft"] { color: var(--text-secondary); background: var(--bg-subtle); }
+
+.content-status-detail {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
 
 .content-list-empty .btn-text {
   display: inline-flex;
@@ -2794,6 +2801,11 @@ button.module-summary-card:focus-visible {
 .publishing-log-icon[data-status="published"] {
   color: var(--success);
   background: var(--success-soft);
+}
+
+.publishing-log-icon[data-status="partial_success"] {
+  color: #9a5b00;
+  background: #fff4d6;
 }
 
 .publishing-log-icon[data-status="failed"] {

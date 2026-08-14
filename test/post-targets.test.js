@@ -22,18 +22,32 @@ test('summarizePostStatus: all published', () => {
   ]), 'published');
 });
 
-test('summarizePostStatus: failed when any failed and none pending', () => {
+test('summarizePostStatus: partial success when published and failed targets coexist', () => {
   assert.equal(summarizePostStatus([
     { status: 'published' },
+    { status: 'failed' },
+  ]), 'partial_success');
+});
+
+test('summarizePostStatus: partial success when published and scheduled targets coexist', () => {
+  assert.equal(summarizePostStatus([
+    { status: 'published' },
+    { status: 'scheduled' },
+  ]), 'partial_success');
+});
+
+test('summarizePostStatus: failed when all targets fail without a published target', () => {
+  assert.equal(summarizePostStatus([
+    { status: 'failed' },
     { status: 'failed' },
   ]), 'failed');
 });
 
-test('summarizePostStatus: mixed published+scheduled stays scheduled', () => {
+test('summarizePostStatus: published with unsupported targets remains published', () => {
   assert.equal(summarizePostStatus([
     { status: 'published' },
-    { status: 'scheduled' },
-  ]), 'scheduled');
+    { status: 'skipped_unsupported' },
+  ]), 'published');
 });
 
 test('summarizePostStatus: empty targets is draft', () => {

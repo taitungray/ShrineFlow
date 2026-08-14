@@ -15,6 +15,7 @@ import {
   applyActiveTargetToEditor,
 } from './targets-ui.js';
 import { renderPlatformStrategy } from './platform-strategy.js';
+import { postStatusLabel, targetStatusLabel } from './status.js';
 
 export function updateLivePreview() {
   const contentType = fieldValue($('#targetContentType')) || 'post';
@@ -70,7 +71,11 @@ export function renderPreviewPlatformTabs() {
   }
 
   // 平台名已在上方「目標平台」顯示，此處只補非重複提示
-  const publishHint = selected.canPublish ? '' : '目前僅預覽版型，尚未串接真發';
+  const activeTarget = (state.savedPost?.targets || []).find((target) => target.id === state.activeTargetId || target.accountId === state.activeTargetId);
+  const targetHint = activeTarget
+    ? [selected.name || PLATFORM_NAMES[selected.id] || selected.id, targetStatusLabel(activeTarget.status)].join('：')
+    : '';
+  const publishHint = selected.canPublish ? targetHint : '目前僅預覽版型，尚未串接真發';
   status.textContent = publishHint;
   status.hidden = !publishHint;
   status.dataset.ready = String(Boolean(selected.canPublish));
@@ -106,7 +111,7 @@ function syncEditorActions() {
   }
   const badge = $('#draftState');
   if (badge && hasSavedPost) {
-    badge.textContent = isDirty ? '有未儲存變更' : '已儲存';
+    badge.textContent = isDirty ? '有未儲存變更' : postStatusLabel(state.savedPost.status) === '草稿' ? '已儲存' : postStatusLabel(state.savedPost.status);
     badge.classList.toggle('ready', !isDirty);
   }
 }

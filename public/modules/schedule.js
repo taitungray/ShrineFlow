@@ -2,6 +2,7 @@ import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, se
 import { state, PLATFORM_NAMES } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api } from './api.js';
+import { targetStatusLabel } from './status.js';
 
 let reschedulingItem = null;
 let calendarView = 'month';
@@ -143,20 +144,10 @@ export function renderSchedule() {
     return;
   }
   container.className = 'record-list';
-  const statusLabels = {
-    pending: '待發布',
-    scheduled: '已排程',
-    publishing: '發布中',
-    retrying: '等待重試',
-    published: '已發布',
-    failed: '發布失敗',
-    skipped_unsupported: '尚未支援',
-    draft: '草稿',
-  };
   container.innerHTML = state.schedule.slice(0, 8).map((item) => {
     const post = state.posts.find((record) => record.id === item.postId);
     const name = escapeHtml(post ? (post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容') : '未命名內容');
-    const status = statusLabels[item.status] || item.status;
+    const status = targetStatusLabel(item.status);
     const error = item.lastError?.message ? ' title="' + escapeHtml(item.lastError.message) + '"' : '';
     const attempts = item.attempts > 1 ? ' · 第 ' + item.attempts + ' 次' : '';
     const channel = PLATFORM_NAMES[item.channel] || item.channel || '未指定平台';

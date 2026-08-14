@@ -85,7 +85,8 @@ export function renderInsights() {
   const published = targets.filter((target) => target.status === 'published').length;
   const scheduled = targets.filter((target) => ['scheduled', 'pending', 'publishing'].includes(target.status)).length;
   const failed = targets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
-  summary.innerHTML = [['內容總數', posts.length, '目前品牌'], ['已發布目標', published, '本機發布狀態'], ['排程中', scheduled, '待處理目標'], ['需處理', failed, '失敗或重試']].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
+  const partial = posts.filter((post) => post.status === 'partial_success').length;
+  summary.innerHTML = [['內容總數', posts.length, '目前品牌'], ['已發布目標', published, '本機發布狀態'], ['部分成功', partial, '需確認的平台'], ['排程中', scheduled, '待處理目標'], ['需處理', failed, '失敗或重試']].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
   const insights = state.insights || { status: 'unavailable', sources: [] };
   const scope = insights.scope || state.insightsScope || 'account';
   state.insightsScope = scope;

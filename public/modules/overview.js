@@ -12,12 +12,17 @@ export function renderOverview() {
   const recentList = $('#overviewRecentList');
   const schedules = state.schedule || [];
   const attentionStatuses = new Set(['failed', 'retrying']);
+  const attentionTargetPostIds = new Set(
+    schedules.filter((item) => attentionStatuses.has(item.status)).map((item) => item.postId).filter(Boolean),
+  );
+  const partialPostCount = state.posts.filter((post) => post.status === 'partial_success' && !attentionTargetPostIds.has(post.id)).length;
 
   if (postCount) postCount.textContent = String(state.posts.length);
   if (scheduledCount) scheduledCount.textContent = String(schedules.filter((item) => ['scheduled', 'pending'].includes(item.status)).length);
   if (attentionCount) {
     attentionCount.textContent = String(
       schedules.filter((item) => attentionStatuses.has(item.status)).length
+      + partialPostCount
       + (state.notifications || []).length,
     );
   }
