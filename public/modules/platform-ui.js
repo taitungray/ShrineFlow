@@ -79,15 +79,18 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
   container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>'
     + settings.map((setting) => renderSettingField(setting, 'data-content-setting', 'schedule-setting')).join('');
   const isStory = contentType.id === 'story';
+  const isQueueMode = fieldValue($('#scheduleMode')) === 'queue';
   const timeInput = $('#scheduledAt');
   const timeHint = $('#scheduledAtHint');
   if (timeInput) {
     timeInput.classList.toggle('is-hidden', isStory);
-    timeInput.disabled = isStory;
-    timeInput.required = !isStory;
+    timeInput.disabled = isStory || isQueueMode;
+    timeInput.required = !isStory && !isQueueMode;
   }
   if (timeHint) {
-    timeHint.textContent = isStory
+    timeHint.textContent = isQueueMode && !isStory
+      ? '將依目前平台連線的下一個可用佇列時段排程。'
+      : isStory
       ? '限時動態無法排程，只能立刻發。'
       : (platformId === 'facebook'
         ? '將交 Facebook 粉專排程佇列；關機仍會到點公開。'

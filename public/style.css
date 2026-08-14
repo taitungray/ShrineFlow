@@ -546,7 +546,7 @@ h4 {
   text-decoration: underline;
 }
 
-select, textarea, input[type="text"], input[type="password"], input[type="datetime-local"] {
+select, textarea, input[type="text"], input[type="password"], input[type="time"], input[type="datetime-local"] {
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -3399,6 +3399,51 @@ button.module-summary-card:focus-visible {
   border-top: 1px solid var(--border);
 }
 
+.queue-settings-card {
+  margin-top: 20px;
+  background: var(--bg-card);
+}
+
+.queue-settings-card.is-empty {
+  opacity: 0.82;
+}
+
+.queue-toggle-row .field {
+  justify-content: center;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+
+.queue-slots {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.queue-slot-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.8fr) minmax(110px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.queue-slot-row select,
+.queue-slot-row input[type="time"] {
+  min-height: 44px;
+}
+
+.queue-slot-row .btn-text {
+  min-height: 44px;
+  padding: 8px;
+}
+
+.queue-empty-slots {
+  margin: 0 0 4px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+}
+
 @media (max-width: 1099px) {
   .media-library-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3480,6 +3525,15 @@ button.module-summary-card:focus-visible {
   .platform-connection-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .queue-slot-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .queue-slot-row .btn-text {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
 

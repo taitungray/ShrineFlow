@@ -37,6 +37,7 @@ import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } f
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
 import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
+import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
@@ -64,6 +65,7 @@ async function refreshLists() {
   renderMediaLibrary();
   renderPublishingLogs();
   renderPlatformConnections();
+  renderQueueSettings();
   renderTemplates();
   renderCampaigns();
   renderInsights();
@@ -78,6 +80,8 @@ function applyClientAccounts() {
     name: account.name,
     configured: Boolean(account.configured),
     enabled: account.enabled !== false,
+    capabilities: account.capabilities || {},
+    queue: account.queue || null,
   }));
   if (!state.accounts.length) {
     state.accounts = state.config?.publishingAccounts || [];
@@ -135,6 +139,7 @@ async function loadData() {
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
+  await loadQueueSettings();
   loadClientFacebookFields();
 
   if (config.version && $('#appVersion')) {
@@ -151,6 +156,7 @@ async function loadData() {
   renderMediaLibrary();
   renderPublishingLogs();
   renderPlatformConnections();
+  renderQueueSettings();
   renderTemplates();
   renderCampaigns();
   renderInsights();
@@ -290,6 +296,7 @@ async function initApp() {
 
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
+  initQueueSettings();
   initPublishingLogs(refreshLists);
   initCampaignManager(loadData);
   initTeamListeners();
@@ -302,6 +309,7 @@ async function initApp() {
   initClientListeners({
     onClientChanged: async () => {
       applyClientAccounts();
+      await loadQueueSettings();
       renderUserIdentity();
       applyPermissionUi();
       await refreshLists();
@@ -312,6 +320,7 @@ async function initApp() {
       state.clients = await api('/api/clients');
       renderClientSwitcher();
       applyClientAccounts();
+      await loadQueueSettings();
       renderUserIdentity();
       applyPermissionUi();
       await refreshLists();

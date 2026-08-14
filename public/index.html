@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.50" />
+    <link rel="stylesheet" href="/style.css?v=0.5.51" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -718,6 +718,35 @@
           </div>
           <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
           <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
+          <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard" data-required-permission="schedule.manage">
+            <legend class="group-title">📅 發布佇列</legend>
+            <p class="helper">為每個平台連線設定固定時段；排程時選擇「加入佇列」，系統會自動找下一個未被占用的時段。時間會以 IANA 時區保存。</p>
+            <form id="queueForm">
+              <div class="field-row">
+                <div class="field">
+                  <label for="queueAccount" class="field-label">設定平台連線</label>
+                  <select id="queueAccount"></select>
+                </div>
+                <div class="field">
+                  <label for="queueTimeZone" class="field-label">時區</label>
+                  <input id="queueTimeZone" type="text" placeholder="Asia/Taipei" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field-row queue-toggle-row">
+                <div class="field"><label class="checkbox-field"><input id="queueEnabled" type="checkbox" /><span>啟用發布佇列</span></label></div>
+                <div class="field"><label class="checkbox-field"><input id="queuePaused" type="checkbox" /><span>暫停新內容加入</span></label></div>
+              </div>
+              <div class="field queue-slots-field">
+                <span class="field-label">固定時段</span>
+                <div id="queueSlots" class="queue-slots"></div>
+                <button class="btn-secondary" id="queueAddSlot" type="button">＋ 新增時段</button>
+              </div>
+              <div class="action-box">
+                <button class="primary-button" id="queueSaveButton" type="submit">儲存佇列設定</button>
+                <span class="test-result" id="queueStatus" aria-live="polite"></span>
+              </div>
+            </form>
+          </fieldset>
         </section>
 
         <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
@@ -817,6 +846,13 @@
           <select id="scheduleAccount" aria-label="排程平台連線">
             <option value="facebook:default">Facebook</option>
           </select>
+        </div>
+        <div class="field">
+          <span id="scheduleModeLabel" class="field-label">排程方式</span>
+          <div class="radio-pill-group" id="scheduleMode" role="radiogroup" aria-labelledby="scheduleModeLabel">
+            <label class="radio-pill"><input type="radio" id="scheduleModeManual" name="scheduleMode" value="manual" checked /><span>指定時間</span></label>
+            <label class="radio-pill"><input type="radio" id="scheduleModeQueue" name="scheduleMode" value="queue" /><span>加入佇列</span></label>
+          </div>
         </div>
         <div class="field">
           <span id="scheduleContentTypeLabel" class="field-label">格式</span>
@@ -929,6 +965,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.50" type="module"></script>
+    <script src="/app.js?v=0.5.51" type="module"></script>
   </body>
 </html>

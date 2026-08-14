@@ -136,6 +136,13 @@ function scheduleQueueLabel(channel) {
   return `${PLATFORM_NAMES[channel] || channel} 本機排程`;
 }
 
+function setScheduleMode(mode = 'manual', { locked = false } = {}) {
+  setFieldValue($('#scheduleMode'), mode);
+  const queueRadio = $('#scheduleModeQueue');
+  if (queueRadio) queueRadio.disabled = locked;
+  renderContentSettings(fieldValue($('#scheduleChannel')), fieldValue($('#scheduleContentType')));
+}
+
 export function renderSchedule() {
   const container = $('#scheduleList');
   if (!container) return;
@@ -158,7 +165,8 @@ export function renderSchedule() {
     const platform = state.platforms.find((entry) => entry.id === item.channel);
     const contentType = platform?.contentTypes?.find((entry) => entry.id === item.contentType);
     const format = contentType?.name || item.contentType || '貼文';
-    return '<div class="schedule-card" id="schedule-item-' + escapeHtml(item.targetId) + '"' + error + '><span class="calendar-icon">' + new Date(item.scheduledAt).getDate() + '</span><span><strong>' + name + '</strong><small>' + escapeHtml(channel) + ' ・ ' + escapeHtml(accountName) + ' ・ ' + escapeHtml(format) + ' ・ ' + formatDate(item.scheduledAt) + attempts + '</small></span><em data-status="' + escapeHtml(item.status) + '">' + escapeHtml(status) + '</em>' + scheduleActions(item) + '</div>';
+    const mode = item.scheduleMode === 'queue' ? ' ・ 佇列' : '';
+    return '<div class="schedule-card" id="schedule-item-' + escapeHtml(item.targetId) + '"' + error + '><span class="calendar-icon">' + new Date(item.scheduledAt).getDate() + '</span><span><strong>' + name + '</strong><small>' + escapeHtml(channel) + ' ・ ' + escapeHtml(accountName) + ' ・ ' + escapeHtml(format) + mode + ' ・ ' + formatDate(item.scheduledAt) + attempts + '</small></span><em data-status="' + escapeHtml(item.status) + '">' + escapeHtml(status) + '</em>' + scheduleActions(item) + '</div>';
   }).join('');
 }
 
@@ -247,6 +255,7 @@ export function initScheduleDialog(refreshListsFn) {
       renderContentTypeOptions(item.channel);
       setFieldValue($('#scheduleContentType'), item.contentType);
       renderContentSettings(item.channel, item.contentType);
+      setScheduleMode('manual', { locked: true });
       dialog.showModal();
     });
   }
@@ -264,6 +273,7 @@ export function initScheduleDialog(refreshListsFn) {
       setFieldValue($('#scheduleChannel'), 'facebook');
       renderAccountOptions('facebook');
       renderContentTypeOptions('facebook');
+      setScheduleMode('manual', { locked: false });
       dialog.showModal();
     });
   }
@@ -273,8 +283,13 @@ export function initScheduleDialog(refreshListsFn) {
     channelSel.addEventListener('change', (event) => {
       renderAccountOptions(event.target.value);
       renderContentTypeOptions(event.target.value);
+      renderContentSettings(event.target.value, fieldValue($('#scheduleContentType')));
     });
   }
+
+  document.querySelectorAll('input[name="scheduleMode"]').forEach((input) => input.addEventListener('change', () => {
+    renderContentSettings(fieldValue($('#scheduleChannel')), fieldValue($('#scheduleContentType')));
+  }));
 
   const contentTypeSel = $('#scheduleContentType');
   if (contentTypeSel) {
@@ -286,16 +301,17 @@ export function initScheduleDialog(refreshListsFn) {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       try {
+        const mode = fieldValue($('#scheduleMode')) || 'manual';
         const scheduledLocal = $('#scheduledAt').value;
         const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Taipei';
-        const scheduledAt = new Date(scheduledLocal).toISOString();
+        const scheduledAt = scheduledLocal ? new Date(scheduledLocal).toISOString() : '';
         const isRescheduling = Boolean(reschedulingItem);
         const channel = fieldValue($('#scheduleChannel')) || 'facebook';
         if (isRescheduling) {
           await api('/api/schedule/' + encodeURIComponent(reschedulingItem.targetId), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheduledAt, scheduledLocal, timeZone }),
+            body: JSON.stringify({ scheduledAt, scheduledLocal, timeZone, scheduleMode: 'manual' }),
           });
         } else {
           await api('/api/schedule', {
@@ -304,9 +320,8 @@ export function initScheduleDialog(refreshListsFn) {
             body: JSON.stringify({
               postId: state.savedPost.id,
               targetId: state.activeTargetId || undefined,
-              scheduledAt,
-              scheduledLocal,
-              timeZone,
+              ...(mode === 'manual' ? { scheduledAt, scheduledLocal, timeZone } : {}),
+              scheduleMode: mode,
               channel,
               accountId: $('#scheduleAccount').value || state.activeTargetId,
               contentType: fieldValue($('#scheduleContentType')) || 'post',
@@ -319,6 +334,8 @@ export function initScheduleDialog(refreshListsFn) {
         if (typeof refreshListsFn === 'function') await refreshListsFn();
         const message = isRescheduling
           ? `${scheduleQueueLabel(channel)}時間已更新。`
+          : mode === 'queue'
+            ? '已加入發布佇列，會使用下一個可用時段。'
           : channel === 'facebook'
             ? '已交 Facebook 排程佇列'
             : '已加入本機排程（到期時需服務運行中）';

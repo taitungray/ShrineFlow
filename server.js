@@ -20,6 +20,7 @@ import { createGodsRouter } from './lib/routes/gods.js';
 import { createPostsRouter } from './lib/routes/posts.js';
 import { createGenerateRouter } from './lib/routes/generate.js';
 import { createScheduleRouter } from './lib/routes/schedule.js';
+import { createQueuesRouter } from './lib/routes/queues.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createInsightsRouter } from './lib/routes/insights.js';
 import { createInboxRouter } from './lib/routes/inbox.js';
@@ -280,6 +281,7 @@ app.use('/api', createClientsRouter({
   onAccountsChanged: refreshPublishingState,
   repositories,
 }));
+app.use('/api', createQueuesRouter({ repositories }));
 app.use('/api', createTeamRouter({ repositories, authService, invitationMailer }));
 app.use('/api', createReviewRouter({ repositories }));
 app.use('/api', createTemplatesRouter({ repositories }));

@@ -10,6 +10,7 @@ export const state = {
   autosaveState: 'idle',
   posts: [],
   schedule: [],
+  queueSettings: null,
   templates: [],
   campaigns: [],
   insights: null,
