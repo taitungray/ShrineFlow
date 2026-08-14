@@ -23,6 +23,22 @@ function accountById(accountId) {
   return accounts.find((account) => account.id === accountId) || null;
 }
 
+function motherCopyForTarget(post, target = {}) {
+  if (target.contentType === 'reel') return post.reel || post.facebook || '';
+  return post.facebook || '';
+}
+
+function renderCopyMode(target = null) {
+  const mode = $('#platformCopyMode');
+  const restore = $('#btnRestoreMotherCopy');
+  const overridden = target?.copyOverride != null && String(target.copyOverride).trim() !== '';
+  if (mode) {
+    mode.textContent = overridden ? '已覆寫此平台文案' : '沿用母稿';
+    mode.dataset.mode = overridden ? 'overridden' : 'inherited';
+  }
+  if (restore) restore.disabled = !overridden;
+}
+
 export function syncSelectedTargetAccountIds() {
   state.selectedTargetAccountIds = selectedAccountIds();
   if (!state.selectedTargetAccountIds.includes(state.activeTargetId)) {
@@ -109,6 +125,7 @@ export function applyActiveTargetToEditor() {
       reel.value = post.reel || reel.value || '';
     }
   }
+  renderCopyMode(target);
   if (scheduled) {
     if (target?.scheduledAt) {
       const date = new Date(target.scheduledAt);
@@ -126,6 +143,19 @@ export function applyActiveTargetToEditor() {
     contentSettings: target?.contentSettings || null,
   });
   syncPreviewPlatformFromActiveTarget();
+}
+
+export function getActiveTarget() {
+  const post = state.savedPost || state.generated || {};
+  const targets = Array.isArray(post.targets) ? post.targets : [];
+  return targets.find((item) => item.accountId === state.activeTargetId)
+    || targets.find((item) => item.id === state.activeTargetId)
+    || null;
+}
+
+export function getMotherCopyForActiveTarget(target = getActiveTarget()) {
+  const post = state.savedPost || state.generated || {};
+  return motherCopyForTarget(post, target);
 }
 
 export function buildTargetsPayload(draft) {
@@ -157,6 +187,13 @@ export function buildTargetsPayload(draft) {
     const activeContentSettings = Object.keys(readTargetContentSettings()).length
       ? readTargetContentSettings()
       : (draft.contentSettings || {});
+    const currentCopy = contentType === 'reel' ? ($('#reelText')?.value || '') : ($('#facebookText')?.value || '');
+    const motherCopy = contentType === 'reel'
+      ? (state.savedPost?.reel || state.generated?.reel || draft.reel || '')
+      : (state.savedPost?.facebook || state.generated?.facebook || draft.facebook || '');
+    const copyOverride = currentCopy.trim() && currentCopy.trim() !== String(motherCopy || '').trim()
+      ? currentCopy
+      : null;
     return {
       id: previous?.id,
       accountId,
@@ -164,7 +201,7 @@ export function buildTargetsPayload(draft) {
       contentType,
       contentSettings: isActive ? activeContentSettings : (previous?.contentSettings || {}),
       copyOverride: isActive
-        ? ((contentType === 'reel' ? $('#reelText')?.value : $('#facebookText')?.value) || '')
+        ? copyOverride
         : (previous?.copyOverride ?? null),
       mediaPaths: previous?.mediaPaths ?? null,
       scheduledAt,

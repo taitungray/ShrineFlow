@@ -7,7 +7,13 @@ import {
   readTargetContentSettings,
 } from './platform-ui.js';
 import { api } from './api.js';
-import { buildTargetsPayload, renderTargetAccountControls, applyActiveTargetToEditor } from './targets-ui.js';
+import {
+  buildTargetsPayload,
+  getActiveTarget,
+  getMotherCopyForActiveTarget,
+  renderTargetAccountControls,
+  applyActiveTargetToEditor,
+} from './targets-ui.js';
 import { renderPlatformStrategy } from './platform-strategy.js';
 
 export function updateLivePreview() {
@@ -207,6 +213,67 @@ export function initEditorListeners(refreshListsFn) {
   if (reelText) reelText.addEventListener('input', updateLivePreview);
   const tagsText = $('#hashtagsText');
   if (tagsText) tagsText.addEventListener('input', updateLivePreview);
+
+  const rewriteButton = $('#btnRewritePlatform');
+  if (rewriteButton) {
+    rewriteButton.addEventListener('click', async () => {
+      const target = getActiveTarget();
+      const account = (currentClient()?.accounts || state.accounts || []).find((item) => item.id === state.activeTargetId);
+      const contentType = fieldValue($('#targetContentType')) || target?.contentType || 'post';
+      const input = contentType === 'reel' ? $('#reelText') : $('#facebookText');
+      const sourceCopy = input?.value?.trim() || getMotherCopyForActiveTarget(target);
+      if (!account?.platformId || !sourceCopy) return setPreviewMessage('請先準備平台與母稿文案。', 'error');
+      rewriteButton.disabled = true;
+      rewriteButton.dataset.busy = 'true';
+      try {
+        const rewritten = await api('/api/rewrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platformId: account.platformId,
+            contentType,
+            sourceCopy,
+            contentTopic: $('#contentTopic')?.value || '',
+            extraNotes: $('#extraNotes')?.value || '',
+          }),
+        });
+        if (input) input.value = rewritten.copy || '';
+        const mode = $('#platformCopyMode');
+        if (mode) {
+          mode.textContent = '已覆寫此平台文案';
+          mode.dataset.mode = 'overridden';
+        }
+        const restoreButton = $('#btnRestoreMotherCopy');
+        if (restoreButton) restoreButton.disabled = false;
+        markEditorDirty();
+        updateLivePreview();
+        setPreviewMessage(`${PLATFORM_NAMES[account.platformId] || account.platformId} 已完成 AI 改寫，儲存後套用。`, 'success');
+      } catch (error) {
+        setPreviewMessage(error.message, 'error');
+      } finally {
+        rewriteButton.disabled = false;
+        rewriteButton.dataset.busy = 'false';
+      }
+    });
+  }
+
+  const restoreButton = $('#btnRestoreMotherCopy');
+  if (restoreButton) {
+    restoreButton.addEventListener('click', () => {
+      const target = getActiveTarget();
+      const contentType = fieldValue($('#targetContentType')) || target?.contentType || 'post';
+      const input = contentType === 'reel' ? $('#reelText') : $('#facebookText');
+      if (input) input.value = getMotherCopyForActiveTarget(target);
+      const mode = $('#platformCopyMode');
+      if (mode) {
+        mode.textContent = '沿用母稿';
+        mode.dataset.mode = 'inherited';
+      }
+      restoreButton.disabled = true;
+      markEditorDirty();
+      updateLivePreview();
+    });
+  }
 
   const composerForm = $('#generateForm');
   composerForm?.addEventListener('input', (event) => {

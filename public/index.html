@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.20" />
+    <link rel="stylesheet" href="/style.css?v=0.5.21" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -35,7 +35,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.20</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.21</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
@@ -217,6 +217,11 @@
             <label for="reelText" class="field-label">短影音文案</label>
             <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
             <p class="helper">影片請確認比例、長度與格式符合目標平台規格。</p>
+          </div>
+          <div class="action-box platform-copy-actions">
+            <span class="helper" id="platformCopyMode" data-mode="inherited">沿用母稿</span>
+            <button class="btn-secondary" id="btnRewritePlatform" type="button" aria-label="AI 改寫此平台文案">✦ AI 改寫此平台</button>
+            <button class="btn-text" id="btnRestoreMotherCopy" type="button" aria-label="還原母稿" disabled>還原母稿</button>
           </div>
           <div class="field">
             <label for="hashtagsText" class="field-label">Hashtag</label>
@@ -773,6 +778,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.20" type="module"></script>
+    <script src="/app.js?v=0.5.21" type="module"></script>
   </body>
 </html>

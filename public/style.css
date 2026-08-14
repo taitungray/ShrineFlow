@@ -366,6 +366,29 @@ h4 {
   margin-top: 10px;
 }
 
+.platform-copy-actions {
+  flex-wrap: wrap;
+  margin-top: -4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+}
+
+.platform-copy-actions .helper {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+.platform-copy-actions .btn-secondary {
+  flex: 0 0 auto;
+}
+
+.platform-copy-actions .btn-text:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
