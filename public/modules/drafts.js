@@ -1,29 +1,124 @@
 import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage } from './dom.js';
-import { state, mediaPathsOf } from './state.js';
+import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { renderGenerated } from './editor.js';
 import { setActiveView } from './tabs.js';
+
+const filters = {
+  query: '',
+  status: 'all',
+  platform: 'all',
+};
+
+const STATUS_LABELS = {
+  draft: '草稿',
+  scheduled: '已排程',
+  published: '已發布',
+  failed: '需處理',
+};
+
+function targetsOf(post) {
+  if (Array.isArray(post.targets) && post.targets.length) return post.targets;
+  return [{ platformId: post.channel || 'facebook', status: post.status || 'draft', scheduledAt: post.scheduledAt || null }];
+}
+
+function postTitle(post) {
+  return post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容';
+}
+
+function postText(post) {
+  return String(post.facebook || post.text || post.reel || '').trim();
+}
+
+function matchesFilters(post) {
+  const targets = targetsOf(post);
+  const statusMatches = filters.status === 'all' || String(post.status || 'draft') === filters.status;
+  const platformMatches = filters.platform === 'all' || targets.some((target) => target.platformId === filters.platform);
+  if (!statusMatches || !platformMatches) return false;
+  if (!filters.query) return true;
+  const haystack = [postTitle(post), postText(post), post.extraNotes, post.postType].join(' ').toLowerCase();
+  return haystack.includes(filters.query.toLowerCase());
+}
+
+function statusLabel(status) {
+  return STATUS_LABELS[status] || status || '草稿';
+}
+
+function platformLabel(platformId) {
+  if (platformId === 'facebook') return 'Facebook';
+  if (platformId === 'instagram') return 'Instagram';
+  if (platformId === 'threads') return 'Threads';
+  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
+}
+
+function renderEmpty(container, isFiltered) {
+  container.className = 'list-empty content-list-empty';
+  container.innerHTML = isFiltered
+    ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的內容。</p><button class="btn-text" type="button" data-clear-content-filters>清除篩選</button></div>'
+    : '<div class="empty-state"><span class="empty-icon">📝</span><p>還沒有內容，從「新增內容」開始。</p><a class="btn-text" href="#/content/new" data-view-target="create" data-route-target="content/new">＋ 新增內容</a></div>';
+  const clearButton = container.querySelector('[data-clear-content-filters]');
+  clearButton?.addEventListener('click', () => {
+    filters.query = '';
+    filters.status = 'all';
+    filters.platform = 'all';
+    const search = $('#contentSearch');
+    if (search) search.value = '';
+    const allStatus = document.querySelector('input[name="contentStatus"][value="all"]');
+    const allPlatform = document.querySelector('input[name="contentPlatform"][value="all"]');
+    if (allStatus) allStatus.checked = true;
+    if (allPlatform) allPlatform.checked = true;
+    renderPosts();
+  });
+}
 
 export function renderPosts() {
   const container = $('#postsList');
   if (!container) return;
-  if (!state.posts.length) {
-    container.className = 'list-empty';
-    container.innerHTML = '<div class="empty-state"><span class="empty-icon">📝</span><p>還沒有草稿，點擊上方「產生文案」開始創作吧！</p></div>';
+  const visiblePosts = state.posts.filter(matchesFilters);
+  if (!visiblePosts.length) {
+    renderEmpty(container, Boolean(state.posts.length));
     return;
   }
-  container.className = 'record-list';
-  container.innerHTML = state.posts.slice(0, 8).map((post) => {
+
+  container.className = 'record-list content-list';
+  container.innerHTML = visiblePosts.slice(0, 40).map((post) => {
     const firstMedia = mediaPathsOf(post)[0];
     const thumbnail = !firstMedia ? '✦' : isVideoPath(firstMedia)
       ? '<video src="' + escapeHtml(firstMedia) + '" muted playsinline preload="metadata"></video>'
       : '<img src="' + escapeHtml(firstMedia) + '" alt="" />';
-    const excerpt = escapeHtml(post.facebook.slice(0, 72)) + (post.facebook.length > 72 ? '…' : '');
-    return '<button class="record-card" id="draft-' + post.id + '" data-post-id="' + post.id + '" type="button" aria-label="載入草稿 ' + escapeHtml(post.godName) + '">' +
+    const text = postText(post);
+    const excerpt = escapeHtml(text.slice(0, 92)) + (text.length > 92 ? '…' : '');
+    const targets = targetsOf(post);
+    const scheduleTarget = targets.find((target) => target.scheduledAt);
+    const platformChips = targets.slice(0, 3).map((target) => '<span class="platform-chip" data-platform="' + escapeHtml(target.platformId) + '">' + escapeHtml(platformLabel(target.platformId)) + '</span>').join('');
+    const morePlatforms = targets.length > 3 ? '<span class="platform-chip platform-chip-more">+' + (targets.length - 3) + '</span>' : '';
+    const status = String(post.status || 'draft');
+    const updated = post.updatedAt || post.createdAt;
+    const meta = [
+      updated ? formatDate(updated) : '',
+      scheduleTarget?.scheduledAt ? '預計 ' + formatDate(scheduleTarget.scheduledAt) : '',
+    ].filter(Boolean).join(' · ');
+    return '<button class="record-card content-card" id="draft-' + escapeHtml(post.id) + '" data-post-id="' + escapeHtml(post.id) + '" data-status="' + escapeHtml(status) + '" type="button" aria-label="載入內容 ' + escapeHtml(postTitle(post)) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
-      '<span class="record-body"><strong>' + escapeHtml(post.godName) + '</strong><small>' + formatDate(post.createdAt) + ' ・ ' + escapeHtml(post.postType) + '</small><span>' + excerpt + '</span></span>' +
-      '<span class="record-arrow">›</span></button>';
+      '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '剛剛') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span></span>' +
+      '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">' + escapeHtml(statusLabel(status)) + '</em><span class="record-arrow">›</span></span></button>';
   }).join('');
   container.querySelectorAll('[data-post-id]').forEach((button) => button.addEventListener('click', () => loadPost(button.dataset.postId)));
+}
+
+export function initContentFilters() {
+  const search = $('#contentSearch');
+  search?.addEventListener('input', () => {
+    filters.query = search.value.trim();
+    renderPosts();
+  });
+  document.querySelectorAll('input[name="contentStatus"]').forEach((input) => input.addEventListener('change', () => {
+    filters.status = input.value;
+    renderPosts();
+  }));
+  document.querySelectorAll('input[name="contentPlatform"]').forEach((input) => input.addEventListener('change', () => {
+    filters.platform = input.value;
+    renderPosts();
+  }));
 }
 
 export async function loadPost(postId) {
@@ -32,7 +127,7 @@ export async function loadPost(postId) {
   state.savedPost = post;
   renderGenerated(post);
   setActiveView('review');
-  setPreviewMessage('已載入草稿，可以繼續修改。');
-  const panel = $('.preview-panel');
+  setPreviewMessage('已載入內容，可以繼續修改。');
+  const panel = $('#reviewPanel');
   if (panel) window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
 }

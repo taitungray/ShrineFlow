@@ -1,7 +1,7 @@
 {
   "labels": {
-    "godName": "神明名稱：",
-    "intro": "神明資料：",
+    "contentTopic": "內容主題或對象：",
+    "context": "品牌／背景資料：",
     "tags": "相關標籤：",
     "postType": "貼文類型：",
     "notes": "補充說明：",

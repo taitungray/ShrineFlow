@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ShrineFlow · AI社群小編</title>
+    <title>ShrineFlow · Social Publishing Workspace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.3.19" />
+    <link rel="stylesheet" href="/style.css?v=0.4.0" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -15,47 +15,109 @@
 
     <header class="app-header-fixed">
       <div class="topbar">
-        <div class="brand-group">
-          <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.3.19</em></span>
-          <h1>AI社群小編</h1>
+        <div class="topbar-leading">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="開啟導覽選單" aria-controls="appSidebar" aria-expanded="false">☰</button>
+          <div class="page-heading">
+            <p class="section-tag" id="pageSectionTag">OVERVIEW</p>
+            <h1 id="currentPageTitle">總覽</h1>
+          </div>
         </div>
         <div class="topbar-actions">
           <div class="field client-switcher">
-            <label for="currentClientSelect" class="field-label">目前客戶</label>
-            <select id="currentClientSelect" aria-label="切換客戶"></select>
+            <label for="currentClientSelect" class="field-label">目前品牌</label>
+            <select id="currentClientSelect" aria-label="切換品牌"></select>
           </div>
           <div class="status-pill" id="apiStatus">檢查連線中…</div>
         </div>
       </div>
-
-      <div class="nav-wrapper">
-        <nav class="view-tabs" role="tablist" aria-label="工作區分頁">
-          <button class="view-tab active" type="button" id="viewTabCreate" role="tab" aria-selected="true" aria-controls="generateForm" aria-label="產生文案" data-view-target="create"><span class="view-tab-icon" aria-hidden="true">✦</span><span class="view-tab-label">產生文案</span><span class="view-tab-label-short" aria-hidden="true">產生</span></button>
-          <button class="view-tab" type="button" id="viewTabReview" role="tab" aria-selected="false" aria-controls="reviewPanel" aria-label="編輯預覽" data-view-target="review"><span class="view-tab-icon" aria-hidden="true">✏️</span><span class="view-tab-label">編輯預覽</span><span class="view-tab-label-short" aria-hidden="true">預覽</span></button>
-          <button class="view-tab" type="button" id="viewTabDrafts" role="tab" aria-selected="false" aria-controls="draftsPanel" aria-label="草稿" data-view-target="drafts"><span class="view-tab-icon" aria-hidden="true">📁</span><span class="view-tab-label">草稿</span><span class="view-tab-label-short" aria-hidden="true">草稿</span></button>
-          <button class="view-tab" type="button" id="viewTabSchedule" role="tab" aria-selected="false" aria-controls="schedulePanel" aria-label="排程" data-view-target="schedule"><span class="view-tab-icon" aria-hidden="true">📅</span><span class="view-tab-label">排程</span><span class="view-tab-label-short" aria-hidden="true">排程</span></button>
-          <button class="view-tab" type="button" id="viewTabSettings" role="tab" aria-selected="false" aria-controls="settingsForm" aria-label="設定" data-view-target="settings"><span class="view-tab-icon" aria-hidden="true">⚙️</span><span class="view-tab-label">設定</span><span class="view-tab-label-short" aria-hidden="true">設定</span></button>
-        </nav>
-      </div>
     </header>
+
+    <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
+      <div class="sidebar-brand">
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.4.0</em></span>
+        <p>Social publishing workspace</p>
+      </div>
+      <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
+      <nav class="app-nav" aria-label="工作區導覽">
+        <p class="nav-group-label">工作區</p>
+        <a class="app-nav-item active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span aria-hidden="true">⌂</span>總覽</a>
+        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span>內容</a>
+        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span>日曆</a>
+        <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span aria-hidden="true">▧</span>素材庫</a>
+        <p class="nav-group-label nav-group-label-spaced">管理</p>
+        <a class="app-nav-item" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
+        <a class="app-nav-item" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
+        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
+        <a class="app-nav-item" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
+      </div>
+    </aside>
+    <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
 
     <main class="shell">
 
       <section class="workspace-grid">
 
-        <!-- ========== 產生文案 ========== -->
-        <form class="panel" id="generateForm" data-view-panel="create">
+        <!-- ========== 總覽 ========== -->
+        <section class="panel overview-panel" id="overviewPanel" data-view-panel="overview">
+          <div class="panel-heading overview-heading">
+            <div>
+              <p class="section-tag">WORKSPACE</p>
+              <h2>內容工作台</h2>
+              <p class="panel-lede">集中查看內容進度、排程與平台發布狀態。</p>
+            </div>
+            <button class="primary-button" type="button" data-view-target="create" data-route-target="content/new" aria-label="新增內容">＋ 新增內容</button>
+          </div>
+          <div class="overview-summary" aria-label="內容摘要">
+            <article class="summary-card"><span class="summary-label">全部內容</span><strong id="overviewPostCount">—</strong><small>目前品牌</small></article>
+            <article class="summary-card"><span class="summary-label">待排程</span><strong id="overviewScheduledCount">—</strong><small>即將發布</small></article>
+            <article class="summary-card"><span class="summary-label">需要處理</span><strong id="overviewAttentionCount">—</strong><small>失敗或未完成</small></article>
+          </div>
+          <div class="overview-grid">
+            <fieldset class="form-group-card quick-actions-card">
+              <legend class="group-title">快速開始</legend>
+              <div class="quick-actions">
+                <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><strong>建立內容</strong><small>從母稿開始編輯</small></button>
+                <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><strong>查看內容</strong><small>管理草稿與已發布</small></button>
+                <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><strong>查看日曆</strong><small>掌握發布節奏</small></button>
+              </div>
+            </fieldset>
+            <fieldset class="form-group-card overview-recent-card">
+              <legend class="group-title">最近更新</legend>
+              <div id="overviewRecentList" class="overview-recent-list"><p class="helper">載入最近內容中…</p></div>
+            </fieldset>
+          </div>
+        </section>
+
+        <!-- ========== Composer ========== -->
+        <section class="panel composer-panel is-hidden" id="composerPanel" data-view-panel="composer" data-composer-mode="edit">
+          <div class="composer-shell-header">
+            <div>
+              <p class="section-tag">COMPOSER</p>
+              <h2>建立與發布內容</h2>
+              <p class="panel-lede">先建立母稿，再檢查每個平台的文案、素材與排程。</p>
+            </div>
+            <div class="composer-mode-switch" role="tablist" aria-label="Composer 顯示模式">
+              <button class="composer-mode-button active" type="button" data-composer-mode="edit" role="tab" aria-selected="true">編輯</button>
+              <button class="composer-mode-button" type="button" data-composer-mode="preview" role="tab" aria-selected="false">預覽</button>
+            </div>
+          </div>
+
+        <!-- ========== 編輯區 ========== -->
+        <form class="composer-editor-pane" id="generateForm">
           <div class="panel-heading">
             <div>
-              <p class="section-tag">CREATE</p>
-              <h2>產生文案</h2>
+              <p class="section-tag">CONTENT EDITOR</p>
+              <h2>內容編輯</h2>
             </div>
           </div>
 
           <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾平台） -->
           <fieldset class="form-group-card">
             <legend class="group-title">🚀 1. 發布格式</legend>
-            <p class="helper">先選貼文／Reel／限時。選完下方會寫出此格式的素材與排程規則。要發到哪些平台，到「編輯預覽」再勾。</p>
+            <p class="helper">先選貼文／短影音／限時。格式規則會同步到平台預覽。</p>
             <div class="field">
               <span id="createContentTypeLabel" class="field-label">格式</span>
               <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
@@ -82,29 +144,28 @@
 
             <div class="field-row">
               <div class="field">
-                <label for="godName" class="field-label-group">
-                  <span class="field-label">神明名稱 <span class="field-required">*</span></span>
+                <label for="contentTopic" class="field-label-group">
+                  <span class="field-label">內容主題或對象 <span class="field-required">*</span></span>
                 </label>
-                <input id="godName" name="godName" type="text" list="godSuggestions" placeholder="例：天上聖母、關聖帝君" autocomplete="off" required />
-                <datalist id="godSuggestions"></datalist>
+                <input id="contentTopic" name="contentTopic" type="text" placeholder="例：新品上市、週末活動、品牌故事" autocomplete="off" required />
               </div>
               <div class="field">
-                <span id="postTypeLabel" class="field-label">貼文類型</span>
+                <span id="postTypeLabel" class="field-label">內容方向</span>
                 <div class="radio-pill-group" role="radiogroup" aria-labelledby="postTypeLabel">
                   <label class="radio-pill">
-                    <input id="postTypeWork" type="radio" name="postType" value="work" checked />
-                    <span>🎨 作品介紹</span>
+                    <input id="postTypeIntro" type="radio" name="postType" value="intro" checked />
+                    <span>🧩 品牌／作品介紹</span>
                   </label>
                   <label class="radio-pill">
-                    <input id="postTypeBirthday" type="radio" name="postType" value="birthday" />
-                    <span>🎂 聖誕祝壽</span>
+                    <input id="postTypeAnnouncement" type="radio" name="postType" value="announcement" />
+                    <span>📣 活動／公告</span>
                   </label>
                 </div>
               </div>
             </div>
 
             <div class="field">
-              <label for="extraNotes" class="field-label-group">
+                <label for="extraNotes" class="field-label-group">
                 <span class="field-label">補充說明 <span class="field-optional">(選填)</span></span>
               </label>
               <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
@@ -114,70 +175,71 @@
               <label for="defaultHashtags" class="field-label-group">
                 <span class="field-label">Hashtag</span>
               </label>
-              <input id="defaultHashtags" name="defaultHashtags" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
+              <input id="defaultHashtags" name="defaultHashtags" type="text" value="#品牌內容 #社群經營 #內容行銷" />
             </div>
           </fieldset>
+
+          <fieldset class="form-group-card composer-target-card">
+            <legend class="group-title">🚀 3. 多平台發布與覆寫</legend>
+            <div class="field">
+              <span id="targetAccountsLabel" class="field-label">發布平台（可多選）</span>
+              <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
+              <p class="helper">先選平台，再在下方切換要檢查的版本。</p>
+            </div>
+            <div class="field" id="activeTargetField">
+              <span id="activeTargetLabel" class="field-label">目前編輯的平台版本</span>
+              <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
+            </div>
+            <div class="field">
+              <span id="targetContentTypeLabel" class="field-label">發布格式</span>
+              <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
+              <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
+            </div>
+            <div class="platform-strategy-card" id="platformStrategyCard" aria-live="polite">
+              <span class="platform-strategy-icon" aria-hidden="true">◎</span>
+              <div><strong>平台內容策略</strong><p id="platformStrategyText">選取平台後顯示文案與素材建議。</p></div>
+            </div>
+            <div class="field" id="targetScheduleField">
+              <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
+              <input id="targetScheduledAt" type="datetime-local" />
+              <p class="helper" id="targetScheduleHint"></p>
+            </div>
+          </fieldset>
+
+          <div class="field" id="platformCopyField">
+            <label for="facebookText" class="field-label" id="accountCopyLabel">此平台文案</label>
+            <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依平台覆寫"></textarea>
+          </div>
+          <div class="field is-hidden" id="reelTextField">
+            <label for="reelText" class="field-label">短影音文案</label>
+            <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
+            <p class="helper">影片請確認比例、長度與格式符合目標平台規格。</p>
+          </div>
+          <div class="field">
+            <label for="hashtagsText" class="field-label">Hashtag</label>
+            <input id="hashtagsText" type="text" value="#品牌內容 #社群經營 #內容行銷" />
+          </div>
+          <div class="action-row composer-actions">
+            <button class="btn-secondary" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
+            <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
+          </div>
+          <p class="form-hint" id="previewMessage"></p>
 
           <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
           <p class="form-hint" id="formMessage"></p>
         </form>
 
-        <!-- ========== 編輯預覽 ========== -->
-        <section class="panel is-hidden" id="reviewPanel" data-view-panel="review">
+        <!-- ========== 預覽區 ========== -->
+        <section class="composer-preview-pane" id="reviewPanel">
           <div class="panel-heading">
             <div>
-              <p class="section-tag">EDIT & PREVIEW</p>
-              <h2>編輯預覽</h2>
+              <p class="section-tag">LIVE PREVIEW</p>
+              <h2>平台預覽</h2>
             </div>
             <span class="badge" id="draftState">尚未產生</span>
           </div>
 
-          <div class="review-layout">
-            <div class="review-editor">
-              <fieldset class="form-group-card">
-                <legend class="group-title">🎯 要發到哪裡</legend>
-                <div class="field">
-                  <span id="targetAccountsLabel" class="field-label">目標平台（可多選）</span>
-                  <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
-                  <p class="helper">勾要發出去的平台。每個客戶在同一平台只有一個連線。</p>
-                </div>
-                <div class="field" id="activeTargetField">
-                  <span id="activeTargetLabel" class="field-label">目前編輯哪個平台</span>
-                  <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
-                </div>
-                <div class="field">
-                  <span id="targetContentTypeLabel" class="field-label">此平台發布格式</span>
-                  <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
-                  <p class="helper">預設跟產文相同，可依平台改。選完下方會寫出此格式規則與必要欄位。</p>
-                  <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
-                </div>
-                <div class="field" id="targetScheduleField">
-                  <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
-                  <input id="targetScheduledAt" type="datetime-local" />
-                  <p class="helper" id="targetScheduleHint"></p>
-                </div>
-              </fieldset>
-              <div class="field" id="platformCopyField">
-                <label for="facebookText" class="field-label" id="accountCopyLabel">此平台文案</label>
-                <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依平台覆寫"></textarea>
-              </div>
-              <div class="field is-hidden" id="reelTextField">
-                <label for="reelText" class="field-label">Reel 短影音文案</label>
-                <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
-                <p class="helper">Reel 影片請維持 9:16、長度適中（約 3–90 秒）、mp4；規格不符時 Meta 可能拒發。</p>
-              </div>
-              <div class="field">
-                <label for="hashtagsText" class="field-label">Hashtag</label>
-                <input id="hashtagsText" type="text" value="#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰" />
-              </div>
-              <div class="action-row">
-                <button class="btn-secondary" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
-                <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
-              </div>
-              <p class="form-hint" id="previewMessage"></p>
-            </div>
-
-            <div class="review-preview">
+          <div class="review-preview">
               <p id="previewPlatformStatus" class="platform-status" aria-live="polite"></p>
               <div class="preview-image-wrap empty" id="previewImageWrap">
                 <div class="preview-empty">
@@ -191,8 +253,9 @@
                 <div id="facebookPreview" class="copy-text">尚未產生文案</div>
                 <p id="hashtagsPreview" class="hashtags"></p>
               </article>
-            </div>
           </div>
+        </section>
+
         </section>
 
         <!-- ========== 設定 ========== -->
@@ -229,11 +292,11 @@
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">👥 客戶管理</legend>
+            <legend class="group-title">🏷️ 品牌管理</legend>
             <div class="field-row">
               <div class="field">
-                <label for="newClientName" class="field-label">新增客戶名稱</label>
-                <input id="newClientName" type="text" placeholder="例：大甲鎮瀾宮" />
+                <label for="newClientName" class="field-label">新增品牌名稱</label>
+                <input id="newClientName" type="text" placeholder="例：品牌／服務名稱" />
               </div>
               <div class="field">
                 <label for="newClientNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
@@ -241,13 +304,13 @@
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnCreateClient" class="btn-secondary" aria-label="新增客戶">＋ 新增客戶</button>
+              <button type="button" id="btnCreateClient" class="btn-secondary" aria-label="新增品牌">＋ 新增品牌</button>
             </div>
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">📘 目前客戶的 Facebook</legend>
-            <p class="helper">金鑰只存在此客戶底下，不會跟其他客戶混用。</p>
+            <legend class="group-title">📘 目前品牌的 Facebook</legend>
+            <p class="helper">連線憑證只存在此品牌底下，不會跟其他品牌混用。</p>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
@@ -272,14 +335,14 @@
             </div>
 
             <div class="action-box">
-              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存客戶 Facebook 連線">💾 儲存此客戶 FB 連線</button>
+              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 FB 連線</button>
               <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">📸 目前客戶的 Instagram</legend>
+            <legend class="group-title">📸 目前品牌的 Instagram</legend>
             <p class="helper">填 Instagram User ID＋Token。有圖／影發布前請確認上方「公開媒體基底網址」可被 Meta 讀取。配額或權限錯誤時請檢查 App 權限與當日發布上限。</p>
             <div class="field">
               <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
@@ -296,14 +359,14 @@
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存客戶 Instagram 連線">💾 儲存此客戶 IG 連線</button>
+              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存品牌 Instagram 連線">💾 儲存此品牌 IG 連線</button>
               <button type="button" id="btnTestInstagram" class="btn-test" aria-label="測試 Instagram 連線">🧪 測試連線</button>
               <span id="testInstagramResult" class="test-result"></span>
             </div>
           </fieldset>
 
           <fieldset class="form-group-card">
-            <legend class="group-title">🧵 目前客戶的 Threads</legend>
+            <legend class="group-title">🧵 目前品牌的 Threads</legend>
             <p class="helper">Threads User ID＋Token。純文字可不設公開媒體網址；有圖／影則必須。文字請勿過長；影片處理較慢，失敗可稍後再試。</p>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
@@ -317,7 +380,7 @@
               </div>
             </div>
             <div class="action-box">
-              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存客戶 Threads 連線">💾 儲存此客戶 Threads 連線</button>
+              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存品牌 Threads 連線">💾 儲存此品牌 Threads 連線</button>
               <button type="button" id="btnTestThreads" class="btn-test" aria-label="測試 Threads 連線">🧪 測試連線</button>
               <span id="testThreadsResult" class="test-result"></span>
             </div>
@@ -331,9 +394,34 @@
           <div class="panel-heading compact">
             <div>
               <p class="section-tag">DRAFTS</p>
-              <h3>草稿</h3>
+              <h2>內容</h2>
             </div>
             <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+          </div>
+          <div class="content-toolbar" aria-label="內容篩選工具">
+            <div class="field content-search-field">
+              <label for="contentSearch" class="field-label">搜尋內容</label>
+              <input id="contentSearch" type="search" placeholder="搜尋標題、文案或備註…" autocomplete="off" />
+            </div>
+            <div class="field content-filter-field">
+              <span id="contentStatusFilterLabel" class="field-label">狀態</span>
+              <div class="radio-pill-group content-filter-pills" id="contentStatusFilter" role="radiogroup" aria-labelledby="contentStatusFilterLabel">
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="draft" /><span>草稿</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="scheduled" /><span>已排程</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="published" /><span>已發布</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
+              </div>
+            </div>
+            <div class="field content-filter-field content-platform-filter-field">
+              <span id="contentPlatformFilterLabel" class="field-label">平台</span>
+              <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
+                <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
+                <label class="radio-pill"><input type="radio" name="contentPlatform" value="facebook" /><span>Facebook</span></label>
+                <label class="radio-pill"><input type="radio" name="contentPlatform" value="instagram" /><span>Instagram</span></label>
+                <label class="radio-pill"><input type="radio" name="contentPlatform" value="threads" /><span>Threads</span></label>
+              </div>
+            </div>
           </div>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
@@ -347,10 +435,25 @@
         <section class="panel is-hidden" id="schedulePanel" data-view-panel="schedule">
           <div class="panel-heading compact">
             <div>
-              <p class="section-tag">SCHEDULE</p>
-              <h3>排程</h3>
+              <p class="section-tag">CALENDAR</p>
+              <h2>日曆</h2>
             </div>
           </div>
+          <div class="calendar-toolbar" aria-label="日曆控制">
+            <div class="calendar-month-nav">
+              <button class="btn-icon" id="calendarPrevious" type="button" aria-label="上一個日期範圍">‹</button>
+              <strong id="calendarMonthLabel">—</strong>
+              <button class="btn-icon" id="calendarNext" type="button" aria-label="下一個日期範圍">›</button>
+              <button class="btn-text" id="calendarToday" type="button">今天</button>
+            </div>
+            <div class="radio-pill-group calendar-view-switch" id="calendarViewSwitch" role="radiogroup" aria-label="日曆檢視">
+              <label class="radio-pill"><input type="radio" name="calendarView" value="month" checked /><span>月</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="week" /><span>週</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="list" /><span>列表</span></label>
+            </div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
+          <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">選取內容可進入編輯</span></div>
           <div id="scheduleList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📅</span>
@@ -358,8 +461,84 @@
             </div>
           </div>
         </section>
+
+        <!-- ========== 素材庫 ========== -->
+        <section class="panel module-panel is-hidden" id="mediaPanel" data-view-panel="media">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">MEDIA</p><h2>素材庫</h2><p class="panel-lede">集中查看已上傳素材、使用內容與平台分布。</p></div>
+            <a class="btn-secondary" href="#/content/new" data-view-target="create" data-route-target="content/new">＋ 新增內容</a>
+          </div>
+          <div class="module-toolbar" aria-label="素材篩選工具">
+            <div class="field module-search-field">
+              <label for="mediaSearch" class="field-label">搜尋素材</label>
+              <input id="mediaSearch" type="search" placeholder="搜尋檔名或使用內容…" autocomplete="off" />
+            </div>
+            <div class="field module-filter-field">
+              <span id="mediaTypeFilterLabel" class="field-label">類型</span>
+              <div class="radio-pill-group module-filter-pills" id="mediaTypeFilter" role="radiogroup" aria-labelledby="mediaTypeFilterLabel">
+                <label class="radio-pill"><input type="radio" name="mediaType" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="image" /><span>圖片</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="video" /><span>影片</span></label>
+              </div>
+            </div>
+          </div>
+          <p class="module-summary" id="mediaSummary" aria-live="polite"></p>
+          <div id="mediaGrid" class="media-library-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel scaffold-panel is-hidden" id="templatesPanel" data-view-panel="templates">
+          <div class="panel-heading"><div><p class="section-tag">TEMPLATES</p><h2>模板</h2><p class="panel-lede">把常用內容結構保存成可重用模板。</p></div></div>
+          <div class="scaffold-message"><span aria-hidden="true">◇</span><h3>模板模組即將接入</h3><p>後續會支援母稿、平台覆寫與品牌內容策略。</p></div>
+        </section>
+        <section class="panel scaffold-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
+          <div class="panel-heading"><div><p class="section-tag">CAMPAIGNS</p><h2>活動</h2><p class="panel-lede">以活動整理內容、平台與發布節奏。</p></div></div>
+          <div class="scaffold-message"><span aria-hidden="true">◈</span><h3>活動模組即將接入</h3><p>先保留路由與頁面位置，避免未來新增功能時再次改動主導覽。</p></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">PUBLISHING LOGS</p><h2>發布紀錄</h2><p class="panel-lede">以平台目標查看排程、發布結果、錯誤與重試。</p></div>
+            <a class="btn-text" href="#/calendar" data-view-target="schedule" data-route-target="calendar">查看日曆 →</a>
+          </div>
+          <div class="module-summary-grid" id="publishingSummary" aria-label="發布摘要"></div>
+          <div class="module-toolbar" aria-label="發布紀錄篩選工具">
+            <div class="field module-filter-field">
+              <span id="publishingStatusFilterLabel" class="field-label">結果</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingStatusFilter" role="radiogroup" aria-labelledby="publishingStatusFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="queue" /><span>進行中</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="success" /><span>成功</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="attention" /><span>需處理</span></label>
+              </div>
+            </div>
+            <div class="field module-filter-field">
+              <span id="publishingPlatformFilterLabel" class="field-label">平台</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingPlatformFilter" role="radiogroup" aria-labelledby="publishingPlatformFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="all" checked /><span>全部平台</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="facebook" /><span>Facebook</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="instagram" /><span>Instagram</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="threads" /><span>Threads</span></label>
+              </div>
+            </div>
+          </div>
+          <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">PLATFORMS</p><h2>平台連線</h2><p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。</p></div>
+            <a class="btn-secondary" href="#/settings" data-view-target="settings" data-route-target="settings">⚙️ 前往設定</a>
+          </div>
+          <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
+          <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
+        </section>
       </section>
     </main>
+
+    <nav class="mobile-bottom-nav" aria-label="手機主要導覽">
+      <a href="#/overview" data-view-target="overview" data-route-target="overview"><span aria-hidden="true">⌂</span><small>總覽</small></a>
+      <a href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><small>內容</small></a>
+      <a class="mobile-nav-create" href="#/content/new" data-view-target="create" data-route-target="content/new" aria-label="新增內容"><span aria-hidden="true">＋</span><small>新增</small></a>
+      <a href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><small>日曆</small></a>
+      <button id="mobileMoreToggle" type="button" aria-label="開啟更多導覽" aria-controls="appSidebar" aria-expanded="false"><span aria-hidden="true">⋯</span><small>更多</small></button>
+    </nav>
 
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
@@ -390,6 +569,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.3.19" type="module"></script>
+    <script src="/app.js?v=0.4.0" type="module"></script>
   </body>
 </html>

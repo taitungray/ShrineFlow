@@ -1,4 +1,4 @@
-import { $, escapeHtml, setFormMessage, showToast, fieldValue } from './modules/dom.js';
+import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js';
 import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js';
 import { api } from './modules/api.js';
 import { initTabs, setActiveView } from './modules/tabs.js';
@@ -20,8 +20,12 @@ import {
   renderGenerated,
   initEditorListeners,
 } from './modules/editor.js';
-import { renderPosts } from './modules/drafts.js';
-import { renderSchedule, initScheduleDialog } from './modules/schedule.js';
+import { renderPosts, initContentFilters } from './modules/drafts.js';
+import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js';
+import { renderOverview } from './modules/overview.js';
+import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
+import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js';
+import { renderPlatformConnections } from './modules/platform-connections.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
@@ -31,6 +35,10 @@ async function refreshLists() {
   state.schedule = await api(clientQuery('/api/schedule'));
   renderPosts();
   renderSchedule();
+  renderOverview();
+  renderMediaLibrary();
+  renderPublishingLogs();
+  renderPlatformConnections();
 }
 
 function applyClientAccounts() {
@@ -59,10 +67,7 @@ function setLoading(isLoading) {
 }
 
 async function loadData() {
-  const [gods, config] = await Promise.all([
-    api('/api/gods'),
-    api('/api/config'),
-  ]);
+  const config = await api('/api/config');
 
   state.config = config;
   state.clients = config.clients || [];
@@ -82,11 +87,6 @@ async function loadData() {
     error: error.message,
   }));
 
-  const godSuggestions = $('#godSuggestions');
-  if (godSuggestions) {
-    godSuggestions.innerHTML = gods.map((god) => '<option value="' + escapeHtml(god.name) + '"></option>').join('');
-  }
-
   state.posts = posts;
   state.schedule = schedule;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
@@ -104,11 +104,12 @@ async function loadData() {
   renderCreatePublishSpec();
   renderPosts();
   renderSchedule();
+  renderOverview();
 
   const status = $('#apiStatus');
   if (status) {
     const client = currentClient();
-    const clientLabel = client ? client.name : '未選客戶';
+    const clientLabel = client ? client.name : '未選品牌';
     const aiOk = Boolean(config.aiConfigured);
     const facebookAccount = (client?.accounts || []).find((account) => account.platformId === 'facebook' && account.configured);
     const fbOk = Boolean(facebookAccount) || Boolean(facebookStatus.connected);
@@ -126,7 +127,7 @@ async function loadData() {
   }
 
   if (config.aiConfigured) {
-    setFormMessage('先選客戶，再產文；編輯預覽可為多個平台各寫各的、各排時間。');
+    setFormMessage('先選品牌，再建立內容；每個平台都能各自覆寫與排程。');
   } else {
     setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
   }
@@ -134,6 +135,9 @@ async function loadData() {
 
 function initApp() {
   initTabs();
+  initContentFilters();
+  initCalendarControls();
+  initMediaLibrary();
 
   const imageInput = $('#imageInput');
   if (imageInput) {
@@ -227,6 +231,7 @@ function initApp() {
 
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
+  initPublishingLogs(refreshLists);
   initTargetListeners({
     onActiveTargetChange: () => {
       renderPreviewPlatformTabs();

@@ -62,7 +62,7 @@ export function renderTargetAccountControls() {
         + (account.configured ? '' : '（未連線）') + '</span>'
         + '</label>';
     }).join('')
-    : '<p class="helper">此客戶尚未設定平台連線，請到設定新增。</p>';
+    : '<p class="helper">此品牌尚未設定平台連線，請到設定新增。</p>';
 
   syncSelectedTargetAccountIds();
   const activeAccounts = accounts.filter((account) => state.selectedTargetAccountIds.includes(account.id));

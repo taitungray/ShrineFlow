@@ -1,21 +1,19 @@
-# AI社群小編：專案狀態與後續規劃
+# ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-13
+更新日期：2026-08-14
 
 ## 專案定位
 
-本專案是本機執行的 AI 社群內容工具：輸入神明名稱、補充說明與可選的圖片／影片，由 Gemini 產生社群文案，編輯後保存草稿並排程發布。目前正式發布串接只有 Facebook 粉專。
+本專案是本機執行、單一操作員使用的 AI 社群內容營運工具：輸入內容主題或對象、補充說明與可選的圖片／影片，由 Gemini 產生平台中立母稿，再分別編輯、預覽、排程與發布到多個平台。不使用資料庫，內容與設定以 JSON／環境設定保存。
 
-## 多客戶／多目標（Phase 1 骨架）
+## 單人操作／多品牌／多平台
 
-- [x] 代操模式：頂欄切換客戶；資料存 `data/clients.json`
-- [x] 一則貼文可掛多個發布目標（文案／時間可異）；排程以 target 為準
-- [x] 編輯預覽一次只編一個帳號目標
-- [x] 非 Facebook 到期標 `skipped_unsupported`；僅 FB 真發布
-- [x] 設計規格：`docs/superpowers/specs/2026-08-13-multi-client-publishing-design.md`
-- [x] 手機優化（v0.3.3／v0.3.4）：頂欄精簡、導覽／pill 依文字縮寬
-- [x] UX（v0.3.5）：產生頁不再選平台／帳號（只留格式）；「要發哪裡」只在編輯預覽勾帳號；預覽版型跟目前帳號走
-- [x] Facebook 發布格式（v0.3.6）：貼文＋Reel（`video_reels`）＋限時動態（`photo_stories`／`video_stories`）皆可真發；編輯預覽可選此帳號格式
+- [x] 單一操作員工作流；保留多品牌切換，資料存 `data/clients.json`
+- [x] 一則內容可掛多個發布平台 target，文案／格式／時間可各自不同
+- [x] 編輯預覽以目前平台 target 為單位，對外用語統一為「多平台」
+- [x] Facebook、Instagram、Threads 的發布 adapter 與 target 狀態已接入；平台能力不足時不宣稱成功
+- [x] Facebook 使用平台原生排程；Instagram／Threads 使用本機到期發布
+- [x] 規劃文件：`docs/superpowers/specs/2026-08-14-general-social-publishing-roadmap.md`、`docs/superpowers/specs/2026-08-14-responsive-web-ui-plan.md`
 
 ## 已完成
 
@@ -26,22 +24,25 @@
 - [x] 支援拖曳上傳、檔案選擇與媒體預覽。
 - [x] 媒體卡片可拖曳或用上下按鈕調整順序。
 - [x] 產文時將媒體順序保存到 `mediaPaths`。
-- [x] 預設 Hashtag 可在產文前修改，預設為 `#神像彩繪 #宮廟藝術 #傳統工藝 #台灣信仰`。
+- [x] 預設 Hashtag 可在產文前修改，預設為 `#品牌內容 #社群經營 #內容行銷`。
 - [x] Facebook 文案與 Reel 文案自動分段。
 - [x] Gemini 503／429 等暫時性錯誤會自動退避重試並切換備援模型。
 
-### 使用介面
+### 使用介面與響應式規劃
 
-- [x] 工作區分頁：產生文案、編輯預覽、草稿、排程。
+- [x] UI-0：桌機 sidebar、平板 drawer、手機 bottom navigation 與 hash route。
+- [x] UI-1：內容列表、搜尋、狀態與平台篩選。
+- [x] UI-2：單頁 Composer、母稿、平台策略提示與即時預覽。
+- [x] UI-3：月／週／列表日曆與手機行程列表。
+- [x] UI-4：素材庫、發布紀錄、平台連線與設定入口。
 - [x] 編輯與即時預覽在同一個畫面，避免反覆切換。
-- [x] 預覽頁可切換 Facebook、Instagram、Threads、LINE VOOM 版型。
-- [x] 產生文案頁可選發布平台、帳號、發布格式與格式設定。
-- [x] 桌機左右布局、窄螢幕上下布局。
-- [x] 前端資源使用 `?v=YYYYMMDD-N` 版號避免快取。
+- [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示。
+- [x] 桌機左右布局、平板單欄、手機單欄與 44px 觸控區域。
+- [x] 前端資源 `?v=`、`/api/config` 與 `package.json` 版號同步。
 
 ### 資料與發布
 
-- [x] 神明資料保存於 `data/gods.json`。
+- [x] 舊有 `data/gods.json` 僅作 legacy 相容；新的內容流程不要求神明資料。
 - [x] 草稿保存於 `data/posts.json`。
 - [x] 排程保存於 `data/schedule.json`。
 - [x] 草稿保存媒體順序、平台、帳號、發布格式與 `contentSettings`。
@@ -58,20 +59,17 @@
 
 ## 尚未完成／後續工作
 
-### 高優先
+### 下一階段
 
-- [ ] 完成 Facebook Reel API 發布。
-- [ ] 完成 Facebook 限時動態 API 發布。
-- [ ] 完成 Instagram 帳號連接與發布 API。
-- [ ] 完成 Threads 帳號連接與發布 API。
-- [ ] 完成 LINE VOOM 帳號連接與發布 API。
-- [ ] 為每個平台建立獨立 publisher adapter，依 `channel + contentType` 發布。
-- [ ] 建立真正的帳號管理介面：新增、重新授權、停用、刪除帳號。
-- [ ] 使用 OAuth 管理平台授權，不再只依賴 `.env` 單一 Facebook 帳號。
+- [ ] Templates：保存母稿結構、語氣、Hashtag、CTA 與平台預設。
+- [ ] Campaigns：將多篇內容整理為活動並查看發布進度。
+- [ ] 發布 attempt 歷史、idempotency 與更完整的錯誤分類／reconciliation。
+- [ ] 備份、匯出、還原與媒體清理策略。
+- [ ] 平台 Token 健康檢查、到期提示與成效回看。
 
 ### 中優先
 
-- [ ] 為不同平台產生真正不同的文案欄位，目前預覽主要沿用 Facebook／Reel 文案。
+- [ ] 為不同平台提供主動式 AI 改寫與「沿用母稿／已覆寫／還原母稿」狀態。
 - [ ] 完成各平台格式設定的實際驗證，例如影片比例、長度、圖片數量與文字長度。
 - [ ] 排程編輯、取消、刪除與手動立即發布。
 - [ ] 排程時區、夏令時間與失敗通知處理。
@@ -125,8 +123,9 @@ npm test         # 執行全部測試
 | --- | --- |
 | `server.js` | Express API、Gemini 產文、草稿、排程與啟動入口 |
 | `public/index.html` | 頁面結構與表單 |
-| `public/app.js` | 前端互動、分頁、上傳、預覽與 API 呼叫 |
-| `public/style.css` | 介面樣式與響應式布局 |
+| `public/app.js` | 前端互動、路由、資料刷新、上傳、預覽與 API 呼叫 |
+| `public/modules/` | Composer、內容、日曆、素材庫、發布紀錄與平台連線模組 |
+| `public/style.css` | App Shell、元件樣式與桌機／平板／手機響應式布局 |
 | `prompts/social.txt` | Gemini 系統提示詞 |
 | `prompts/social-schema.json` | Gemini JSON 輸出格式 |
 | `prompts/generation-context.json` | 產文上下文標籤與 fallback 文字 |
@@ -134,7 +133,7 @@ npm test         # 執行全部測試
 | `lib/platform-accounts.js` | 平台帳號模型 |
 | `lib/facebook.js` | Facebook Graph API publisher |
 | `lib/gemini-retry.js` | Gemini 重試與錯誤處理 |
-| `data/gods.json` | 神明資料 |
+| `data/gods.json` | 舊版神明資料，僅供 legacy 相容 |
 | `data/posts.json` | 草稿與貼文資料 |
 | `data/schedule.json` | 排程資料 |
 

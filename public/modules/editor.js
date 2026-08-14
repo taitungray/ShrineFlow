@@ -8,6 +8,7 @@ import {
 } from './platform-ui.js';
 import { api } from './api.js';
 import { buildTargetsPayload, renderTargetAccountControls, applyActiveTargetToEditor } from './targets-ui.js';
+import { renderPlatformStrategy } from './platform-strategy.js';
 
 export function updateLivePreview() {
   const contentType = fieldValue($('#targetContentType')) || 'post';
@@ -54,6 +55,7 @@ export function renderPreviewPlatformTabs() {
   }
 
   const selected = platforms.find((platform) => platform.id === state.selectedPlatform);
+  renderPlatformStrategy(state.selectedPlatform);
   if (!selected) {
     status.hidden = false;
     status.textContent = '請先勾選要發的平台。';
@@ -101,11 +103,11 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (reelText) reelText.value = generated.reel || '';
   const defaultTags = $('#defaultHashtags');
   if (generated.defaultHashtags !== undefined && defaultTags) defaultTags.value = generated.defaultHashtags;
-  const godName = $('#godName');
-  if (generated.godName && godName) godName.value = generated.godName;
+  const contentTopic = $('#contentTopic');
+  if ((generated.contentTopic || generated.godName) && contentTopic) contentTopic.value = generated.contentTopic || generated.godName;
   const extraNotes = $('#extraNotes');
   if (generated.extraNotes !== undefined && extraNotes) extraNotes.value = generated.extraNotes;
-  const postTypeRadio = document.querySelector('input[name="postType"][value="' + (generated.postType || 'work') + '"]');
+  const postTypeRadio = document.querySelector('input[name="postType"][value="' + (generated.postType || 'intro') + '"]');
   if (postTypeRadio) postTypeRadio.checked = true;
   if (generated.contentType) {
     setFieldValue($('#createContentType'), generated.contentType);
@@ -150,11 +152,13 @@ export function currentDraft() {
     || accounts.find((account) => account.platformId === 'facebook')
     || accounts[0]
     || null;
+  const contentTopic = $('#contentTopic')?.value || '';
   const draft = {
     ...(state.generated || {}),
     clientId: state.currentClientId || '',
-    godName: $('#godName')?.value || '',
-    postType: document.querySelector('input[name="postType"]:checked')?.value || 'work',
+    contentTopic,
+    godName: contentTopic,
+    postType: document.querySelector('input[name="postType"]:checked')?.value || 'intro',
     extraNotes: $('#extraNotes')?.value || '',
     defaultHashtags: $('#defaultHashtags')?.value || '',
     channel: activeAccount?.platformId || 'facebook',

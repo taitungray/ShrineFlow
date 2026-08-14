@@ -149,7 +149,7 @@ export function initSettingsListeners(onSettingsSavedFn) {
         const client = currentClient();
         const account = (client?.accounts || []).find((item) => item.platformId === platformId);
         if (!client || !account?.id) {
-          throw new Error(`請先儲存此客戶的 ${label} 連線。`);
+          throw new Error(`請先儲存此品牌的 ${label} 連線。`);
         }
         const res = await api(
           '/api/clients/' + client.id + '/accounts/' + encodeURIComponent(account.id) + '/test',

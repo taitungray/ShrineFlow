@@ -7,7 +7,7 @@ export function renderClientSwitcher() {
   if (!select) return;
   const clients = state.clients || [];
   if (!clients.length) {
-    select.innerHTML = '<option value="">尚無客戶</option>';
+    select.innerHTML = '<option value="">尚無品牌</option>';
     return;
   }
   if (!state.currentClientId || !clients.some((client) => client.id === state.currentClientId)) {
@@ -54,7 +54,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
   if (createBtn) {
     createBtn.addEventListener('click', async () => {
       const name = $('#newClientName')?.value?.trim();
-      if (!name) return showToast('請輸入客戶名稱', 'error');
+      if (!name) return showToast('請輸入品牌名稱', 'error');
       try {
         const client = await api('/api/clients', {
           method: 'POST',
@@ -70,7 +70,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         loadClientFacebookFields();
         $('#newClientName').value = '';
         if ($('#newClientNotes')) $('#newClientNotes').value = '';
-        showToast('客戶已建立', 'success');
+        showToast('品牌已建立', 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');
@@ -82,7 +82,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
   if (saveFb) {
     saveFb.addEventListener('click', async () => {
       const client = currentClient();
-      if (!client) return showToast('請先選擇客戶', 'error');
+      if (!client) return showToast('請先選擇品牌', 'error');
       try {
         const pageId = $('#settingFacebookPageId')?.value?.trim() || '';
         const updated = await api('/api/clients/' + client.id + '/accounts', {
@@ -99,7 +99,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         });
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
         if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
-        showToast('客戶 Facebook 連線已儲存', 'success');
+        showToast('品牌 Facebook 連線已儲存', 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');
@@ -127,7 +127,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
     if (!saveButton) return;
     saveButton.addEventListener('click', async () => {
       const client = currentClient();
-      if (!client) return showToast('請先選擇客戶', 'error');
+      if (!client) return showToast('請先選擇品牌', 'error');
       try {
         const existing = (client.accounts || []).find((account) => account.platformId === platformId);
         const userId = $('#' + userIdField)?.value?.trim() || '';
@@ -147,7 +147,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
         if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
         loadClientFacebookFields();
-        showToast(`客戶 ${label} 連線已儲存`, 'success');
+        showToast(`品牌 ${label} 連線已儲存`, 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {
         showToast(error.message, 'error');

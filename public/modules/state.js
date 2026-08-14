@@ -16,7 +16,7 @@ export const state = {
   accounts: [],
 };
 
-export const DEFAULT_HASHTAGS = ['#神像彩繪', '#宮廟藝術', '#傳統工藝', '#台灣信仰'];
+export const DEFAULT_HASHTAGS = ['#品牌內容', '#社群經營', '#內容行銷'];
 
 export const PLATFORM_NAMES = {
   facebook: 'Facebook 粉專',
