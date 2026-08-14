@@ -13,6 +13,7 @@
 5. 設定 `SHRINEFLOW_OPERATOR_PASSWORD` 與 `SHRINEFLOW_SESSION_SECRET`，啟用單一操作員登入；session 不寫入資料庫。
 6. 若要發布 Instagram／Threads 媒體，設定可由平台讀取的 `PUBLIC_MEDIA_BASE_URL=https://...`。
 7. 確認 `data/`、`uploads/`、`data/backups/` 可寫入，並確認備份目錄位於可持久化磁碟。
+8. 若使用 Inbox webhook 同步，設定 `META_APP_SECRET` 與 `META_WEBHOOK_VERIFY_TOKEN`；readiness 會檢查兩者是否同時存在。
 
 ## 上線前演練
 

@@ -1,7 +1,7 @@
 # ShrineFlow 未完成項目與補強計畫
 
 > 建立日期：2026-08-14  
-> 依據版本：v0.5.35
+> 依據版本：v0.5.36
 > 目前驗收結果：PASS WITH ISSUES  
 > 適用範圍：單一操作員、無資料庫、JSON 儲存、多品牌、多平台
 
@@ -367,7 +367,7 @@ Target 狀態仍是實際發布真相，Post 狀態只是彙總結果；不能�
 ## 9. 建議下一個實作批次
 
 （歷史快照）當時建議先做 P0 的 `partial_success`，再做 P1 的 Autosave；這些項目目前已完成並通過測試，後續依本文件最後的 Current implementation update 執行。
-## Current implementation update (2026-08-14, v0.5.35)
+## Current implementation update (2026-08-14, v0.5.36)
 
 This section is an additive status update. Earlier assessment notes remain above as historical records.
 
@@ -381,6 +381,7 @@ This section is an additive status update. Earlier assessment notes remain above
 - Post lifecycle actions are implemented without a database: archive, restore, duplicate-as-draft, lifecycle event history capped at 50 events per post, and forced content snapshots for archive/restore transitions.
 - Archived posts are excluded from edit, schedule, publish, and scheduler claim paths; archive is blocked while any platform target is scheduled, pending, publishing, or retrying.
 - Content list UI exposes archive, restore, and duplicate actions with an archived filter and mobile-safe touch targets.
+- Deployment readiness now surfaces incomplete Meta webhook configuration, while `.env.example` and the local deployment runbook document the required operator, media URL, and webhook variables.
 - Verification completed: `npm test` passes 161/161; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
 
 ### Next planned work

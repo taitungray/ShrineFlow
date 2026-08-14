@@ -23,6 +23,8 @@ test('deployment readiness is ready when production prerequisites are present', 
       SHRINEFLOW_OPERATOR_PASSWORD: 'operator-password',
       SHRINEFLOW_SESSION_SECRET: 'session-secret',
       PUBLIC_MEDIA_BASE_URL: 'https://media.example.test',
+      META_APP_SECRET: 'app-secret',
+      META_WEBHOOK_VERIFY_TOKEN: 'verify-token',
     },
     directoriesOverride: { data: 'data', uploads: 'uploads', backups: 'backups' },
     writableCheckImpl: async () => true,
@@ -30,4 +32,5 @@ test('deployment readiness is ready when production prerequisites are present', 
   });
   assert.equal(readiness.status, 'ready');
   assert.equal(readiness.mode, 'single_operator_json');
+  assert.equal(readiness.checks.find((item) => item.id === 'meta_webhook').status, 'pass');
 });
