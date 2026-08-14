@@ -53,3 +53,65 @@ test('platform rewrite route rejects unsupported platforms and empty source copy
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test('generate route supports no-media content generation without creating upload files', async () => {
+  const app = express();
+  app.use('/api', createGenerateRouter({
+    aiService: {
+      configured: true,
+      async generatePostCopy(input) {
+        assert.equal(input.files.length, 0);
+        return { facebook: '無素材母稿', reel: '無素材短影音' };
+      },
+    },
+  }));
+  const server = app.listen(0);
+  try {
+    const form = new FormData();
+    form.set('contentTopic', '新產品');
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+      method: 'POST',
+      body: form,
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.deepEqual(body.mediaPaths, []);
+    assert.equal(body.facebook, '無素材母稿');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('generate route returns clear API errors for missing topic and AI failure', async () => {
+  const app = express();
+  app.use('/api', createGenerateRouter({
+    aiService: {
+      configured: true,
+      async generatePostCopy() {
+        const error = new Error('AI provider unavailable');
+        error.status = 429;
+        throw error;
+      },
+    },
+  }));
+  const server = app.listen(0);
+  try {
+    const missingTopic = new FormData();
+    const missingResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+      method: 'POST',
+      body: missingTopic,
+    });
+    assert.equal(missingResponse.status, 400);
+
+    const failingForm = new FormData();
+    failingForm.set('contentTopic', 'API 錯誤測試');
+    const failingResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+      method: 'POST',
+      body: failingForm,
+    });
+    assert.equal(failingResponse.status, 429);
+    assert.match((await failingResponse.json()).error, /AI provider/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

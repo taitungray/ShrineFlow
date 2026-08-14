@@ -1,0 +1,130 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import express from 'express';
+
+import { createPostsRouter } from '../lib/routes/posts.js';
+import { jsonFiles, readJson, writeJson } from '../lib/store.js';
+
+test('posts router saves and validates multiple platform targets independently', async () => {
+  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients };
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-posts-router-'));
+  jsonFiles.posts = path.join(temporaryDirectory, 'posts.json');
+  jsonFiles.clients = path.join(temporaryDirectory, 'clients.json');
+  await writeJson(jsonFiles.posts, []);
+  await writeJson(jsonFiles.clients, [{ id: 'brand-a', name: 'Brand A', accounts: [] }]);
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createPostsRouter());
+  const server = app.listen(0);
+  const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
+
+  try {
+    const createResponse = await fetch(`${baseUrl}/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'brand-a',
+        contentTopic: '新品上市',
+        facebook: 'Facebook 母稿',
+        reel: 'Reel 母稿',
+        targets: [
+          {
+            id: 'target-facebook',
+            platformId: 'facebook',
+            contentType: 'post',
+            mediaPaths: ['/uploads/facebook.jpg'],
+          },
+          {
+            id: 'target-instagram',
+            platformId: 'instagram',
+            contentType: 'feed',
+            copyOverride: 'Instagram 覆寫',
+            mediaPaths: ['/uploads/instagram.jpg'],
+          },
+          {
+            id: 'target-threads',
+            platformId: 'threads',
+            contentType: 'post',
+            copyOverride: 'Threads 版本',
+          },
+        ],
+      }),
+    });
+    assert.equal(createResponse.status, 201);
+    const created = await createResponse.json();
+    assert.equal(created.clientId, 'brand-a');
+    assert.equal(created.targets.length, 3);
+    assert.equal(created.validation.valid, true);
+    assert.equal(created.targets.find((target) => target.platformId === 'instagram').copyOverride, 'Instagram 覆寫');
+
+    const validateResponse = await fetch(`${baseUrl}/posts/${created.id}/validate`, { method: 'POST' });
+    assert.equal(validateResponse.status, 200);
+    const validation = await validateResponse.json();
+    assert.equal(validation.valid, true);
+    assert.equal(validation.targets.length, 3);
+
+    const patchResponse = await fetch(`${baseUrl}/posts/${created.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targets: created.targets.map((target) => target.platformId === 'threads'
+          ? { ...target, copyOverride: 'Threads 更新版本' }
+          : target),
+      }),
+    });
+    assert.equal(patchResponse.status, 200);
+    const patched = await patchResponse.json();
+    assert.equal(patched.targets.find((target) => target.platformId === 'threads').copyOverride, 'Threads 更新版本');
+
+    const saved = await readJson(jsonFiles.posts, []);
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].targets.length, 3);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    Object.assign(jsonFiles, originalPaths);
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});
+
+test('posts router rejects an oversized multi-platform media selection before persistence', async () => {
+  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients };
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-posts-invalid-'));
+  jsonFiles.posts = path.join(temporaryDirectory, 'posts.json');
+  jsonFiles.clients = path.join(temporaryDirectory, 'clients.json');
+  await writeJson(jsonFiles.posts, []);
+  await writeJson(jsonFiles.clients, [{ id: 'brand-a', name: 'Brand A', accounts: [] }]);
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createPostsRouter());
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'brand-a',
+        contentTopic: '多圖測試',
+        facebook: '母稿',
+        targets: [{
+          id: 'target-instagram',
+          platformId: 'instagram',
+          contentType: 'feed',
+          mediaPaths: Array.from({ length: 11 }, (_item, index) => `/uploads/${index}.jpg`),
+        }],
+      }),
+    });
+    assert.equal(response.status, 400);
+    const body = await response.json();
+    assert.ok(body.validation.errors.some((issue) => issue.code === 'media_count_exceeded'));
+    assert.deepEqual(await readJson(jsonFiles.posts, []), []);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    Object.assign(jsonFiles, originalPaths);
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});
