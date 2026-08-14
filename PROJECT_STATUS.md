@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.18）
+更新日期：2026-08-14（v0.5.19）
 
 ## 專案定位
 
@@ -64,16 +64,16 @@
 
 ### 下一階段
 
-- [x] 手動與排程發布保存完整 attempt 歷史；target 僅保留近期摘要，完整事件依月份分檔，並以 idempotency key 阻止重複發布。
+- [x] 手動與排程發布保存 attempt 歷史；target 僅保留近期摘要，事件依月份分檔，並以 idempotency key 阻止重複發布；歷史最多保留 24 個月，每月檔案最多 10,000 筆，追加時裁切最舊資料並清理過期檔案。
 - [x] 接入 Facebook／Instagram／Threads Insights API，依平台帳號顯示 API 回傳的真實成效；未設定、權限錯誤與無資料狀態不虛構數字。
 - [x] Insights 同步成功時保存完整月份快照；即時同步失敗時可回退到有時間戳的 cached 資料。
-- [x] Insights 按 post target 保存，並補齊各平台貼文 Insights endpoint；可在成效頁切換平台總覽／已發布內容，歷史快照按月份保存且每次查詢最多回傳 100 筆。
+- [x] Insights 按 post target 保存，並補齊各平台貼文 Insights endpoint；可在成效頁切換平台總覽／已發布內容，歷史快照按月份保存且每次查詢最多回傳 100 筆；歷史最多保留 24 個月，每月最多 5,000 筆。
 - [x] Inbox 第一階段接入 Facebook／Instagram 對話與 Threads 回覆，只讀 provider-backed 資料，不建立永久訊息倉儲。
 - [x] Inbox 未讀／標籤／備註與同步 cursor：只保存本機 metadata，不保存訊息全文；無註記暫存狀態最多 2,000 筆，cursor 每個平台連線只留一份。
 - [x] Inbox provider 回覆：Facebook／Instagram／Threads 只在 capability 與識別資料具備時送出；不保存回覆全文。
 - [x] Inbox webhook 驗證邊界：GET verify token、POST HMAC 簽章驗證，事件只回 ACK 不落地。
 - [ ] Inbox webhook 事件同步與 provider cursor 自動推進。
-- [x] 備份／匯出、還原與媒體清理策略：備份不含秘密、還原自動先建立安全備份，未使用素材必須明確確認才刪除；備份最多 30 份／180 天，完整事件歷史按月份保留。
+- [x] 備份／匯出、還原與媒體清理策略：備份不含秘密、還原自動先建立安全備份，未使用素材必須明確確認才刪除；備份最多 30 份／180 天，事件與 Insights 歷史最多 24 個月且單月有上限，避免持久化資料無限膨脹。
 - [x] 平台 Token 健康檢查與到期提示：保存最後驗證／失敗狀態，設定頁支援選填到期日；未提供日期時不猜測。
 
 ### 中優先
