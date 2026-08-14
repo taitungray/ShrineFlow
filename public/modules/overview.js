@@ -15,7 +15,12 @@ export function renderOverview() {
 
   if (postCount) postCount.textContent = String(state.posts.length);
   if (scheduledCount) scheduledCount.textContent = String(schedules.filter((item) => ['scheduled', 'pending'].includes(item.status)).length);
-  if (attentionCount) attentionCount.textContent = String(schedules.filter((item) => attentionStatuses.has(item.status)).length);
+  if (attentionCount) {
+    attentionCount.textContent = String(
+      schedules.filter((item) => attentionStatuses.has(item.status)).length
+      + (state.notifications || []).length,
+    );
+  }
   if (!recentList) return;
 
   const recentPosts = state.posts

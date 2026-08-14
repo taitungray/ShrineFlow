@@ -293,14 +293,16 @@ export function initScheduleDialog(refreshListsFn) {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       try {
-        const scheduledAt = new Date($('#scheduledAt').value).toISOString();
+        const scheduledLocal = $('#scheduledAt').value;
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Taipei';
+        const scheduledAt = new Date(scheduledLocal).toISOString();
         const isRescheduling = Boolean(reschedulingItem);
         const channel = fieldValue($('#scheduleChannel')) || 'facebook';
         if (isRescheduling) {
           await api('/api/schedule/' + encodeURIComponent(reschedulingItem.targetId), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scheduledAt }),
+            body: JSON.stringify({ scheduledAt, scheduledLocal, timeZone }),
           });
         } else {
           await api('/api/schedule', {
@@ -310,6 +312,8 @@ export function initScheduleDialog(refreshListsFn) {
               postId: state.savedPost.id,
               targetId: state.activeTargetId || undefined,
               scheduledAt,
+              scheduledLocal,
+              timeZone,
               channel,
               accountId: $('#scheduleAccount').value || state.activeTargetId,
               contentType: fieldValue($('#scheduleContentType')) || 'post',

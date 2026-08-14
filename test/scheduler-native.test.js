@@ -16,12 +16,14 @@ before(async () => {
     posts: path.join(temporaryDataDirectory, 'posts.json'),
     schedule: path.join(temporaryDataDirectory, 'schedule.json'),
     clients: path.join(temporaryDataDirectory, 'clients.json'),
+    notifications: path.join(temporaryDataDirectory, 'notifications.json'),
   });
   directories.publishAttempts = path.join(temporaryDataDirectory, 'publish-attempts');
   await Promise.all([
     writeJson(jsonFiles.posts, []),
     writeJson(jsonFiles.schedule, []),
     writeJson(jsonFiles.clients, []),
+    writeJson(jsonFiles.notifications, { version: 1, items: [] }),
   ]);
 });
 
@@ -171,4 +173,52 @@ test('processDueSchedules dispatches Instagram and Threads with web media paths'
   ]);
   assert.equal(posts[0].facebookPostId, undefined);
   assert.equal(posts[1].facebookPostId, undefined);
+});
+
+test('processDueSchedules records a bounded failure notification', async () => {
+  await writeJson(jsonFiles.clients, [{
+    id: 'client-1',
+    accounts: [{
+      id: 'threads:1',
+      platformId: 'threads',
+      credentials: { userId: 'threads-user', accessToken: 'threads-token' },
+    }],
+  }]);
+  await writeJson(jsonFiles.posts, [{
+    id: 'post-failed',
+    clientId: 'client-1',
+    facebook: 'Failure notification',
+    targets: [{
+      id: 'target-failed',
+      accountId: 'threads:1',
+      platformId: 'threads',
+      contentType: 'post',
+      status: 'scheduled',
+      scheduledAt: '2026-08-13T07:00:00.000Z',
+    }],
+  }]);
+  await writeJson(jsonFiles.notifications, { version: 1, items: [] });
+
+  const scheduler = createScheduler({
+    facebookPublisher: { configured: false },
+    createThreadsPublisher() {
+      return {
+        configured: true,
+        async publish() {
+          const error = new Error('Threads temporary failure');
+          error.code = 'TEMPORARY';
+          throw error;
+        },
+      };
+    },
+    resolvePublicMediaBaseUrl: () => 'https://media.example.test',
+  });
+  await scheduler.processDueSchedules(new Date('2026-08-13T08:00:00.000Z'));
+
+  const posts = await readJson(jsonFiles.posts, []);
+  assert.equal(posts[0].targets[0].status, 'failed');
+  const notifications = await readJson(jsonFiles.notifications, { items: [] });
+  assert.equal(notifications.items.length, 1);
+  assert.equal(notifications.items[0].targetId, 'target-failed');
+  assert.equal(notifications.items[0].message, 'Threads temporary failure');
 });

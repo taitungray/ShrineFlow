@@ -9,6 +9,8 @@ import {
   assertLocalScheduleWindow,
   rejectLocalScheduleTooSoon,
   rejectScheduleContentType,
+  resolveScheduleTime,
+  resolveZonedDateTime,
 } from '../lib/schedule-policy.js';
 import {
   cancelFacebookTarget,
@@ -61,6 +63,36 @@ test('local schedules require at least a one minute buffer', () => {
     () => assertLocalScheduleWindow('not-a-date', now),
     /格式不正確/,
   );
+});
+
+test('resolves schedule local time with an explicit IANA timezone', () => {
+  const taipei = resolveScheduleTime({
+    scheduledLocal: '2026-08-14T10:00',
+    timeZone: 'Asia/Taipei',
+  });
+  assert.equal(taipei.ok, true);
+  assert.equal(taipei.scheduledAt, '2026-08-14T02:00:00.000Z');
+
+  const legacyIso = resolveScheduleTime({ scheduledAt: '2026-08-14T02:00:00.000Z', timeZone: 'Asia/Taipei' });
+  assert.equal(legacyIso.ok, true);
+  assert.equal(legacyIso.scheduledAt, '2026-08-14T02:00:00.000Z');
+});
+
+test('rejects nonexistent and ambiguous daylight-saving local times', () => {
+  const nonexistent = resolveZonedDateTime('2026-03-08T02:30', 'America/New_York');
+  assert.equal(nonexistent.ok, false);
+  assert.equal(nonexistent.code, 'SCHEDULE_DST_NONEXISTENT');
+
+  const ambiguous = resolveZonedDateTime('2026-11-01T01:30', 'America/New_York');
+  assert.equal(ambiguous.ok, false);
+  assert.equal(ambiguous.code, 'SCHEDULE_DST_AMBIGUOUS');
+
+  const invalidZone = resolveScheduleTime({
+    scheduledLocal: '2026-08-14T10:00',
+    timeZone: 'Not/AZone',
+  });
+  assert.equal(invalidZone.ok, false);
+  assert.equal(invalidZone.code, 'SCHEDULE_TIMEZONE_INVALID');
 });
 
 test('publishes Facebook target immediately with scheduledAt', async () => {
@@ -196,6 +228,82 @@ test('POST /schedule calls Facebook before persisting scheduled target', async (
     const posts = await readJson(jsonFiles.posts, []);
     assert.equal(posts[0].targets[0].status, 'scheduled');
     assert.equal(posts[0].targets[0].externalId, 'graph-1');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('POST /schedule resolves local time and persists the selected timezone', async () => {
+  const calls = [];
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish(_post, options) {
+        calls.push(options.scheduledAt);
+        return { externalId: 'graph-timezone-1' };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-timezone',
+      clientId: 'client-1',
+      facebook: 'Timezone test',
+      targets: [],
+    }]);
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'post-timezone',
+        accountId: 'facebook:1',
+        channel: 'facebook',
+        contentType: 'post',
+        scheduledLocal: '2026-08-14T10:00',
+        timeZone: 'Asia/Taipei',
+      }),
+    });
+    assert.equal(response.status, 201);
+    assert.deepEqual(calls, ['2026-08-14T02:00:00.000Z']);
+    const item = await response.json();
+    assert.equal(item.timeZone, 'Asia/Taipei');
+    const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+    assert.equal(target.scheduledAt, '2026-08-14T02:00:00.000Z');
+    assert.equal(target.timeZone, 'Asia/Taipei');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('POST /schedule rejects a nonexistent daylight-saving local time before persistence', async () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({ configured: true }),
+  }));
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'not-used',
+        scheduledLocal: '2026-03-08T02:30',
+        timeZone: 'America/New_York',
+      }),
+    });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).code, 'SCHEDULE_DST_NONEXISTENT');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

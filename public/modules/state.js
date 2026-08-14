@@ -9,6 +9,7 @@ export const state = {
   insights: null,
   insightsScope: 'account',
   inbox: null,
+  notifications: [],
   config: null,
   clients: [],
   currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',

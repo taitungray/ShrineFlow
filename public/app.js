@@ -37,13 +37,14 @@ import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListe
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
     api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -52,6 +53,7 @@ async function refreshLists() {
   state.insights = insights;
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
+  state.notifications = notifications;
   renderPosts();
   renderSchedule();
   renderOverview();
@@ -100,13 +102,14 @@ async function loadData() {
   renderClientSwitcher();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
     api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
   ]);
 
   const facebookStatus = await api('/api/facebook/status').catch((error) => ({
@@ -122,6 +125,7 @@ async function loadData() {
   state.insights = insights;
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
+  state.notifications = notifications;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
