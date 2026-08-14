@@ -1,6 +1,6 @@
 import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage } from './dom.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
-import { renderGenerated } from './editor.js';
+import { renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
 import { setActiveView } from './tabs.js';
 import { postStatusLabel, targetStatusSummary } from './status.js';
 
@@ -119,10 +119,12 @@ export function initContentFilters() {
 export async function loadPost(postId) {
   const post = state.posts.find((record) => record.id === postId);
   if (!post) return;
-  state.savedPost = post;
-  renderGenerated(post);
+  const restored = restoreRecoverySnapshotForPost(post);
+  if (!restored) {
+    state.savedPost = post;
+    renderGenerated(post);
+  }
   setActiveView('review');
-  setPreviewMessage('已載入內容，可以繼續修改。');
-  const panel = $('#reviewPanel');
-  if (panel) window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
+  setPreviewMessage(restored ? '已從本機復原未儲存修改，請確認後等待自動儲存。' : '已載入貼文。');
+  const panel = $('#reviewPanel');  if (panel) window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
 }

@@ -6,6 +6,7 @@ export async function api(path, options) {
     const error = new Error(data.error || '請求失敗');
     error.status = response.status;
     error.code = data.code;
+    error.data = data;
     throw error;
   }
   return data;

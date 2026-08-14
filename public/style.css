@@ -803,6 +803,16 @@ select:focus, textarea:focus, input:focus {
 .form-hint { min-height: 20px; margin: 8px 0 0; color: var(--text-tertiary); font-size: 0.75rem; }
 .form-hint[data-type="error"] { color: var(--danger); font-weight: 600; }
 .form-hint[data-type="success"] { color: var(--success); font-weight: 600; }
+.autosave-indicator { display: flex; align-items: center; gap: 8px; min-height: 28px; margin-top: 4px; }
+.autosave-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--text-tertiary); opacity: 0.55; }
+.autosave-status { margin: 0; color: var(--text-tertiary); font-size: 0.75rem; }
+.autosave-status[data-state="pending"], .autosave-status[data-state="saving"] { color: var(--brand); }
+.autosave-status[data-state="saved"] { color: var(--success); }
+.autosave-status[data-state="error"], .autosave-status[data-state="conflict"], .autosave-status[data-state="blocked"] { color: var(--danger); font-weight: 600; }
+.autosave-status[data-state="recovery"] { color: var(--warning, #a66a00); font-weight: 600; }
+.autosave-indicator:has(.autosave-status[data-state="saved"]) .autosave-dot { background: var(--success); opacity: 1; }
+.autosave-indicator:has(.autosave-status[data-state="saving"]) .autosave-dot { background: var(--brand); opacity: 1; animation: autosave-pulse 1s ease-in-out infinite; }
+@keyframes autosave-pulse { 50% { transform: scale(1.7); opacity: 0.45; } }
 .helper {
   margin: 0 0 12px;
   color: var(--text-secondary);

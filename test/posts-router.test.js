@@ -57,6 +57,7 @@ test('posts router saves and validates multiple platform targets independently',
     assert.equal(createResponse.status, 201);
     const created = await createResponse.json();
     assert.equal(created.clientId, 'brand-a');
+    assert.equal(created.version, 1);
     assert.equal(created.targets.length, 3);
     assert.equal(created.validation.valid, true);
     assert.equal(created.targets.find((target) => target.platformId === 'instagram').copyOverride, 'Instagram 覆寫');
@@ -79,6 +80,17 @@ test('posts router saves and validates multiple platform targets independently',
     assert.equal(patchResponse.status, 200);
     const patched = await patchResponse.json();
     assert.equal(patched.targets.find((target) => target.platformId === 'threads').copyOverride, 'Threads 更新版本');
+    assert.equal(patched.version, 2);
+
+    const staleResponse = await fetch(`${baseUrl}/posts/${created.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseVersion: 1, extraNotes: 'stale write' }),
+    });
+    assert.equal(staleResponse.status, 409);
+    const staleBody = await staleResponse.json();
+    assert.equal(staleBody.code, 'POST_VERSION_CONFLICT');
+    assert.equal(staleBody.currentVersion, 2);
 
     const saved = await readJson(jsonFiles.posts, []);
     assert.equal(saved.length, 1);

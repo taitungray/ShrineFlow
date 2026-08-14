@@ -189,8 +189,8 @@ export function buildTargetsPayload(draft) {
       : (draft.contentSettings || {});
     const currentCopy = contentType === 'reel' ? ($('#reelText')?.value || '') : ($('#facebookText')?.value || '');
     const motherCopy = contentType === 'reel'
-      ? (state.savedPost?.reel || state.generated?.reel || draft.reel || '')
-      : (state.savedPost?.facebook || state.generated?.facebook || draft.facebook || '');
+      ? (draft.reel || state.savedPost?.reel || state.generated?.reel || '')
+      : (draft.facebook || state.savedPost?.facebook || state.generated?.facebook || '');
     const copyOverride = currentCopy.trim() && currentCopy.trim() !== String(motherCopy || '').trim()
       ? currentCopy
       : null;
