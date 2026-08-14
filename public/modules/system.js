@@ -37,6 +37,19 @@ async function refreshStorageHealth() {
   return health;
 }
 
+async function refreshErrorLog() {
+  const entries = await api('/api/system/error-log?limit=20');
+  const result = $('#errorLogResult');
+  const list = $('#errorLogList');
+  if (result) result.textContent = entries.length ? `最近有 ${entries.length} 筆錯誤／節流記錄。` : '目前沒有錯誤／節流記錄。';
+  if (!list) return;
+  list.innerHTML = entries.length
+    ? '<div class="backup-list-heading"><strong>最近錯誤</strong><span>最多顯示 20 筆</span></div>' + entries.map((entry) => (
+      '<div class="backup-row"><div><strong>' + escapeHtml(entry.scope || 'unknown') + ' · ' + escapeHtml(String(entry.status || '')) + '</strong><small>' + escapeHtml(formatDate(entry.createdAt)) + ' · ' + escapeHtml(entry.message || '') + '</small></div></div>'
+    )).join('')
+    : '';
+}
+
 export function initSystemTools(onRestored) {
   $('#btnCreateBackup')?.addEventListener('click', async () => {
     try {
@@ -56,6 +69,15 @@ export function initSystemTools(onRestored) {
     try {
       await refreshStorageHealth();
       setMessage('儲存狀態已更新。', 'success');
+    } catch (error) {
+      setMessage(error.message, 'danger');
+    }
+  });
+
+  $('#btnRefreshErrorLog')?.addEventListener('click', async () => {
+    try {
+      await refreshErrorLog();
+      setMessage('錯誤記錄已更新。', 'success');
     } catch (error) {
       setMessage(error.message, 'danger');
     }
@@ -105,4 +127,5 @@ export function initSystemTools(onRestored) {
 
   refreshBackups().catch(() => {});
   refreshStorageHealth().catch(() => {});
+  refreshErrorLog().catch(() => {});
 }

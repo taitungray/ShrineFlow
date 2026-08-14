@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "error-1786694912955-a35288",
+      "createdAt": "2026-08-14T08:08:32.955Z",
+      "scope": "scheduler_publish",
+      "method": "",
+      "path": "",
+      "status": null,
+      "platformId": "threads",
+      "code": "TEMPORARY",
+      "message": "Threads temporary failure",
+      "retriable": false,
+      "durationMs": 0
+    }
+  ]
+}

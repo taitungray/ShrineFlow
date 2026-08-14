@@ -17,6 +17,7 @@ before(async () => {
     schedule: path.join(temporaryDataDirectory, 'schedule.json'),
     clients: path.join(temporaryDataDirectory, 'clients.json'),
     notifications: path.join(temporaryDataDirectory, 'notifications.json'),
+    errorLog: path.join(temporaryDataDirectory, 'error-log.json'),
   });
   directories.publishAttempts = path.join(temporaryDataDirectory, 'publish-attempts');
   await Promise.all([
@@ -24,6 +25,7 @@ before(async () => {
     writeJson(jsonFiles.schedule, []),
     writeJson(jsonFiles.clients, []),
     writeJson(jsonFiles.notifications, { version: 1, items: [] }),
+    writeJson(jsonFiles.errorLog, { version: 1, items: [] }),
   ]);
 });
 

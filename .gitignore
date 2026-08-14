@@ -15,6 +15,8 @@ data/backups/*
 data/*.json.bak
 data/*.json.lock
 data/*.json.*.tmp
+data/error-log.json
+!data/error-log.json
 dev-server*.log
 start-last.log
 .superpowers/

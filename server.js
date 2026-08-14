@@ -27,6 +27,7 @@ import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
 import { createWebhookRouter } from './lib/routes/webhooks.js';
 import { cleanupOrphanUploads } from './lib/storage-management.js';
+import { appendErrorLog } from './lib/error-log.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -192,6 +193,21 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true }));
 
+app.use((request, response, next) => {
+  const startedAt = Date.now();
+  response.once('finish', () => {
+    if (response.statusCode < 429 && response.statusCode < 500) return;
+    appendErrorLog({
+      scope: 'http',
+      method: request.method,
+      path: request.path,
+      status: response.statusCode,
+      durationMs: Date.now() - startedAt,
+    }).catch(() => {});
+  });
+  next();
+});
+
 const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
   setHeaders: (response) => {
     response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -250,9 +266,16 @@ app.use('/api', (request, response, next) => createPublishRouter({
   resolveThreadsPublisher,
 })(request, response, next));
 
-app.use((error, _request, response, _next) => {
+app.use((error, request, response, _next) => {
+  appendErrorLog({
+    scope: 'http_exception',
+    error,
+    method: request.method,
+    path: request.path,
+    status: error.status || 500,
+  }).catch(() => {});
   console.error(error);
-  response.status(400).json({ error: error.message || '請求處理失敗。' });
+  response.status(error.status || 400).json({ error: error.message || '請求處理失敗。' });
 });
 
 const processDueSchedules = (now) => scheduler.processDueSchedules(now);
@@ -285,7 +308,10 @@ const server = app.listen(port, '0.0.0.0', () => {
   } else {
     console.log('Global Facebook .env credentials not set; use per-client accounts.');
   }
-  processDueSchedules().catch((error) => console.error('Target scheduler failed:', error));
+  processDueSchedules().catch((error) => {
+    appendErrorLog({ scope: 'scheduler_loop', error, retriable: true }).catch(() => {});
+    console.error('Target scheduler failed:', error);
+  });
 });
 
 server.on('error', (error) => {
@@ -301,7 +327,10 @@ server.on('error', (error) => {
 scheduler.startTimer();
 
 const uploadCleanupTimer = setInterval(
-  () => cleanupOrphanUploads({ mode: 'automatic' }).catch((error) => console.error('Upload cleanup failed:', error)),
+  () => cleanupOrphanUploads({ mode: 'automatic' }).catch((error) => {
+    appendErrorLog({ scope: 'upload_cleanup', error }).catch(() => {});
+    console.error('Upload cleanup failed:', error);
+  }),
   24 * 60 * 60 * 1000,
 );
 uploadCleanupTimer.unref?.();
