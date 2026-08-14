@@ -92,6 +92,27 @@ test('posts router saves and validates multiple platform targets independently',
     assert.equal(staleBody.code, 'POST_VERSION_CONFLICT');
     assert.equal(staleBody.currentVersion, 2);
 
+    const versionsResponse = await fetch(`${baseUrl}/posts/${created.id}/versions`);
+    assert.equal(versionsResponse.status, 200);
+    const versionsBody = await versionsResponse.json();
+    assert.equal(versionsBody.currentVersion, 2);
+    assert.equal(versionsBody.versions.length, 2);
+    assert.equal(versionsBody.versions[0].source, 'manual');
+    assert.equal(versionsBody.versions[1].source, 'created');
+
+    const restoreResponse = await fetch(`${baseUrl}/posts/${created.id}/versions/${versionsBody.versions[1].versionId}/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseVersion: 2 }),
+    });
+    assert.equal(restoreResponse.status, 200);
+    const restored = await restoreResponse.json();
+    assert.equal(restored.version, 3);
+    assert.equal(restored.status, 'draft');
+    assert.equal(restored.targets.length, 3);
+    assert.ok(restored.targets.every((target) => target.status === 'draft'));
+    assert.notEqual(restored.targets[0].id, created.targets[0].id);
+
     const saved = await readJson(jsonFiles.posts, []);
     assert.equal(saved.length, 1);
     assert.equal(saved[0].targets.length, 3);

@@ -1,7 +1,7 @@
 # ShrineFlow 未完成項目與補強計畫
 
 > 建立日期：2026-08-14  
-> 依據版本：v0.5.31  
+> 依據版本：v0.5.34
 > 目前驗收結果：PASS WITH ISSUES  
 > 適用範圍：單一操作員、無資料庫、JSON 儲存、多品牌、多平台
 
@@ -366,5 +366,22 @@ Target 狀態仍是實際發布真相，Post 狀態只是彙總結果；不能�
 
 ## 9. 建議下一個實作批次
 
-下一批先做 P0 的 `partial_success`，再做 P1 的 Autosave。兩者完成並通過測試後，再進入版本歷史與封存／還原／複製；Meta 審查與正式部署則同步準備，但要使用真實環境另行驗收。
+（歷史快照）當時建議先做 P0 的 `partial_success`，再做 P1 的 Autosave；這些項目目前已完成並通過測試，後續依本文件最後的 Current implementation update 執行。
+## Current implementation update (2026-08-14, v0.5.34)
 
+This section is an additive status update. Earlier assessment notes remain above as historical records.
+
+- P0 partial publish status is implemented and covered by the existing publish, calendar, composer, and insights flows.
+- Composer autosave is implemented with an 800ms debounce, one in-flight save chain, optimistic `baseVersion` conflict protection, local recovery snapshots capped at 20 items and seven days, before-leave warning, retry action, and unsaved-content blocking for schedule/publish.
+- Post version history is implemented without a database. Content snapshots are stored in monthly `data/post-versions/YYYY-MM.json` archives and include content, target overrides, media references, and platform settings while excluding credentials, publish attempts, external IDs, and transient errors.
+- Version history is bounded to 20 active versions per post, autosave snapshots are throttled to 30 seconds, and monthly archives are retained for up to 24 months with a per-file record limit. Backup and restore now include the version archive directory.
+- `GET /api/posts/:postId/versions`, `POST /api/posts/:postId/versions`, and `POST /api/posts/:postId/versions/:versionId/restore` are available. Restore creates a new draft version and resets target runtime state so it cannot republish with stale external IDs.
+- Manual save, autosave, schedule, publish, restore, and create events are represented by a source label when a distinct content snapshot is created. Duplicate content does not create unbounded history.
+- The Composer version history panel is responsive: actions wrap on narrow screens and restore controls remain touch-sized.
+- Verification completed: `npm test` passes 160/160; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
+
+### Next planned work
+
+- Add explicit archive/restore/duplicate post actions and lifecycle rules for user-facing post records.
+- Add focused UI smoke coverage for version history restore and autosave recovery at 390px width when the browser harness is available.
+- Continue production readiness work for Meta App Review, HTTPS media hosting, webhook deployment, and backup operations.

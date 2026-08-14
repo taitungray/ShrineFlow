@@ -28,6 +28,7 @@ test('backup, restore and orphan media cleanup preserve data without secrets', a
   directories.uploads = path.join(temporaryData, 'uploads');
   directories.insights = path.join(temporaryData, 'insights');
   directories.publishAttempts = path.join(temporaryData, 'publish-attempts');
+  directories.postVersions = path.join(temporaryData, 'post-versions');
 
   try {
     await Promise.all(Object.values(jsonFiles).map((filePath) => writeJson(filePath, [])));
@@ -37,15 +38,18 @@ test('backup, restore and orphan media cleanup preserve data without secrets', a
       targets: [],
     }]);
     await fs.writeFile(path.join(directories.uploads, 'used.jpg'), 'used');
+    await writeJson(path.join(directories.postVersions, '2026-08.json'), [{ postId: 'post-1', versionId: 'version-1' }]);
     await fs.writeFile(path.join(directories.uploads, 'orphan.jpg'), 'orphan');
 
     const health = await scanStorageHealth();
     assert.equal(health.uploads.fileCount, 2);
     assert.equal(health.uploads.orphanFileCount, 1);
+    assert.equal(health.history.postVersions.recordCount, 1);
 
     const manifest = await createBackup({ includeMedia: true });
     assert.equal(manifest.includesSecrets, false);
     assert.equal(manifest.includesMedia, true);
+    assert.equal(manifest.files.includes('data/postVersions/'), true);
     assert.equal((await listBackups()).length, 1);
 
     await writeJson(jsonFiles.posts, []);
@@ -55,6 +59,7 @@ test('backup, restore and orphan media cleanup preserve data without secrets', a
     assert.equal(restored.restored.id, manifest.id);
     assert.equal(restored.safetyBackup.includesSecrets, false);
     assert.equal((await fs.readFile(jsonFiles.posts, 'utf8')).includes('post-1'), true);
+    assert.equal((await fs.readFile(path.join(directories.postVersions, '2026-08.json'), 'utf8')).includes('version-1'), true);
     assert.equal((await fs.readdir(directories.uploads)).includes('used.jpg'), true);
     assert.equal((await listBackups()).length, 2);
 

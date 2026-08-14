@@ -20,3 +20,5 @@ data/error-log.json
 dev-server*.log
 start-last.log
 .superpowers/
+data/post-versions/*.json
+data/post-versions/*.json.bak

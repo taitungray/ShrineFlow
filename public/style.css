@@ -812,6 +812,16 @@ select:focus, textarea:focus, input:focus {
 .autosave-status[data-state="recovery"] { color: var(--warning, #a66a00); font-weight: 600; }
 .autosave-indicator:has(.autosave-status[data-state="saved"]) .autosave-dot { background: var(--success); opacity: 1; }
 .autosave-indicator:has(.autosave-status[data-state="saving"]) .autosave-dot { background: var(--brand); opacity: 1; animation: autosave-pulse 1s ease-in-out infinite; }
+.version-history { margin-top: 18px; padding: 16px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--bg-subtle); }
+.version-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.version-history-heading h3 { margin: 0; font-size: 1rem; }
+.version-history-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+.version-history-list { display: grid; gap: 8px; margin-top: 12px; }
+.version-history-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--bg-card); }
+.version-history-item strong, .version-history-item small { display: block; }
+.version-history-item small { margin-top: 3px; color: var(--text-tertiary); font-size: 0.72rem; }
+.version-history-item .btn-text { min-height: 40px; }
+.version-history-empty { margin: 0; color: var(--text-tertiary); font-size: 0.78rem; }
 @keyframes autosave-pulse { 50% { transform: scale(1.7); opacity: 0.45; } }
 .helper {
   margin: 0 0 12px;
@@ -1419,6 +1429,21 @@ select:focus, textarea:focus, input:focus {
     width: auto;
     min-width: min(100%, 220px);
     min-height: 48px;
+  }
+
+  .version-history-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .version-history-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .version-history-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .platform-tabs {

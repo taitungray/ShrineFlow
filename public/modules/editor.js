@@ -1,4 +1,4 @@
-import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
+import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient } from './state.js';
 import {
   renderCreatePublishSpec,
@@ -16,7 +16,6 @@ import {
 } from './targets-ui.js';
 import { renderPlatformStrategy } from './platform-strategy.js';
 import { postStatusLabel, targetStatusLabel } from './status.js';
-
 const AUTOSAVE_DELAY_MS = 800;
 const RECOVERY_SNAPSHOT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const RECOVERY_SNAPSHOT_LIMIT = 20;
@@ -171,7 +170,7 @@ async function saveDraft({ mode = 'manual', intent = state.autosaveIntent } = {}
   }
 
   const postBeforeSave = state.savedPost;
-  const payload = { ...draft };
+  const payload = { ...draft, versionSource: mode };
   if (postBeforeSave) payload.baseVersion = Number(postBeforeSave.version || 1);
   const saveKey = postBeforeSave?.id || 'new';
   state.autosaveInFlight = true;
@@ -245,6 +244,97 @@ function scheduleAutosave(delay = AUTOSAVE_DELAY_MS) {
     saveDraft({ mode: 'autosave', intent }).catch(() => {});
   }, delay);
 }
+const VERSION_SOURCE_LABELS = {
+  created: '建立貼文',
+  manual: '手動儲存',
+  autosave: '自動儲存',
+  schedule: '排程前',
+  publish: '發布前',
+  restore: '還原版本',
+};
+
+function renderVersionHistory(versions = []) {
+  const list = $('#versionHistoryList');
+  if (!list) return;
+  if (!versions.length) {
+    list.innerHTML = '<p class="version-history-empty">尚未建立版本歷史。</p>';
+    return;
+  }
+  list.innerHTML = versions.map((version) => {
+    const summary = version.summary || {};
+    const platforms = Array.isArray(summary.platforms) && summary.platforms.length
+      ? summary.platforms.join('、')
+      : '尚未選擇平台';
+    const source = VERSION_SOURCE_LABELS[version.source] || version.source || '內容變更';
+    const archived = version.archived === true;
+    return '<article class="version-history-item">'
+      + '<div><strong>v' + escapeHtml(version.version || '?') + ' · ' + escapeHtml(source) + '</strong>'
+      + '<small>' + escapeHtml(formatDate(version.createdAt)) + ' · ' + escapeHtml(platforms)
+      + ' · ' + escapeHtml(String(summary.mediaCount || 0)) + ' 個素材</small></div>'
+      + '<button class="btn-text" type="button" data-restore-version="' + escapeHtml(version.versionId) + '"'
+      + (archived ? ' disabled' : '') + '>' + (archived ? '已封存' : '還原') + '</button>'
+      + '</article>';
+  }).join('');
+}
+
+export async function refreshVersionHistory() {
+  const panel = $('#versionHistory');
+  const list = $('#versionHistoryList');
+  if (!panel || !list) return;
+  if (!state.savedPost?.id) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  list.innerHTML = '<p class="version-history-empty">讀取版本歷史中…</p>';
+  try {
+    const result = await api('/api/posts/' + state.savedPost.id + '/versions');
+    renderVersionHistory(result.versions || []);
+  } catch (error) {
+    list.innerHTML = '<p class="version-history-empty">版本歷史暫時無法載入：' + escapeHtml(error.message) + '</p>';
+  }
+}
+
+async function createManualVersion() {
+  if (!state.savedPost?.id) return;
+  if (state.editorDirty) {
+    setPreviewMessage('請先完成儲存，再建立版本。', 'error');
+    return;
+  }
+  try {
+    await api('/api/posts/' + state.savedPost.id + '/versions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'manual' }),
+    });
+    await refreshVersionHistory();
+    showToast('版本已建立', 'success');
+  } catch (error) {
+    setPreviewMessage(error.message, 'error');
+  }
+}
+
+async function restoreVersion(versionId) {
+  if (!state.savedPost?.id || !versionId) return;
+  if (!window.confirm('還原後會建立新的草稿版本，不會自動重新發布，是否繼續？')) return;
+  try {
+    const restored = await api('/api/posts/' + state.savedPost.id + '/versions/' + versionId + '/restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ baseVersion: Number(state.savedPost.version || 1) }),
+    });
+    state.savedPost = restored;
+    state.generated = restored;
+    state.editorDirty = false;
+    renderGenerated(restored);
+    if (typeof refreshListsCallback === 'function') await refreshListsCallback();
+    setPreviewMessage('版本已還原為新的草稿，請確認後再排程或發布。', 'success');
+    showToast('版本已還原', 'success');
+  } catch (error) {
+    setPreviewMessage(error.message, 'error');
+  }
+}
+
 export function updateLivePreview() {
   const contentType = fieldValue($('#targetContentType')) || 'post';
   const text = contentType === 'reel'
@@ -401,6 +491,160 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
     badge.textContent = '可編輯';
     badge.classList.add('ready');
   }
+  const saveBtn = $('#saveButton');
+  if (saveBtn) saveBtn.disabled = false;
+  const scheduleBtn = $('#scheduleButton');
+  if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
+  syncEditorActions();
+  renderSavedMedia(mediaPathsOf(generated));
+  renderPreviewPlatformTabs();
+  updateLivePreview();
+  if (state.savedPost?.id) refreshVersionHistory();
+}
+
+export function currentDraft() {
+  const selectedServerPaths = state.selectedMediaItems.map((item) => item.serverPath).filter(Boolean);
+  const mediaPaths = selectedServerPaths.length ? selectedServerPaths : mediaPathsOf(state.generated || {});
+  const accounts = currentClient()?.accounts || state.accounts || [];
+  const activeAccount = accounts.find((account) => account.id === state.activeTargetId)
+    || accounts.find((account) => state.selectedTargetAccountIds.includes(account.id))
+    || accounts.find((account) => account.platformId === 'facebook')
+    || accounts[0]
+    || null;
+  const activeTarget = getActiveTarget();
+  const activeCopy = fieldValue($('#targetContentType')) === 'reel'
+    ? ($('#reelText')?.value || '')
+    : ($('#facebookText')?.value || '');
+  const motherFacebook = state.savedPost?.facebook || state.generated?.facebook || '';
+  const motherReel = state.savedPost?.reel || state.generated?.reel || '';
+  const activePlatform = activeAccount?.platformId || activeTarget?.platformId || 'facebook';
+  const isMotherCopy = !activeTarget?.copyOverride;
+  const contentTopic = $('#contentTopic')?.value || '';
+  const draft = {
+    ...(state.generated || {}),
+    clientId: state.currentClientId || '',
+    contentTopic,
+    godName: contentTopic,
+    postType: document.querySelector('input[name="postType"]:checked')?.value || 'intro',
+    extraNotes: $('#extraNotes')?.value || '',
+    defaultHashtags: $('#defaultHashtags')?.value || '',
+    channel: activePlatform,
+    accountId: state.activeTargetId || activeAccount?.id || '',
+    contentType: fieldValue($('#createContentType')) || fieldValue($('#targetContentType')) || 'post',
+    contentSettings: Object.keys(readTargetContentSettings()).length
+      ? readTargetContentSettings()
+      : readCreateContentSettings(),
+    facebook: activePlatform === 'facebook' && isMotherCopy ? activeCopy : motherFacebook,
+    reel: activePlatform === 'facebook' && isMotherCopy && fieldValue($('#targetContentType')) === 'reel' ? activeCopy : motherReel,
+    hashtags: $('#hashtagsText')?.value ? $('#hashtagsText').value.split(/\s+/).map((tag) => tag.trim()).filter(Boolean) : [],
+    imagePath: mediaPaths[0] || '',
+    mediaPaths,
+  };
+  draft.targets = buildTargetsPayload(draft);
+  return draft;
+}
+export function initEditorListeners(refreshListsFn) {
+  refreshListsCallback = refreshListsFn;
+  window.addEventListener('beforeunload', (event) => {
+    if (!state.editorDirty && !state.autosaveInFlight) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+
+  const refreshVersionsButton = $('#refreshVersionsButton');
+  refreshVersionsButton?.addEventListener('click', () => refreshVersionHistory());
+  const createVersionButton = $('#createVersionButton');
+  createVersionButton?.addEventListener('click', () => createManualVersion());
+  const versionList = $('#versionHistoryList');
+  versionList?.addEventListener('click', (event) => {
+    const button = event.target?.closest?.('[data-restore-version]');
+    if (!button || button.disabled) return;
+    restoreVersion(button.dataset.restoreVersion);
+  });
+  const fbText = $('#facebookText');
+  if (fbText) fbText.addEventListener('input', updateLivePreview);
+  const reelText = $('#reelText');
+  if (reelText) reelText.addEventListener('input', updateLivePreview);
+  const tagsText = $('#hashtagsText');
+  if (tagsText) tagsText.addEventListener('input', updateLivePreview);
+
+  const rewriteButton = $('#btnRewritePlatform');
+  if (rewriteButton) {
+    rewriteButton.addEventListener('click', async () => {
+      const target = getActiveTarget();
+      const account = (currentClient()?.accounts || state.accounts || []).find((item) => item.id === state.activeTargetId);
+      const contentType = fieldValue($('#targetContentType')) || target?.contentType || 'post';
+      const input = contentType === 'reel' ? $('#reelText') : $('#facebookText');
+      const sourceCopy = input?.value?.trim() || getMotherCopyForActiveTarget(target);
+      if (!account?.platformId || !sourceCopy) return setPreviewMessage('請先準備平台與母稿文案。', 'error');
+      rewriteButton.disabled = true;
+      rewriteButton.dataset.busy = 'true';
+      try {
+        const rewritten = await api('/api/rewrite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platformId: account.platformId,
+            contentType,
+            sourceCopy,
+            contentTopic: $('#contentTopic')?.value || '',
+            extraNotes: $('#extraNotes')?.value || '',
+          }),
+        });
+        if (input) input.value = rewritten.copy || '';
+        const mode = $('#platformCopyMode');
+        if (mode) {
+          mode.textContent = '已覆寫此平台文案';
+          mode.dataset.mode = 'overridden';
+        }
+        const restoreButton = $('#btnRestoreMotherCopy');
+        if (restoreButton) restoreButton.disabled = false;
+        markEditorDirty();
+        updateLivePreview();
+        setPreviewMessage(`${PLATFORM_NAMES[account.platformId] || account.platformId} 已完成 AI 改寫，儲存後套用。`, 'success');
+      } catch (error) {
+        setPreviewMessage(error.message, 'error');
+      } finally {
+        rewriteButton.disabled = false;
+        rewriteButton.dataset.busy = 'false';
+      }
+    });
+  }
+
+  const restoreButton = $('#btnRestoreMotherCopy');
+  if (restoreButton) {
+    restoreButton.addEventListener('click', () => {
+      const target = getActiveTarget();
+      const contentType = fieldValue($('#targetContentType')) || target?.contentType || 'post';
+      const input = contentType === 'reel' ? $('#reelText') : $('#facebookText');
+      if (input) input.value = getMotherCopyForActiveTarget(target);
+      const mode = $('#platformCopyMode');
+      if (mode) {
+        mode.textContent = '沿用母稿';
+        mode.dataset.mode = 'inherited';
+      }
+      restoreButton.disabled = true;
+      markEditorDirty();
+      updateLivePreview();
+    });
+  }
+
+  const composerForm = $('#generateForm');
+  composerForm?.addEventListener('input', (event) => {
+    const target = event.target;
+    if (target?.matches?.('#contentTopic, #extraNotes, #defaultHashtags, #facebookText, #reelText, #hashtagsText, #targetScheduledAt')
+      || target?.closest?.('#targetContentSettings')) {
+      markEditorDirty();
+    }
+  });
+  composerForm?.addEventListener('change', (event) => {
+    const target = event.target;
+    if (target?.closest?.('#targetAccountChecks, #targetContentType, #targetContentSettings')
+      || target?.matches?.('#targetScheduledAt')) {
+      markEditorDirty();
+    }
+  });
+
   const saveBtn = $('#saveButton');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
