@@ -10,6 +10,8 @@ import { createThreadsPublisher } from './lib/threads.js';
 import { buildPublishingState } from './lib/platforms.js';
 import { createAiService } from './lib/ai-service.js';
 import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
+import { getRepositories } from './lib/repositories.js';
+import { runSchemaMigrations } from './lib/schema-migrations.js';
 import { ensureDefaultClientFromEnv, getClientRaw, findAccount, listClientsRaw } from './lib/clients.js';
 
 import { createConfigRouter } from './lib/routes/config.js';
@@ -30,6 +32,7 @@ import { cleanupOrphanUploads } from './lib/storage-management.js';
 import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
 import { createAuthMiddleware, createAuthRouter, createAuthService } from './lib/auth.js';
+import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -45,10 +48,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const port = Number(process.env.PORT || 3000);
+const repositories = getRepositories();
 
 await initStorage();
+await runSchemaMigrations({ repositories });
 await ensureDefaultClientFromEnv();
-await migrateScheduleIntoTargets();
+await migrateScheduleIntoTargets({ repositories });
 await cleanupOrphanUploads({ mode: 'automatic' });
 
 let facebookPublisher;
@@ -181,12 +186,14 @@ async function initServices() {
     createInstagramPublisher,
     createThreadsPublisher,
     resolvePublicMediaBaseUrl: () => process.env.PUBLIC_MEDIA_BASE_URL || '',
+    repositories,
   });
 }
 
 await initServices();
 const aiService = createAiService();
 const authService = createAuthService();
+const processDueSchedules = (now) => scheduler.processDueSchedules(now);
 
 app.use(express.json({
   limit: '2mb',
@@ -222,6 +229,7 @@ app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 
 app.use('/api', createAuthRouter({ authService }));
+app.use('/api', createSchedulerTriggerRouter({ processDueSchedules: (now) => scheduler.processDueSchedules(now) }));
 app.use('/api', createAuthMiddleware(authService));
 
 app.use('/api', createSettingsRouter({
@@ -238,14 +246,16 @@ app.use('/api', (request, response, next) => {
     publishingPlatforms,
     publishingAccounts,
     schedulerIntervalMs: scheduler.intervalMs,
+    schedulerMode: scheduler.mode,
+    repositories,
   })(request, response, next);
 });
 
 app.use('/api', createClientsRouter({
   onAccountsChanged: refreshPublishingState,
 }));
-app.use('/api', createTemplatesRouter());
-app.use('/api', createCampaignsRouter());
+app.use('/api', createTemplatesRouter({ repositories }));
+app.use('/api', createCampaignsRouter({ repositories }));
 app.use('/api', createSystemRouter({
   getHealth: () => inspectSystemHealth({
     schedulerIntervalMs: scheduler.intervalMs,
@@ -263,18 +273,20 @@ app.use('/api', (request, response, next) => createInboxRouter({
   resolveInstagramInbox,
   resolveThreadsInbox,
 })(request, response, next));
-app.use('/api', createGodsRouter());
-app.use('/api', createPostsRouter());
+app.use('/api', createGodsRouter({ repositories }));
+app.use('/api', createPostsRouter({ repositories }));
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));
 app.use('/api', (request, response, next) => createScheduleRouter({
   publishingPlatforms,
   resolveFacebookPublisher,
+  repositories,
 })(request, response, next));
 app.use('/api', (request, response, next) => createPublishRouter({
   facebookPublisher,
   resolveFacebookPublisher,
   resolveInstagramPublisher,
   resolveThreadsPublisher,
+  repositories,
 })(request, response, next));
 
 app.use((error, request, response, _next) => {
@@ -288,8 +300,6 @@ app.use((error, request, response, _next) => {
   console.error(error);
   response.status(error.status || 400).json({ error: error.message || '請求處理失敗。' });
 });
-
-const processDueSchedules = (now) => scheduler.processDueSchedules(now);
 
 import os from 'node:os';
 
@@ -337,13 +347,13 @@ server.on('error', (error) => {
 
 scheduler.startTimer();
 
-const uploadCleanupTimer = setInterval(
+const uploadCleanupTimer = scheduler.mode === 'cloud' ? null : setInterval(
   () => cleanupOrphanUploads({ mode: 'automatic' }).catch((error) => {
     appendErrorLog({ scope: 'upload_cleanup', error }).catch(() => {});
     console.error('Upload cleanup failed:', error);
   }),
   24 * 60 * 60 * 1000,
 );
-uploadCleanupTimer.unref?.();
+uploadCleanupTimer?.unref?.();
 
 export { app, server, processDueSchedules };
