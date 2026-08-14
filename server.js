@@ -33,6 +33,7 @@ import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
 import { createAuthMiddleware, createAuthRouter, createAuthService } from './lib/auth.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
+import { createMediaRouter } from './lib/routes/media.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -263,6 +264,7 @@ app.use('/api', createSystemRouter({
   }),
 }));
 app.use('/api', createWebhookRouter());
+app.use('/api', createMediaRouter({ repositories }));
 app.use('/api', (request, response, next) => createInsightsRouter({
   resolveFacebookInsights,
   resolveInstagramInsights,
