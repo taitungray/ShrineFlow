@@ -35,10 +35,13 @@ import { inspectSystemHealth } from './lib/system-health.js';
 import { createAuthMiddleware, createAuthRouter } from './lib/auth.js';
 import { createEnvironmentAuthService } from './lib/firebase-auth.js';
 import { createApiAuthorizationMiddleware } from './lib/api-authorization.js';
+import { createReauthService } from './lib/reauth.js';
+import { createSecurityMonitor } from './lib/security-events.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
 import { createTeamRouter } from './lib/routes/team.js';
+import { createInvitationMailer } from './lib/invitation-mailer.js';
 import { createReviewRouter } from './lib/routes/review.js';
 import {
   createFacebookInsightsClient,
@@ -56,6 +59,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const repositories = getRepositories();
+const securityMonitor = createSecurityMonitor({ repositories });
+const reauthService = createReauthService({
+  secret: process.env.SHRINEFLOW_REAUTH_SECRET || process.env.SHRINEFLOW_SESSION_SECRET,
+  required: String(process.env.SHRINEFLOW_REQUIRE_REAUTH || '').toLowerCase() === 'true'
+    || String(process.env.NODE_ENV || '').toLowerCase() === 'production',
+});
 const cloudRuntime = repositories.backend === 'firestore'
   && getMediaStorage().backend === 'r2';
 
@@ -201,7 +210,8 @@ async function initServices() {
 
 await initServices();
 const aiService = createAiService();
-const authService = createEnvironmentAuthService({ repositories });
+const authService = createEnvironmentAuthService({ repositories, securityMonitor });
+const invitationMailer = createInvitationMailer();
 const processDueSchedules = (now) => scheduler.processDueSchedules(now);
 
 app.use(express.json({
@@ -237,14 +247,14 @@ const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 
-app.use('/api', createAuthRouter({ authService }));
+app.use('/api', createAuthRouter({ authService, reauthService }));
 app.use('/api', createSchedulerTriggerRouter({
   processDueSchedules: (now) => scheduler.processDueSchedules(now),
   exportBackup: () => exportFirestoreBackup({ repositories }),
   cleanupMedia: () => cleanupOrphanMedia({ repositories }),
 }));
 app.use('/api', createAuthMiddleware(authService));
-app.use('/api', createApiAuthorizationMiddleware({ repositories }));
+app.use('/api', createApiAuthorizationMiddleware({ repositories, reauthService, securityMonitor }));
 
 app.use('/api', createSettingsRouter({
   onReloadSettings: async () => {
@@ -270,7 +280,7 @@ app.use('/api', createClientsRouter({
   onAccountsChanged: refreshPublishingState,
   repositories,
 }));
-app.use('/api', createTeamRouter({ repositories, authService }));
+app.use('/api', createTeamRouter({ repositories, authService, invitationMailer }));
 app.use('/api', createReviewRouter({ repositories }));
 app.use('/api', createTemplatesRouter({ repositories }));
 app.use('/api', createCampaignsRouter({ repositories }));

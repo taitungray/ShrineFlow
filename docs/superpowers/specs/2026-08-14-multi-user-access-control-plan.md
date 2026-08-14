@@ -307,6 +307,7 @@ Route 不直接判斷 `role === 'admin'`，避免角色規則散落各處。
 ```text
 GET    /api/auth/csrf
 POST   /api/auth/session
+POST   /api/auth/reauth
 DELETE /api/auth/session
 GET    /api/me
 ```
@@ -329,6 +330,7 @@ POST   /api/invitations/:invitationId/accept
 PATCH  /api/clients/:clientId/members/:userId
 DELETE /api/clients/:clientId/members/:userId
 GET    /api/audit-events?clientId=&action=&actorId=&from=&to=
+GET    /api/audit-events/export?format=csv|json
 ```
 
 ### 7.3 現有 API 權限化
@@ -673,6 +675,13 @@ Reviewer／Review Queue 可列入第二階段；資料模型先保留。
 - 異常登入與越權監控。
 - Audit retention／export。
 - 邀請寄信與網域限制。
+
+P5 落地備註（2026-08-14）：
+
+- `/api/auth/reauth` 以伺服器簽署的短效 token 保護高風險 POST／PATCH／DELETE；正式環境可由 `SHRINEFLOW_REQUIRE_REAUTH=true` 或 `NODE_ENV=production` 啟用。
+- `security.*` 稽核事件記錄登入成功／失敗、鎖定、重新驗證、權限拒絕，並在短時間內重複失敗時產生 `security.anomaly_detected`。
+- `SHRINEFLOW_AUDIT_RETENTION_DAYS`／`SHRINEFLOW_AUDIT_MAX_RECORDS` 控制稽核保留；`GET /api/audit-events/export` 支援 CSV 與 JSON 匯出。
+- `SHRINEFLOW_ALLOWED_EMAIL_DOMAINS` 與 `SHRINEFLOW_BLOCKED_EMAIL_DOMAINS` 限制邀請網域；邀請 token 仍只保存雜湊值並維持一次性、短效規則。
 
 ## 18. 測試與驗收
 
