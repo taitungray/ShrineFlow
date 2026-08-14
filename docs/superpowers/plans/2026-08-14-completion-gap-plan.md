@@ -385,6 +385,7 @@ This section is an additive status update. Earlier assessment notes remain above
 - Deployment readiness also warns when the newest backup is older than seven days or lacks a valid timestamp.
 - System health now returns 80% usage warnings for JSON item／byte limits and uploads file／byte quotas; the Settings panel surfaces the warning with a cleanup or archive hint.
 - Verification completed: `npm test` passes 163/163; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
+- Acceptance boundary recorded: the current environment does not expose a browser harness for 390px visual smoke; Meta App Review／Business Verification／formal HTTPS and reverse-proxy validation remain real-environment deployment gates.
 
 ### Next planned work
 
