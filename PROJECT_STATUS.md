@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.17）
+更新日期：2026-08-14（v0.5.18）
 
 ## 專案定位
 
@@ -89,7 +89,7 @@
 - [ ] 加入登入與權限控管。
 - [ ] 將 JSON 檔案改為正式資料庫或具鎖定／備份機制的儲存層。
 - [x] Token at-rest encryption：設定 SHRINEFLOW_MASTER_KEY 後，品牌平台 Token 與環境設定秘密下一次寫入以 AES-256-GCM 加密；未設定時明確顯示未啟用。
-- [ ] Token rotation：需提供舊密鑰驗證後，重新加密所有已保存秘密。
+- [x] Token rotation：設定頁可要求輸入目前主密鑰與新主密鑰，先驗證舊密鑰後，以安全備份與回復流程重新加密品牌平台 Token 與環境設定秘密；輪替備份只在請求期間存在，不累積歷史副本。
 - [ ] Facebook App Review／Business Verification。
 - [ ] 平台 API 速率限制、Webhook、監控與錯誤記錄。
 - [ ] 正式部署、HTTPS、備份與還原流程。

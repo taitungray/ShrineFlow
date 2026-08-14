@@ -192,6 +192,43 @@ export function initSettingsListeners(onSettingsSavedFn) {
     });
   });
 
+  const btnRotateSecrets = $('#btnRotateSecrets');
+  if (btnRotateSecrets) {
+    btnRotateSecrets.addEventListener('click', async () => {
+      const status = $('#secretRotationStatus');
+      const currentMasterKey = $('#currentMasterKey')?.value || '';
+      const newMasterKey = $('#newMasterKey')?.value || '';
+      btnRotateSecrets.disabled = true;
+      if (status) {
+        status.textContent = '正在輪替秘密…';
+        status.className = 'test-result';
+      }
+      try {
+        const result = await api('/api/settings/rotate-secrets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currentMasterKey, newMasterKey }),
+        });
+        if ($('#currentMasterKey')) $('#currentMasterKey').value = '';
+        if ($('#newMasterKey')) $('#newMasterKey').value = '';
+        if (status) {
+          status.textContent = `${result.message} 已處理 ${result.clientCount || 0} 個品牌。`;
+          status.className = 'test-result text-success';
+        }
+        showToast('憑證輪替完成。', 'success');
+        await loadSettings();
+      } catch (error) {
+        if (status) {
+          status.textContent = error.message;
+          status.className = 'test-result text-danger';
+        }
+        showToast(error.message, 'error');
+      } finally {
+        btnRotateSecrets.disabled = false;
+      }
+    });
+  }
+
   const form = $('#settingsForm');
   if (form) {
     form.addEventListener('submit', async (event) => {

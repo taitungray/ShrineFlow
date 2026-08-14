@@ -30,6 +30,20 @@ test('client secret transforms cover nested platform credentials without encrypt
   assert.equal(decryptClientSecrets(encrypted, 'master-key').accounts[0].credentials.accessToken, 'ig-secret');
 });
 
+test('client secret transforms use the configured process master key by default', () => {
+  const previous = process.env.SHRINEFLOW_MASTER_KEY;
+  process.env.SHRINEFLOW_MASTER_KEY = 'process-master-key';
+  try {
+    const client = { accounts: [{ credentials: { accessToken: 'process-secret' } }] };
+    const encrypted = encryptClientSecrets(client);
+    assert.equal(isEncryptedSecret(encrypted.accounts[0].credentials.accessToken), true);
+    assert.equal(decryptClientSecrets(encrypted).accounts[0].credentials.accessToken, 'process-secret');
+  } finally {
+    if (previous === undefined) delete process.env.SHRINEFLOW_MASTER_KEY;
+    else process.env.SHRINEFLOW_MASTER_KEY = previous;
+  }
+});
+
 test('settings writes encrypted environment secrets when a master key is configured', async () => {
   const previous = process.env.SHRINEFLOW_MASTER_KEY;
   process.env.SHRINEFLOW_MASTER_KEY = 'master-key';
