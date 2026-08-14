@@ -436,12 +436,59 @@ function syncArchivedEditorState() {
   const panel = $('#reviewPanel');
   if (panel) panel.classList.toggle('is-archived', locked);
 }
+function syncApprovalActions() {
+  const post = state.savedPost;
+  const approvalState = post?.approvalState || 'draft';
+  const badge = document.getElementById('approvalStateBadge');
+  const submit = document.getElementById('submitReviewButton');
+  const approve = document.getElementById('approveButton');
+  const changes = document.getElementById('requestChangesButton');
+  const required = Boolean(currentClient()?.approvalRequired);
+  if (badge) {
+    const labels = { draft: '草稿待送審', in_review: '審核中', approved: '已核准', changes_requested: '待修改後重送' };
+    badge.textContent = !post ? '尚未儲存' : (required ? '審核：' + (labels[approvalState] || approvalState) : '審核未啟用 · ' + (labels[approvalState] || approvalState));
+    badge.dataset.state = approvalState;
+  }
+  if (submit) submit.classList.toggle('is-hidden', !post || ['in_review', 'approved'].includes(approvalState));
+  if (approve) approve.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
+  if (changes) changes.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
+}
+
+async function runApprovalAction(action) {
+  const post = state.savedPost;
+  if (!post?.id) return setPreviewMessage('請先儲存草稿，再操作審核。', 'error');
+  if (state.editorDirty) {
+    await saveDraft({ mode: 'manual' });
+  }
+  const note = action === 'request-changes' ? window.prompt('請輸入修改意見（可留白）：', '') : '';
+  if (action === 'request-changes' && note === null) return;
+  try {
+    const updated = await api('/api/posts/' + encodeURIComponent(post.id) + '/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action === 'request-changes' ? { note } : {}),
+    });
+    state.savedPost = updated;
+    state.generated = updated;
+    state.editorDirty = false;
+    renderGenerated(updated);
+    if (typeof refreshListsCallback === 'function') await refreshListsCallback();
+    setPreviewMessage(action === 'approve' ? '內容已核准。' : action === 'submit-review' ? '內容已送出審核。' : '已要求修改。', 'success');
+  } catch (error) {
+    setPreviewMessage(error.message || '審核操作失敗。', 'error');
+    showToast(error.message || '審核操作失敗。', 'error');
+  }
+}
+
 function syncEditorActions() {
   const isArchived = state.savedPost?.status === 'archived';
   const hasSavedPost = Boolean(state.savedPost);
   const isDirty = Boolean(state.editorDirty);
   const isSaving = Boolean(state.autosaveInFlight);
   const scheduleButton = $('#scheduleButton');
+  document.getElementById('submitReviewButton')?.addEventListener('click', () => runApprovalAction('submit-review'));
+  document.getElementById('approveButton')?.addEventListener('click', () => runApprovalAction('approve'));
+  document.getElementById('requestChangesButton')?.addEventListener('click', () => runApprovalAction('request-changes'));
   const publishButton = $('#publishNowButton');
   if (scheduleButton) scheduleButton.disabled = isArchived || !hasSavedPost || isDirty || isSaving;
   if (publishButton) {
@@ -453,6 +500,7 @@ function syncEditorActions() {
     badge.classList.toggle('ready', !isDirty && !isSaving);
   }
   syncArchivedEditorState();
+  syncApprovalActions();
 }
 
 export function markEditorDirty(isDirty = true) {

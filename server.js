@@ -39,6 +39,7 @@ import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
 import { createTeamRouter } from './lib/routes/team.js';
+import { createReviewRouter } from './lib/routes/review.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -270,6 +271,7 @@ app.use('/api', createClientsRouter({
   repositories,
 }));
 app.use('/api', createTeamRouter({ repositories, authService }));
+app.use('/api', createReviewRouter({ repositories }));
 app.use('/api', createTemplatesRouter({ repositories }));
 app.use('/api', createCampaignsRouter({ repositories }));
 app.use('/api', createSystemRouter({

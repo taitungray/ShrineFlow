@@ -16,6 +16,7 @@ export const state = {
   insightsScope: 'account',
   inbox: null,
   notifications: [],
+  reviewQueue: [],
   config: null,
   clients: [],
   currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',

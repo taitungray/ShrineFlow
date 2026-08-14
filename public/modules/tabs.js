@@ -15,6 +15,7 @@ const VIEW_ROUTES = {
   platforms: 'platforms',
   settings: 'settings',
   team: 'team',
+  reviews: 'reviews',
 };
 
 const PAGE_META = {
@@ -32,6 +33,7 @@ const PAGE_META = {
   platforms: ['PLATFORMS', '平台連線'],
   settings: ['SETTINGS', '設定'],
   team: ['TEAM & ACCESS', '團隊與權限'],
+  reviews: ['REVIEW QUEUE', '審核佇列'],
 };
 
 function normalizeView(view = '') {

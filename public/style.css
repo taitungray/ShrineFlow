@@ -64,6 +64,88 @@
   }
 }
 
+.approval-actions {
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.approval-state-badge {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.approval-state-badge[data-state='approved'] {
+  background: rgba(42, 126, 92, 0.12);
+  color: #23724f;
+}
+
+.approval-state-badge[data-state='in_review'] {
+  background: rgba(193, 126, 34, 0.14);
+  color: #9b5d13;
+}
+
+.review-card {
+  align-items: center;
+}
+
+.review-card .record-card-main {
+  align-items: center;
+}
+
+.review-card .record-body {
+  gap: 5px;
+}
+
+.review-card .record-body small {
+  color: var(--text-muted);
+}
+
+.review-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.review-actions button,
+.review-action {
+  min-height: 40px;
+}
+
+@media (max-width: 768px) {
+  .approval-actions {
+    align-items: stretch;
+  }
+
+  .approval-state-badge,
+  .approval-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .review-card {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .review-card .content-card-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .review-actions {
+    margin-left: 0;
+  }
+}
+
 html {
   overflow-y: scroll;
   scrollbar-gutter: stable;

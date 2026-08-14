@@ -36,6 +36,7 @@ import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
+import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
@@ -56,6 +57,7 @@ async function refreshLists() {
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
   state.notifications = notifications;
+  await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
   renderPosts();
   renderSchedule();
   renderOverview();
@@ -154,6 +156,7 @@ async function loadData() {
   renderInsights();
   renderInbox();
   await loadTeamManagement();
+  await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
 
   const status = $('#apiStatus');
   if (status) {
@@ -189,6 +192,7 @@ async function initApp() {
   initInsightsListeners();
   initInboxListeners();
   initContentFilters(refreshLists);
+  initReviewListeners(refreshLists);
   initCalendarControls();
   initMediaLibrary();
   initTemplateManager(loadData);

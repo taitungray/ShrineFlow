@@ -187,6 +187,10 @@ function renderSections() {
     panel.classList.toggle('is-hidden', panel.dataset.teamSectionPanel !== teamState.activeSection);
   });
   $('#teamInviteCard')?.classList.toggle('permission-hidden', !canManageTeam() || !state.currentClientId);
+  const workflowCard = $('#workflowSettingsCard');
+  const workflowToggle = $('#approvalRequiredToggle');
+  workflowCard?.classList.toggle('permission-hidden', !canManageTeam() || !state.currentClientId);
+  if (workflowToggle) workflowToggle.checked = Boolean(state.clients.find((client) => client.id === state.currentClientId)?.approvalRequired);
 }
 
 export async function loadTeamManagement() {
@@ -276,6 +280,23 @@ export function initTeamListeners() {
   });
   $('#auditSearch')?.addEventListener('input', renderAudit);
   $('#teamPanel')?.addEventListener('change', async (event) => {
+    const workflowToggle = event.target.closest('#approvalRequiredToggle');
+    if (workflowToggle) {
+      try {
+        const updated = await api('/api/clients/' + encodeURIComponent(state.currentClientId) + '/workflow', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approvalRequired: workflowToggle.checked }),
+        });
+        const client = state.clients.find((item) => item.id === state.currentClientId);
+        if (client) client.approvalRequired = Boolean(updated.approvalRequired);
+        showToast(updated.approvalRequired ? '已啟用發布前審核。' : '已關閉發布前審核。', 'success');
+      } catch (error) {
+        workflowToggle.checked = !workflowToggle.checked;
+        showToast(error.message || '流程設定更新失敗。', 'error');
+      }
+      return;
+    }
     const select = event.target.closest('[data-member-role]');
     if (!select) return;
     try {

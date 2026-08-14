@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.47" />
+    <link rel="stylesheet" href="/style.css?v=0.5.48" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -73,6 +73,7 @@
         <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
         <a class="app-nav-item" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">◌</span>成效</a>
         <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
+      <a class='app-nav-item permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列</a>
       </nav>
       <div class="sidebar-footer">
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
@@ -251,6 +252,12 @@
             <input id="hashtagsText" type="text" value="#品牌內容 #社群經營 #內容行銷" />
           </div>
           <div class="action-row composer-actions">
+          <div class='action-box approval-actions' id='approvalActions'>
+            <span class='approval-state-badge' id='approvalStateBadge' aria-live='polite'>尚未儲存</span>
+            <button class='btn-secondary permission-hidden' id='submitReviewButton' data-required-permission='content.submit_review' type='button'>送出審核</button>
+            <button class='btn-secondary permission-hidden' id='requestChangesButton' data-required-permission='content.approve' type='button'>要求修改</button>
+            <button class='primary-button permission-hidden' id='approveButton' data-required-permission='content.approve' type='button'>核准版本</button>
+          </div>
             <button class="btn-secondary" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
             <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
             <button class="primary-button" id="publishNowButton" type="button" aria-label="立即發布" disabled>↗ 立即發布</button>
@@ -557,7 +564,19 @@
         </section>
 
         <!-- 排程 -->
-        <section class="panel is-hidden" id="schedulePanel" data-view-panel="schedule">
+        <section class='panel module-panel is-hidden' id='reviewsPanel' data-view-panel='reviews'>
+          <div class='panel-heading compact'>
+            <div>
+              <p class='section-tag'>REVIEW QUEUE</p>
+              <h2>審核佇列</h2>
+              <p class='panel-lede'>集中查看送審版本，核准或留下修改意見。</p>
+            </div>
+            <button class='btn-text' id='refreshReviewButton' type='button'>重新整理</button>
+          </div>
+          <div id='reviewQueueList' class='list-empty' aria-live='polite'></div>
+        </section>
+
+        <section class='panel is-hidden' id='schedulePanel' data-view-panel='schedule'>
           <div class="panel-heading compact">
             <div>
               <p class="section-tag">CALENDAR</p>
@@ -749,6 +768,13 @@
                 </div>
               </div>
             </fieldset>
+            <fieldset class='form-group-card workflow-settings-card' id='workflowSettingsCard' data-required-permission='member.manage'>
+              <legend class='group-title'>發布流程</legend>
+              <div class='field'>
+                <label class='checkbox-field'><input id='approvalRequiredToggle' type='checkbox' /><span>此品牌強制審核後才能排程或發布</span></label>
+                <p class='helper'>關閉時維持快速發布；開啟後，內容必須先送審並核准目前版本。</p>
+              </div>
+            </fieldset>
             <div class="team-list" id="teamMemberList" aria-live="polite"></div>
           </div>
 
@@ -903,6 +929,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.47" type="module"></script>
+    <script src="/app.js?v=0.5.48" type="module"></script>
   </body>
 </html>
