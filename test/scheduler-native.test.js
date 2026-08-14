@@ -192,6 +192,55 @@ test('processDueSchedules dispatches Instagram and Threads with web media paths'
   assert.equal(posts[1].facebookPostId, undefined);
 });
 
+test('scheduled Instagram first comment is a separate child delivery', async () => {
+  await writeJson(jsonFiles.clients, [{
+    id: 'client-1',
+    accounts: [{
+      id: 'instagram:1',
+      platformId: 'instagram',
+      credentials: { userId: 'ig-user', accessToken: 'ig-token' },
+    }],
+  }]);
+  await writeJson(jsonFiles.posts, [{
+    id: 'post-first-comment',
+    clientId: 'client-1',
+    facebook: '排程首則留言',
+    mediaPaths: ['/uploads/post.jpg'],
+    targets: [{
+      id: 'target-first-comment',
+      accountId: 'instagram:1',
+      platformId: 'instagram',
+      contentType: 'feed',
+      mediaPaths: ['/uploads/post.jpg'],
+      status: 'scheduled',
+      scheduledAt: '2026-08-13T07:00:00.000Z',
+      delivery: { firstComment: { status: 'pending', text: '排程後留言' } },
+    }],
+  }]);
+  const calls = [];
+  const scheduler = createScheduler({
+    facebookPublisher: { configured: false },
+    createInstagramPublisher() {
+      return {
+        configured: true,
+        async publish() { return { externalId: 'ig-media-1' }; },
+        async publishFirstComment(payload) {
+          calls.push(payload);
+          return { externalId: 'ig-comment-1' };
+        },
+      };
+    },
+    resolvePublicMediaBaseUrl: () => 'https://media.example.test',
+  });
+  await scheduler.processDueSchedules(new Date('2026-08-13T08:00:00.000Z'));
+  const post = (await readJson(jsonFiles.posts, []))[0];
+  assert.equal(post.targets[0].status, 'published');
+  assert.equal(post.targets[0].externalId, 'ig-media-1');
+  assert.deepEqual(calls, [{ mediaId: 'ig-media-1', text: '排程後留言' }]);
+  assert.equal(post.targets[0].delivery.firstComment.status, 'published');
+  assert.equal(post.targets[0].delivery.firstComment.externalId, 'ig-comment-1');
+});
+
 test('processDueSchedules records a bounded failure notification', async () => {
   await writeJson(jsonFiles.clients, [{
     id: 'client-1',
