@@ -1,16 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import express from 'express';
 
 import { createPublishRouter } from '../lib/routes/publish.js';
 import { InstagramPublishError } from '../lib/instagram.js';
-import { jsonFiles, readJson, writeJson } from '../lib/store.js';
+import { directories, jsonFiles, readJson, writeJson } from '../lib/store.js';
 import { ThreadsPublishError } from '../lib/threads.js';
 
 test('POST /publish/target dispatches Instagram and Threads publishers', async (t) => {
   const originalPosts = await fs.readFile(jsonFiles.posts, 'utf8').catch(() => '[]');
   const originalClients = await fs.readFile(jsonFiles.clients, 'utf8').catch(() => '[]');
+  const originalAttemptArchiveNames = await fs.readdir(directories.publishAttempts).catch(() => []);
   const calls = [];
   const app = express();
   app.use(express.json());
@@ -41,10 +43,10 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
   }));
   const server = app.listen(0);
 
-  async function publish(body) {
+  async function publish(body, extraHeaders = {}) {
     return fetch(`http://127.0.0.1:${server.address().port}/api/publish/target`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify(body),
     });
   }
@@ -95,6 +97,10 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
       const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
       assert.equal(target.status, 'published');
       assert.equal(target.externalId, 'ig-media-1');
+      assert.equal(target.attempts, 1);
+      assert.equal(target.publishAttempts.length, 1);
+      assert.equal(target.publishAttempts[0].status, 'succeeded');
+      assert.equal(target.publishAttempts[0].source, 'manual');
     });
 
     await t.test('Instagram without contentType defaults publish options to feed', async () => {
@@ -265,9 +271,94 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
       assert.equal(target.lastError, null);
       assert.equal(calls.length, 1);
     });
+
+    await t.test('idempotency key replays success without publishing twice', async () => {
+      calls.length = 0;
+      const idempotencyKey = `publish-key-${process.pid}-${Date.now()}`;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-idempotent',
+        clientId: 'client-1',
+        facebook: 'Idempotent post',
+        targets: [{
+          id: 'target-idempotent',
+          accountId: 'instagram:1',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'draft',
+        }],
+      }]);
+
+      const first = await publish(
+        { postId: 'post-idempotent', targetId: 'target-idempotent' },
+        { 'Idempotency-Key': idempotencyKey },
+      );
+      const second = await publish(
+        { postId: 'post-idempotent', targetId: 'target-idempotent' },
+        { 'Idempotency-Key': idempotencyKey },
+      );
+
+      assert.equal(first.status, 200);
+      assert.equal(second.status, 200);
+      assert.equal((await second.json()).replayed, true);
+      assert.equal(calls.length, 1);
+      const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+      assert.equal(target.publishAttempts.length, 1);
+      assert.equal(target.publishAttempts[0].idempotencyKey, idempotencyKey);
+    });
+
+    await t.test('published target rejects duplicate publish and preserves state', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-already-published',
+        clientId: 'client-1',
+        facebook: 'Already published',
+        targets: [{
+          id: 'target-already-published',
+          accountId: 'instagram:1',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'published',
+          externalId: 'existing-media-1',
+          publishedAt: '2026-08-14T00:00:00.000Z',
+        }],
+      }]);
+
+      const response = await publish({
+        postId: 'post-already-published',
+        targetId: 'target-already-published',
+      });
+
+      assert.equal(response.status, 409);
+      assert.equal(calls.length, 0);
+      const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+      assert.equal(target.status, 'published');
+      assert.equal(target.externalId, 'existing-media-1');
+      assert.equal(target.publishAttempts.length, 0);
+    });
+
+    const attemptArchiveNames = await fs.readdir(directories.publishAttempts);
+    assert.ok(attemptArchiveNames.length >= 1);
+    const archivedEvents = [];
+    for (const name of attemptArchiveNames) {
+      const events = JSON.parse(await fs.readFile(path.join(directories.publishAttempts, name), 'utf8'));
+      archivedEvents.push(...events);
+    }
+    assert.ok(archivedEvents.some((event) => event.eventType === 'started'));
+    assert.ok(archivedEvents.some((event) => event.eventType === 'succeeded'));
+    assert.ok(archivedEvents.some((event) => event.eventType === 'failed'));
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await fs.writeFile(jsonFiles.posts, originalPosts, 'utf8');
     await fs.writeFile(jsonFiles.clients, originalClients, 'utf8');
+    const currentAttemptArchiveNames = await fs.readdir(directories.publishAttempts).catch(() => []);
+    for (const name of currentAttemptArchiveNames) {
+      if (!originalAttemptArchiveNames.includes(name)) {
+        await fs.unlink(path.join(directories.publishAttempts, name)).catch(() => {});
+      }
+    }
+    const remainingAttemptArchives = await fs.readdir(directories.publishAttempts).catch(() => []);
+    if (originalAttemptArchiveNames.length === 0 && remainingAttemptArchives.length === 0) {
+      await fs.rmdir(directories.publishAttempts).catch(() => {});
+    }
   }
 });

@@ -4,9 +4,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createScheduler, shouldClaimTargetForLocalPublish } from '../lib/scheduler.js';
-import { jsonFiles, readJson, writeJson } from '../lib/store.js';
+import { directories, jsonFiles, readJson, writeJson } from '../lib/store.js';
 
 const originalJsonFiles = { ...jsonFiles };
+const originalDirectories = { ...directories };
 let temporaryDataDirectory;
 
 before(async () => {
@@ -16,6 +17,7 @@ before(async () => {
     schedule: path.join(temporaryDataDirectory, 'schedule.json'),
     clients: path.join(temporaryDataDirectory, 'clients.json'),
   });
+  directories.publishAttempts = path.join(temporaryDataDirectory, 'publish-attempts');
   await Promise.all([
     writeJson(jsonFiles.posts, []),
     writeJson(jsonFiles.schedule, []),
@@ -25,6 +27,7 @@ before(async () => {
 
 after(async () => {
   Object.assign(jsonFiles, originalJsonFiles);
+  Object.assign(directories, originalDirectories);
   await fs.rm(temporaryDataDirectory, { recursive: true, force: true });
 });
 
@@ -159,6 +162,9 @@ test('processDueSchedules dispatches Instagram and Threads with web media paths'
 
   const posts = await readJson(jsonFiles.posts, []);
   assert.deepEqual(posts.map((post) => post.targets[0].status), ['published', 'published']);
+  assert.deepEqual(posts.map((post) => post.targets[0].attempts), [1, 1]);
+  assert.deepEqual(posts.map((post) => post.targets[0].publishAttempts[0].source), ['scheduler', 'scheduler']);
+  assert.deepEqual(posts.map((post) => post.targets[0].publishAttempts[0].status), ['succeeded', 'succeeded']);
   assert.deepEqual(posts.map((post) => post.targets[0].externalId), [
     'instagram-published',
     'threads-published',

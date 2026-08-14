@@ -5,6 +5,7 @@ uploads/*
 data/posts.json
 data/schedule.json
 data/clients.json
+data/publish-attempts/*.json
 dev-server*.log
 start-last.log
 .superpowers/

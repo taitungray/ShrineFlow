@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.5）
+更新日期：2026-08-14（v0.5.6）
 
 ## 專案定位
 
@@ -64,7 +64,7 @@
 
 ### 下一階段
 
-- [ ] 發布 attempt 歷史、idempotency 與更完整的錯誤分類／reconciliation。
+- [x] 手動與排程發布保存完整 attempt 歷史；target 僅保留近期摘要，完整事件依月份分檔，並以 idempotency key 阻止重複發布。
 - [ ] 接入 Facebook／Instagram／Threads Insights API，顯示觸及、互動與點擊等真實成效。
 - [ ] 接入 Facebook／Instagram／Threads 留言與訊息 API，完成 Inbox 未讀、標籤與處理流程。
 - [ ] 備份、匯出、還原與媒體清理策略。
