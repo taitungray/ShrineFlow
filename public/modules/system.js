@@ -56,8 +56,12 @@ async function refreshSystemHealth() {
   if (!result) return health;
   const files = health.storage?.jsonFiles || {};
   const backups = health.storage?.backups?.count || 0;
+  const postUsage = files.details?.posts;
+  const contentUsage = postUsage?.maxItems
+    ? ` · 內容 ${postUsage.itemCount || 0}/${postUsage.maxItems}`
+    : '';
   const status = health.status === 'ok' ? '正常' : '需要注意';
-  result.textContent = `${status} · JSON ${files.healthy || 0}/${files.total || 0} · 備份 ${backups} 份 · 排程器 ${health.scheduler?.running ? '運作中' : '待命'}`;
+  result.textContent = `${status} · JSON ${files.healthy || 0}/${files.total || 0}${contentUsage} · 備份 ${backups} 份 · 排程器 ${health.scheduler?.running ? '運作中' : '待命'}`;
   result.className = 'helper ' + (health.status === 'ok' ? 'text-success' : 'text-danger');
   return health;
 }
