@@ -28,6 +28,7 @@ import { createCampaignsRouter } from './lib/routes/campaigns.js';
 import { createWebhookRouter } from './lib/routes/webhooks.js';
 import { cleanupOrphanUploads } from './lib/storage-management.js';
 import { appendErrorLog } from './lib/error-log.js';
+import { inspectSystemHealth } from './lib/system-health.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -240,7 +241,12 @@ app.use('/api', createClientsRouter({
 }));
 app.use('/api', createTemplatesRouter());
 app.use('/api', createCampaignsRouter());
-app.use('/api', createSystemRouter());
+app.use('/api', createSystemRouter({
+  getHealth: () => inspectSystemHealth({
+    schedulerIntervalMs: scheduler.intervalMs,
+    schedulerRunning: scheduler.isRunning(),
+  }),
+}));
 app.use('/api', createWebhookRouter());
 app.use('/api', (request, response, next) => createInsightsRouter({
   resolveFacebookInsights,

@@ -50,6 +50,18 @@ async function refreshErrorLog() {
     : '';
 }
 
+async function refreshSystemHealth() {
+  const health = await api('/api/system/health');
+  const result = $('#systemHealthResult');
+  if (!result) return health;
+  const files = health.storage?.jsonFiles || {};
+  const backups = health.storage?.backups?.count || 0;
+  const status = health.status === 'ok' ? '正常' : '需要注意';
+  result.textContent = `${status} · JSON ${files.healthy || 0}/${files.total || 0} · 備份 ${backups} 份 · 排程器 ${health.scheduler?.running ? '運作中' : '待命'}`;
+  result.className = 'helper ' + (health.status === 'ok' ? 'text-success' : 'text-danger');
+  return health;
+}
+
 export function initSystemTools(onRestored) {
   $('#btnCreateBackup')?.addEventListener('click', async () => {
     try {
@@ -78,6 +90,15 @@ export function initSystemTools(onRestored) {
     try {
       await refreshErrorLog();
       setMessage('錯誤記錄已更新。', 'success');
+    } catch (error) {
+      setMessage(error.message, 'danger');
+    }
+  });
+
+  $('#btnRefreshSystemHealth')?.addEventListener('click', async () => {
+    try {
+      await refreshSystemHealth();
+      setMessage('系統健康狀態已更新。', 'success');
     } catch (error) {
       setMessage(error.message, 'danger');
     }
@@ -128,4 +149,5 @@ export function initSystemTools(onRestored) {
   refreshBackups().catch(() => {});
   refreshStorageHealth().catch(() => {});
   refreshErrorLog().catch(() => {});
+  refreshSystemHealth().catch(() => {});
 }
