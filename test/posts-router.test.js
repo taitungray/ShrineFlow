@@ -73,6 +73,7 @@ test('posts router saves and validates multiple platform targets independently',
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        clientId: 'brand-b',
         targets: created.targets.map((target) => target.platformId === 'threads'
           ? { ...target, copyOverride: 'Threads 更新版本' }
           : target),
@@ -80,6 +81,7 @@ test('posts router saves and validates multiple platform targets independently',
     });
     assert.equal(patchResponse.status, 200);
     const patched = await patchResponse.json();
+    assert.equal(patched.clientId, 'brand-a');
     assert.equal(patched.targets.find((target) => target.platformId === 'threads').copyOverride, 'Threads 更新版本');
     assert.equal(patched.version, 2);
 
@@ -134,11 +136,14 @@ test('posts router saves and validates multiple platform targets independently',
     const duplicateResponse = await fetch(`${baseUrl}/posts/${created.id}/duplicate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: 'brand-b' }),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
     assert.equal(duplicateResponse.status, 201);
     const duplicate = await duplicateResponse.json();
     assert.notEqual(duplicate.id, created.id);
+    assert.equal(duplicate.clientId, 'brand-a');
     assert.equal(duplicate.version, 1);
     assert.equal(duplicate.status, 'draft');
     assert.ok(duplicate.targets.every((target) => target.status === 'draft'));

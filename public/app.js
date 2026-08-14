@@ -113,7 +113,7 @@ async function loadData() {
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
   ]);
 
-  const facebookStatus = await api('/api/facebook/status').catch((error) => ({
+  const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
     configured: config.facebookConfigured,
     connected: false,
     error: error.message,
@@ -260,6 +260,7 @@ async function initApp() {
       event.preventDefault();
       const files = $('#imageInput').files;
       const formData = new FormData(event.currentTarget);
+      if (state.currentClientId) formData.set('clientId', state.currentClientId);
       setLoading(true);
       setFormMessage(files.length
         ? '正在讀取 ' + files.length + ' 個媒體並撰寫文案，影片可能需要較長時間。'

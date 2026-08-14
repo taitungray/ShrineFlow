@@ -604,6 +604,7 @@ export function initEditorListeners(refreshListsFn) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            clientId: state.currentClientId,
             platformId: account.platformId,
             contentType,
             sourceCopy,

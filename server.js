@@ -34,6 +34,7 @@ import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
 import { createAuthMiddleware, createAuthRouter } from './lib/auth.js';
 import { createEnvironmentAuthService } from './lib/firebase-auth.js';
+import { createApiAuthorizationMiddleware } from './lib/api-authorization.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
@@ -241,6 +242,7 @@ app.use('/api', createSchedulerTriggerRouter({
   cleanupMedia: () => cleanupOrphanMedia({ repositories }),
 }));
 app.use('/api', createAuthMiddleware(authService));
+app.use('/api', createApiAuthorizationMiddleware({ repositories }));
 
 app.use('/api', createSettingsRouter({
   onReloadSettings: async () => {
@@ -253,6 +255,7 @@ app.use('/api', (request, response, next) => {
   createConfigRouter({
     aiService,
     facebookPublisher,
+    resolveFacebookPublisher,
     publishingPlatforms,
     publishingAccounts,
     schedulerIntervalMs: scheduler.intervalMs,
@@ -263,6 +266,7 @@ app.use('/api', (request, response, next) => {
 
 app.use('/api', createClientsRouter({
   onAccountsChanged: refreshPublishingState,
+  repositories,
 }));
 app.use('/api', createTemplatesRouter({ repositories }));
 app.use('/api', createCampaignsRouter({ repositories }));
