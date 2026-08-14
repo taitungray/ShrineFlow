@@ -2,7 +2,7 @@
 
 這是本機執行、單一操作員使用的 AI 社群內容營運工作台。資料保存於 `data/` JSON，媒體保存於 `uploads/`，不需要資料庫；可管理多品牌與多平台內容，但不預設多人權限系統。
 
-目前版本為 **v0.5.7**：內容主題已不再侷限神明，並提供響應式 App Shell、內容列表、單頁 Composer、平台預覽、日曆、素材庫、模板、Campaign、發布紀錄、營運摘要、收件匣接入狀態、平台連線與設定頁。手機 drawer 導覽支援垂直滑動，並可點擊選單外區域、關閉按鈕或使用 Escape 收起，同時保留安全區避讓。Composer 已加入立即發布，且未儲存變更時會暫停排程與發布。發布流程會保存完整 attempt 歷史，target 僅保留近期摘要，完整事件依月份分檔；同一請求可用 idempotency key 防止重複發布。Insights 已可在平台憑證與權限具備時讀取 Facebook、Instagram、Threads 的真實帳號成效；未同步時明確顯示原因，不補推測數字。對外產品用語統一使用「多平台」；「帳號」只保留在平台連線、憑證與 target 的技術語境。
+目前版本為 **v0.5.8**：內容主題已不再侷限神明，並提供響應式 App Shell、內容列表、單頁 Composer、平台預覽、日曆、素材庫、模板、Campaign、發布紀錄、營運摘要、收件匣接入狀態、平台連線與設定頁。手機 drawer 導覽支援垂直滑動，並可點擊選單外區域、關閉按鈕或使用 Escape 收起，同時保留安全區避讓。Composer 已加入立即發布，且未儲存變更時會暫停排程與發布。發布流程會保存完整 attempt 歷史，target 僅保留近期摘要，完整事件依月份分檔；同一請求可用 idempotency key 防止重複發布。Insights 已可在平台憑證與權限具備時讀取 Facebook、Instagram、Threads 的真實帳號成效，並以月份分檔保存完整同步快照；即時同步失敗時只顯示有時間戳的 cached 資料，不補推測數字。對外產品用語統一使用「多平台」；「帳號」只保留在平台連線、憑證與 target 的技術語境。
 
 完整狀態請參考 [PROJECT_STATUS.md](PROJECT_STATUS.md)。產品規劃：[通用社群發布 roadmap](docs/superpowers/specs/2026-08-14-general-social-publishing-roadmap.md)、[響應式 Web UI 規劃](docs/superpowers/specs/2026-08-14-responsive-web-ui-plan.md)。
 

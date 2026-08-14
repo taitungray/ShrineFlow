@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 import { createInsightsRouter } from '../lib/routes/insights.js';
+import { directories } from '../lib/store.js';
+import { appendInsightsSnapshot, findLatestInsightsSnapshot } from '../lib/insights-snapshots.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -119,6 +124,8 @@ test('Insights route returns real source states without exposing credentials', a
         };
       },
     }),
+    saveSnapshot: async (snapshot) => snapshot,
+    findSnapshot: async () => null,
   }));
   const server = app.listen(0);
   try {
@@ -129,6 +136,75 @@ test('Insights route returns real source states without exposing credentials', a
     assert.equal(payload.sources[0].accountName, 'Instagram brand');
     assert.equal(payload.sources[0].data[0].values[0].value, 42);
     assert.equal(JSON.stringify(payload).includes('private-token'), false);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('Insights snapshots are partitioned by month and retain full history', async () => {
+  const originalDirectory = directories.insights;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-insights-'));
+  directories.insights = temporaryDirectory;
+  try {
+    await appendInsightsSnapshot({
+      clientId: 'client-1',
+      accountId: 'instagram:1',
+      platformId: 'instagram',
+      fetchedAt: '2026-08-01T00:00:00.000Z',
+      data: [{ name: 'views', values: [{ value: 1 }] }],
+    });
+    await appendInsightsSnapshot({
+      clientId: 'client-1',
+      accountId: 'instagram:1',
+      platformId: 'instagram',
+      fetchedAt: '2026-09-01T00:00:00.000Z',
+      data: [{ name: 'views', values: [{ value: 2 }] }],
+    });
+
+    const files = await fs.readdir(temporaryDirectory);
+    assert.deepEqual(files.sort(), ['2026-08.json', '2026-09.json']);
+    const latest = await findLatestInsightsSnapshot({
+      clientId: 'client-1',
+      accountId: 'instagram:1',
+      platformId: 'instagram',
+    });
+    assert.equal(latest.data[0].values[0].value, 2);
+  } finally {
+    directories.insights = originalDirectory;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});
+
+test('Insights route falls back to a dated cached snapshot when live sync fails', async () => {
+  const app = express();
+  app.use('/api', createInsightsRouter({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'threads:1', platformId: 'threads', configured: true }],
+    }],
+    resolveThreadsInsights: async () => ({
+      configured: true,
+      async fetchAccountInsights() {
+        throw new InsightsApiError('Threads timeout', { retriable: true, status: 504 });
+      },
+    }),
+    findSnapshot: async () => ({
+      fetchedAt: '2026-08-13T00:00:00.000Z',
+      source: 'meta_graph_api',
+      data: [{ name: 'views', values: [{ value: 9 }] }],
+      range: { since: '2026-08-12T00:00:00.000Z', until: '2026-08-13T00:00:00.000Z' },
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }));
+  const server = app.listen(0);
+  try {
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/insights`);
+    const payload = await result.json();
+    assert.equal(result.status, 200);
+    assert.equal(payload.status, 'cached');
+    assert.equal(payload.sources[0].status, 'cached');
+    assert.equal(payload.sources[0].data[0].values[0].value, 9);
+    assert.equal(payload.sources[0].error.category, 'cached');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

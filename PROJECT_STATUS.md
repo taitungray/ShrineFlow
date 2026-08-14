@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.7）
+更新日期：2026-08-14（v0.5.8）
 
 ## 專案定位
 
@@ -66,7 +66,8 @@
 
 - [x] 手動與排程發布保存完整 attempt 歷史；target 僅保留近期摘要，完整事件依月份分檔，並以 idempotency key 阻止重複發布。
 - [x] 接入 Facebook／Instagram／Threads Insights API，依平台帳號顯示 API 回傳的真實成效；未設定、權限錯誤與無資料狀態不虛構數字。
-- [ ] Insights 定期同步、快取與按 post target 保存，並補齊各平台可用指標的歷史回看。
+- [x] Insights 同步成功時保存完整月份快照；即時同步失敗時可回退到有時間戳的 cached 資料。
+- [ ] Insights 按 post target 保存，並補齊各平台可用指標的歷史回看與排程同步。
 - [ ] 接入 Facebook／Instagram／Threads 留言與訊息 API，完成 Inbox 未讀、標籤與處理流程。
 - [ ] 備份、匯出、還原與媒體清理策略。
 - [ ] 平台 Token 健康檢查、到期提示與成效回看。

@@ -26,6 +26,9 @@ function sourceStatusText(source) {
   if (source.status === 'synced') {
     return '已同步 ' + (source.fetchedAt ? escapeHtml(formatDate(source.fetchedAt)) : '最新資料');
   }
+  if (source.status === 'cached') {
+    return '顯示已保存資料 ' + (source.fetchedAt ? escapeHtml(formatDate(source.fetchedAt)) : '') + '（非即時）';
+  }
   if (source.status === 'error') {
     return '同步失敗：' + escapeHtml(source.error?.message || '請檢查平台權限與 Token');
   }
@@ -57,7 +60,9 @@ export function renderInsights() {
     const platformPublished = platformTargets.filter((target) => target.status === 'published').length;
     const platformFailed = platformTargets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
     const source = (insights.sources || []).find((item) => item.platformId === platformId);
-    const externalStats = source?.status === 'synced' ? metricSummary(source) : sourceStatusText(source);
+    const externalStats = ['synced', 'cached'].includes(source?.status)
+      ? metricSummary(source) + ' · ' + sourceStatusText(source)
+      : sourceStatusText(source);
     return '<article class="insights-platform-card"><div class="insights-platform-heading"><span class="platform-mark" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml((platformLabel(platformId)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(platformLabel(platformId)) + '</h3><span>本機發布摘要</span></div></div><div class="insights-platform-stats"><span>目標 <strong>' + platformTargets.length + '</strong></span><span>成功 <strong>' + platformPublished + '</strong></span><span>需處理 <strong>' + platformFailed + '</strong></span></div><p class="insights-external-stats" data-status="' + escapeHtml(source?.status || 'unavailable') + '">' + externalStats + '</p></article>';
   }).join('');
 }

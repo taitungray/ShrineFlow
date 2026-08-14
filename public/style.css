@@ -3379,6 +3379,10 @@ button.module-summary-card:focus-visible {
   color: var(--accent);
 }
 
+.insights-external-stats[data-status="cached"] {
+  color: var(--text-secondary);
+}
+
 .insights-external-stats[data-status="error"] {
   color: var(--danger);
 }
