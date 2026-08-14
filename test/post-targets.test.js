@@ -81,6 +81,21 @@ test('migrateLegacyPost keeps existing targets', () => {
   assert.equal(migrated.targets[0].id, 't1');
 });
 
+test('migrateLegacyPost preserves archived lifecycle state', () => {
+  const withTargets = migrateLegacyPost({
+    id: 'archived-targets',
+    status: 'archived',
+    targets: [{ id: 't1', platformId: 'facebook', status: 'draft' }],
+  });
+  const legacy = migrateLegacyPost({
+    id: 'archived-legacy',
+    status: 'archived',
+    channel: 'facebook',
+  });
+  assert.equal(withTargets.status, 'archived');
+  assert.equal(legacy.status, 'archived');
+  assert.equal(legacy.targets[0].status, 'draft');
+});
 test('resolveTargetCopy uses override when set', () => {
   const copy = resolveTargetCopy(
     { facebook: '母稿', reel: '' },

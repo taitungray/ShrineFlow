@@ -184,7 +184,7 @@ async function initApp() {
   initTabs();
   initInsightsListeners();
   initInboxListeners();
-  initContentFilters();
+  initContentFilters(refreshLists);
   initCalendarControls();
   initMediaLibrary();
   initTemplateManager(loadData);

@@ -1042,7 +1042,9 @@ select:focus, textarea:focus, input:focus {
   text-align: left;
   transition: var(--transition);
 }
-.record-card { cursor: pointer; }
+.record-card { cursor: default; }
+.record-card-main { display: flex; flex: 1; min-width: 0; align-items: center; gap: 12px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.record-card-main:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: var(--r-sm); }
 .record-card:hover { border-color: var(--brand); transform: translateX(2px); }
 
 .record-thumb {
@@ -2251,6 +2253,28 @@ select:focus, textarea:focus, input:focus {
 .content-status[data-status="partial_success"] { color: #9a5b00; background: #fff4d6; }
 .content-status[data-status="failed"] { color: #c62828; background: #ffebee; }
 .content-status[data-status="draft"] { color: var(--text-secondary); background: var(--bg-subtle); }
+.content-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: auto;
+}
+.content-card-action {
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--r-sm);
+  color: var(--brand);
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.content-card-action:hover { background: var(--brand-soft); }
+.content-card[data-status="archived"] { opacity: 0.78; }
+.content-status[data-status="archived"] { color: var(--text-secondary); background: var(--bg-subtle); }
 
 .content-status-detail {
   color: var(--text-tertiary);
@@ -2314,7 +2338,7 @@ select:focus, textarea:focus, input:focus {
   }
 
   .content-card-side {
-    min-width: 54px;
+    min-width: 96px;
   }
 
   .content-card-side .record-arrow {

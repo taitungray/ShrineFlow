@@ -156,6 +156,10 @@ function draftValidationMessage(draft) {
 }
 
 async function saveDraft({ mode = 'manual', intent = state.autosaveIntent } = {}) {
+  if (state.savedPost?.status === 'archived') {
+    setAutosaveStatus('封存中的貼文不可編輯，請先還原。', 'blocked');
+    return null;
+  }
   if (state.autosavePromise) {
     await state.autosavePromise;
     if (mode === 'autosave' && !state.editorDirty) return state.savedPost;
@@ -251,6 +255,8 @@ const VERSION_SOURCE_LABELS = {
   schedule: '排程前',
   publish: '發布前',
   restore: '還原版本',
+  archive: '封存',
+  duplicate: '複製',
 };
 
 function renderVersionHistory(versions = []) {
@@ -418,21 +424,35 @@ export function renderSavedMedia(items = []) {
   if (wrap) wrap.classList.toggle('empty', normalized.length === 0);
 }
 
+function syncArchivedEditorState() {
+  const locked = state.savedPost?.status === 'archived';
+  document.querySelectorAll('#reviewPanel input, #reviewPanel textarea, #reviewPanel select').forEach((control) => {
+    control.disabled = locked;
+  });
+  ['btnRewritePlatform', 'btnRestoreMotherCopy', 'createVersionButton', 'autosaveRetryButton'].forEach((id) => {
+    const button = $('#' + id);
+    if (button && locked) button.disabled = true;
+  });
+  const panel = $('#reviewPanel');
+  if (panel) panel.classList.toggle('is-archived', locked);
+}
 function syncEditorActions() {
+  const isArchived = state.savedPost?.status === 'archived';
   const hasSavedPost = Boolean(state.savedPost);
   const isDirty = Boolean(state.editorDirty);
   const isSaving = Boolean(state.autosaveInFlight);
   const scheduleButton = $('#scheduleButton');
   const publishButton = $('#publishNowButton');
-  if (scheduleButton) scheduleButton.disabled = !hasSavedPost || isDirty || isSaving;
+  if (scheduleButton) scheduleButton.disabled = isArchived || !hasSavedPost || isDirty || isSaving;
   if (publishButton) {
-    publishButton.disabled = !hasSavedPost || isDirty || isSaving || publishButton.dataset.busy === 'true';
+    publishButton.disabled = isArchived || !hasSavedPost || isDirty || isSaving || publishButton.dataset.busy === 'true';
   }
   const badge = $('#draftState');
   if (badge && hasSavedPost) {
     badge.textContent = isDirty ? '尚未儲存' : postStatusLabel(state.savedPost.status);
     badge.classList.toggle('ready', !isDirty && !isSaving);
   }
+  syncArchivedEditorState();
 }
 
 export function markEditorDirty(isDirty = true) {
@@ -488,11 +508,11 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (tagsText) tagsText.value = hashtags.join(' ');
   const badge = $('#draftState');
   if (badge) {
-    badge.textContent = '可編輯';
+    badge.textContent = state.savedPost?.status === 'archived' ? '已封存' : '可編輯';
     badge.classList.add('ready');
   }
   const saveBtn = $('#saveButton');
-  if (saveBtn) saveBtn.disabled = false;
+  if (saveBtn) saveBtn.disabled = state.savedPost?.status === 'archived';
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
   syncEditorActions();

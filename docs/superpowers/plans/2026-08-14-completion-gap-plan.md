@@ -1,7 +1,7 @@
 # ShrineFlow 未完成項目與補強計畫
 
 > 建立日期：2026-08-14  
-> 依據版本：v0.5.34
+> 依據版本：v0.5.35
 > 目前驗收結果：PASS WITH ISSUES  
 > 適用範圍：單一操作員、無資料庫、JSON 儲存、多品牌、多平台
 
@@ -367,7 +367,7 @@ Target 狀態仍是實際發布真相，Post 狀態只是彙總結果；不能�
 ## 9. 建議下一個實作批次
 
 （歷史快照）當時建議先做 P0 的 `partial_success`，再做 P1 的 Autosave；這些項目目前已完成並通過測試，後續依本文件最後的 Current implementation update 執行。
-## Current implementation update (2026-08-14, v0.5.34)
+## Current implementation update (2026-08-14, v0.5.35)
 
 This section is an additive status update. Earlier assessment notes remain above as historical records.
 
@@ -378,10 +378,12 @@ This section is an additive status update. Earlier assessment notes remain above
 - `GET /api/posts/:postId/versions`, `POST /api/posts/:postId/versions`, and `POST /api/posts/:postId/versions/:versionId/restore` are available. Restore creates a new draft version and resets target runtime state so it cannot republish with stale external IDs.
 - Manual save, autosave, schedule, publish, restore, and create events are represented by a source label when a distinct content snapshot is created. Duplicate content does not create unbounded history.
 - The Composer version history panel is responsive: actions wrap on narrow screens and restore controls remain touch-sized.
-- Verification completed: `npm test` passes 160/160; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
+- Post lifecycle actions are implemented without a database: archive, restore, duplicate-as-draft, lifecycle event history capped at 50 events per post, and forced content snapshots for archive/restore transitions.
+- Archived posts are excluded from edit, schedule, publish, and scheduler claim paths; archive is blocked while any platform target is scheduled, pending, publishing, or retrying.
+- Content list UI exposes archive, restore, and duplicate actions with an archived filter and mobile-safe touch targets.
+- Verification completed: `npm test` passes 161/161; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
 
 ### Next planned work
 
-- Add explicit archive/restore/duplicate post actions and lifecycle rules for user-facing post records.
-- Add focused UI smoke coverage for version history restore and autosave recovery at 390px width when the browser harness is available.
+- Add focused UI smoke coverage for lifecycle actions, version history restore, and autosave recovery at 390px width when the browser harness is available.
 - Continue production readiness work for Meta App Review, HTTPS media hosting, webhook deployment, and backup operations.

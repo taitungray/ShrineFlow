@@ -6,13 +6,14 @@ import path from 'node:path';
 import express from 'express';
 
 import { createPostsRouter } from '../lib/routes/posts.js';
-import { jsonFiles, readJson, writeJson } from '../lib/store.js';
+import { directories, jsonFiles, readJson, writeJson } from '../lib/store.js';
 
 test('posts router saves and validates multiple platform targets independently', async () => {
-  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients };
+  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients, postVersions: directories.postVersions };
   const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-posts-router-'));
   jsonFiles.posts = path.join(temporaryDirectory, 'posts.json');
   jsonFiles.clients = path.join(temporaryDirectory, 'clients.json');
+  directories.postVersions = path.join(temporaryDirectory, 'post-versions');
   await writeJson(jsonFiles.posts, []);
   await writeJson(jsonFiles.clients, [{ id: 'brand-a', name: 'Brand A', accounts: [] }]);
 
@@ -113,21 +114,53 @@ test('posts router saves and validates multiple platform targets independently',
     assert.ok(restored.targets.every((target) => target.status === 'draft'));
     assert.notEqual(restored.targets[0].id, created.targets[0].id);
 
+    const archiveResponse = await fetch(`${baseUrl}/posts/${created.id}/archive`, { method: 'POST' });
+    assert.equal(archiveResponse.status, 200);
+    const archived = await archiveResponse.json();
+    assert.equal(archived.status, 'archived');
+    assert.equal(archived.version, 4);
+    assert.ok(archived.lifecycleEvents.some((event) => event.event === 'archived'));
+
+    const archivedListResponse = await fetch(`${baseUrl}/posts?clientId=brand-a`);
+    const archivedList = await archivedListResponse.json();
+    assert.equal(archivedList[0].status, 'archived');
+
+    const restoreLifecycleResponse = await fetch(`${baseUrl}/posts/${created.id}/restore`, { method: 'POST' });
+    assert.equal(restoreLifecycleResponse.status, 200);
+    const restoredLifecycle = await restoreLifecycleResponse.json();
+    assert.equal(restoredLifecycle.status, 'draft');
+    assert.equal(restoredLifecycle.version, 5);
+
+    const duplicateResponse = await fetch(`${baseUrl}/posts/${created.id}/duplicate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    assert.equal(duplicateResponse.status, 201);
+    const duplicate = await duplicateResponse.json();
+    assert.notEqual(duplicate.id, created.id);
+    assert.equal(duplicate.version, 1);
+    assert.equal(duplicate.status, 'draft');
+    assert.ok(duplicate.targets.every((target) => target.status === 'draft'));
+    assert.notEqual(duplicate.targets[0].id, restoredLifecycle.targets[0].id);
+    assert.equal(duplicate.duplicatedFrom, created.id);
     const saved = await readJson(jsonFiles.posts, []);
-    assert.equal(saved.length, 1);
+    assert.equal(saved.length, 2);
     assert.equal(saved[0].targets.length, 3);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     Object.assign(jsonFiles, originalPaths);
+    directories.postVersions = originalPaths.postVersions;
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });
 
 test('posts router rejects an oversized multi-platform media selection before persistence', async () => {
-  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients };
+  const originalPaths = { posts: jsonFiles.posts, clients: jsonFiles.clients, postVersions: directories.postVersions };
   const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-posts-invalid-'));
   jsonFiles.posts = path.join(temporaryDirectory, 'posts.json');
   jsonFiles.clients = path.join(temporaryDirectory, 'clients.json');
+  directories.postVersions = path.join(temporaryDirectory, 'post-versions');
   await writeJson(jsonFiles.posts, []);
   await writeJson(jsonFiles.clients, [{ id: 'brand-a', name: 'Brand A', accounts: [] }]);
 
@@ -158,6 +191,7 @@ test('posts router rejects an oversized multi-platform media selection before pe
   } finally {
     await new Promise((resolve) => server.close(resolve));
     Object.assign(jsonFiles, originalPaths);
+    directories.postVersions = originalPaths.postVersions;
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });
