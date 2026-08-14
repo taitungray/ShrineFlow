@@ -205,9 +205,10 @@ API／權限 Spike
 
 #### Package 4：發布與日曆增強
 
-- 桌面拖曳改期。
-- IG 首則留言與單獨重試。
-- 最佳時段建議，但不自動改動 Queue。
+- [x] 桌面拖曳改期；改期仍走既有時區、DST 與 Facebook 原生補償流程。
+- [x] IG 首則留言與單獨重試；主貼文與留言子交付分開保存，失敗不重發主貼文。
+- [x] 最佳時段建議；只使用本機已發布樣本，低於 10 筆回傳 `insufficient_data`，不自動改動 Queue。
+- [ ] IG capability 預設仍保持 `not_available`；只有完成 Instagram Professional 帳號／權限驗證後，才以帳號 capability override 顯示操作入口。
 
 #### Package 5：平台能力增強
 
@@ -320,9 +321,9 @@ target.firstComment:  disabled / pending → published / failed
 
 ## 9. 下一個建議建置目標
 
-先做 **Package 0：基礎模型與能力閘門**，再做 **Package 1：Queue v1**。
+Package 0～4 已完成可驗證的核心閉環；下一步先做 **Package 5：平台能力增強** 的 API spike，再決定哪些能力能進入正式 UI。
 
-Package 0 完成前，不應直接實作遠端 Planner、Facebook Story 排程或 IG 首則留言；Package 1 完成後，再依實際單人操作頻率決定是否加入最佳時段與拖曳改期。
+遠端 Planner、Facebook Story 排程、Reel 封面與 Story 強化仍不可直接宣稱支援；必須先有 endpoint、權限、帳號類型與失敗補償的驗證結果。
 
 本輪的完成標準不是「A＋B＋C 做完就對齊三站」，而是：
 
@@ -337,7 +338,7 @@ Package 0 完成前，不應直接實作遠端 Planner、Facebook Story 排程�
 1. Queue 的最小排程 horizon 是否跟著平台限制，還是允許先產生本機待建立項目？
 2. 危機暫停的預設範圍是目前品牌、目前帳號，還是所有品牌？
 3. 「待回」第一版是否只採手動標記，並把 provider 自動推導延後？
-4. IG 首則留言 spike 是否具備可用的正式權限與可單獨重試能力？
+4. 哪些 Instagram Professional 帳號已完成首則留言的正式權限與 App Review 驗證？目前資料流已具備，但 capability 預設仍不開啟。
 5. Meta Graph API 是否能可靠提供本產品需要的遠端 scheduled posts 列表與狀態？
 6. 最佳時段的最低樣本數、指標與資料保留期為何？
 7. Ideas 是否要作為 `contentStage`，而不是加入既有 post lifecycle status？

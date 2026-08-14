@@ -15,6 +15,7 @@ export const state = {
   campaigns: [],
   insights: null,
   insightsScope: 'account',
+  bestTimes: null,
   inbox: null,
   inboxFilter: 'all',
   savedReplies: [],

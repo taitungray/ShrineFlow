@@ -2993,6 +2993,30 @@ select:focus, textarea:focus, input:focus {
   background: var(--brand-soft);
 }
 
+.calendar-item[draggable="true"] {
+  cursor: grab;
+}
+
+.calendar-item.is-dragging {
+  opacity: 0.45;
+}
+
+.calendar-day.is-drop-target {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.schedule-child-status {
+  align-self: center;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.schedule-child-status.is-success {
+  color: #2e7d32;
+}
+
 .calendar-item[data-status="failed"] {
   border-left-color: var(--danger);
 }
@@ -4096,6 +4120,61 @@ button.module-summary-card:focus-visible {
 .inbox-reply-field .btn-secondary {
   justify-self: start;
   min-height: 44px;
+}
+
+.best-times-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  background: var(--bg-soft);
+}
+
+.best-times-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.best-times-heading h3 {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+}
+
+.best-times-meta {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+.best-times-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.best-time-slot {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+}
+
+.best-time-slot strong {
+  color: var(--text-primary);
+}
+
+.best-time-slot span {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 767px) {
+  .best-times-slots {
+    grid-template-columns: 1fr;
+  }
 }
 
 .inbox-reply-field select {

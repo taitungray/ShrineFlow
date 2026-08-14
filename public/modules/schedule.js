@@ -5,6 +5,7 @@ import { api } from './api.js';
 import { targetStatusLabel } from './status.js';
 
 let reschedulingItem = null;
+let draggedTargetId = '';
 let calendarView = 'month';
 let calendarCursor = new Date();
 calendarCursor.setHours(0, 0, 0, 0);
@@ -34,7 +35,8 @@ function calendarItemMarkup(item) {
   const post = state.posts.find((record) => record.id === item.postId);
   const title = post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
   const channel = PLATFORM_NAMES[item.channel] || item.channel || '平台';
-  return '<button class="calendar-item" type="button" data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
+  const draggable = item.status === 'scheduled' ? ' draggable="true"' : '';
+  return '<button class="calendar-item" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
     '<span class="calendar-item-platform">' + escapeHtml(channel) + '</span><span class="calendar-item-title">' + escapeHtml(title) + '</span></button>';
 }
 
@@ -94,7 +96,7 @@ function renderCalendarGrid() {
         key === today ? 'is-today' : '',
         calendarView === 'month' && date.getMonth() !== currentMonth ? 'is-outside' : '',
       ].filter(Boolean).join(' ');
-      return '<div class="' + classes + '"><span class="calendar-day-number">' + date.getDate() + '</span>'
+      return '<div class="' + classes + '" data-calendar-date="' + escapeHtml(key) + '"><span class="calendar-day-number">' + date.getDate() + '</span>'
         + '<div class="calendar-day-items">' + items.slice(0, 4).map(calendarItemMarkup).join('')
         + (items.length > 4 ? '<span class="calendar-more">+' + (items.length - 4) + '</span>' : '') + '</div></div>';
     }).join('') + '</div>';
@@ -127,8 +129,18 @@ function scheduleActions(item) {
       + escapeHtml(item.postId) + '">重發</button>',
     );
   }
-  if (!buttons.length) return '';
-  return '<div class="schedule-actions">' + buttons.join('') + '</div>';
+  const firstComment = item.channel === 'instagram' && item.firstComment?.text
+    ? item.firstComment.status === 'failed'
+      ? '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="first-comment-retry" data-target-id="'
+        + escapeHtml(item.targetId) + '" data-post-id="' + escapeHtml(item.postId || '') + '">重試首則留言</button>'
+      : item.firstComment.status === 'pending'
+        ? '<span class="schedule-child-status">首則留言處理中</span>'
+        : item.firstComment.status === 'published'
+          ? '<span class="schedule-child-status is-success">首則留言已發布</span>'
+          : ''
+    : '';
+  if (!buttons.length && !firstComment) return '';
+  return '<div class="schedule-actions">' + buttons.join('') + firstComment + '</div>';
 }
 
 function scheduleQueueLabel(channel) {
@@ -170,7 +182,7 @@ export function renderSchedule() {
   }).join('');
 }
 
-export function initCalendarControls() {
+export function initCalendarControls(refreshListsFn) {
   $('#calendarPrevious')?.addEventListener('click', () => {
     if (calendarView === 'week') calendarCursor.setDate(calendarCursor.getDate() - 7);
     else calendarCursor.setMonth(calendarCursor.getMonth() - 1);
@@ -194,6 +206,62 @@ export function initCalendarControls() {
     const item = event.target.closest('[data-calendar-target-id]');
     if (!item) return;
     document.getElementById('schedule-item-' + item.dataset.calendarTargetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  $('#calendarGrid')?.addEventListener('dragstart', (event) => {
+    const item = event.target.closest('[data-calendar-target-id][draggable="true"]');
+    if (!item) return;
+    draggedTargetId = item.dataset.calendarTargetId || '';
+    event.dataTransfer?.setData('text/plain', draggedTargetId);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    item.classList.add('is-dragging');
+  });
+  $('#calendarGrid')?.addEventListener('dragend', (event) => {
+    event.target.closest('[data-calendar-target-id]')?.classList.remove('is-dragging');
+    document.querySelectorAll('.calendar-day.is-drop-target').forEach((day) => day.classList.remove('is-drop-target'));
+    draggedTargetId = '';
+  });
+  $('#calendarGrid')?.addEventListener('dragover', (event) => {
+    const day = event.target.closest('[data-calendar-date]');
+    if (!day || !draggedTargetId) return;
+    event.preventDefault();
+    day.classList.add('is-drop-target');
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+  });
+  $('#calendarGrid')?.addEventListener('dragleave', (event) => {
+    const day = event.target.closest('[data-calendar-date]');
+    if (day && !day.contains(event.relatedTarget)) day.classList.remove('is-drop-target');
+  });
+  $('#calendarGrid')?.addEventListener('drop', async (event) => {
+    const day = event.target.closest('[data-calendar-date]');
+    const targetId = draggedTargetId || event.dataTransfer?.getData('text/plain');
+    if (!day || !targetId) return;
+    event.preventDefault();
+    day.classList.remove('is-drop-target');
+    const item = state.schedule.find((entry) => entry.targetId === targetId);
+    if (!item?.scheduledAt) return;
+    const original = new Date(item.scheduledAt);
+    if (Number.isNaN(original.getTime())) return;
+    const local = new Date(original.getTime() - original.getTimezoneOffset() * 60000);
+    const scheduledLocal = day.dataset.calendarDate + 'T' + local.toISOString().slice(11, 16);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Taipei';
+    try {
+      await api('/api/schedule/' + encodeURIComponent(targetId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scheduledAt: new Date(scheduledLocal).toISOString(),
+          scheduledLocal,
+          timeZone,
+          scheduleTimeZone: timeZone,
+          scheduleMode: 'manual',
+        }),
+      });
+      if (typeof refreshListsFn === 'function') await refreshListsFn();
+      showToast('已更新排程日期。', 'success');
+    } catch (error) {
+      renderCalendarGrid();
+      showToast(error.message || '拖曳改期失敗。', 'error');
+    }
   });
   renderCalendarGrid();
 }
@@ -242,6 +310,22 @@ export function initScheduleDialog(refreshListsFn) {
         } catch (error) {
           if (typeof refreshListsFn === 'function') await refreshListsFn();
           showToast(error.message || '重發失敗。', 'error');
+        }
+        return;
+      }
+      if (button.dataset.scheduleAction === 'first-comment-retry') {
+        try {
+          button.disabled = true;
+          await api('/api/publish/target/first-comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: item.postId || button.dataset.postId, targetId: item.targetId }),
+          });
+          if (typeof refreshListsFn === 'function') await refreshListsFn();
+          showToast('首則留言已重新送出。', 'success');
+        } catch (error) {
+          if (typeof refreshListsFn === 'function') await refreshListsFn();
+          showToast(error.message || '首則留言重試失敗。', 'error');
         }
         return;
       }

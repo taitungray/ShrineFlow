@@ -235,3 +235,23 @@ test('wraps Graph API errors with code and retriable state', async () => {
       && error.retriable,
   );
 });
+
+test('publishes an Instagram first comment against the published media id', async () => {
+  let request;
+  const publisher = createInstagramPublisher({
+    userId: 'ig-1',
+    accessToken: 'token',
+    graphBaseUrl: 'https://graph.example',
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return jsonResponse({ id: 'comment-1' });
+    },
+  });
+
+  assert.deepEqual(await publisher.publishFirstComment({ mediaId: 'media-9', text: '第一則留言' }), {
+    externalId: 'comment-1',
+  });
+  assert.equal(String(request.url), 'https://graph.example/v25.0/media-9/comments');
+  assert.equal(request.options.body.get('message'), '第一則留言');
+  assert.equal(request.options.headers.Authorization, 'Bearer token');
+});

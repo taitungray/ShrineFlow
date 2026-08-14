@@ -39,6 +39,23 @@ function renderCopyMode(target = null) {
   if (restore) restore.disabled = !overridden;
 }
 
+function renderFirstCommentField(target = null, account = null) {
+  const field = $('#targetFirstCommentField');
+  const input = $('#targetFirstComment');
+  if (!field || !input) return;
+  const supported = account?.platformId === 'instagram'
+    && account?.capabilities?.first_comment?.status === 'supported';
+  field.classList.toggle('is-hidden', !supported);
+  const firstComment = target?.delivery?.firstComment || target?.firstComment || {};
+  input.value = String(firstComment.text || '');
+  input.disabled = firstComment.status === 'published';
+  input.title = input.disabled ? '首則留言已發布；如需修改請另建立平台留言。' : '';
+  const helper = $('#targetFirstCommentHint');
+  if (helper) helper.textContent = input.disabled
+    ? '首則留言已發布，重試只會使用已保存內容。'
+    : '主貼文發布成功後才會送出；失敗可在發布紀錄單獨重試。';
+}
+
 export function syncSelectedTargetAccountIds() {
   state.selectedTargetAccountIds = selectedAccountIds();
   if (!state.selectedTargetAccountIds.includes(state.activeTargetId)) {
@@ -126,6 +143,7 @@ export function applyActiveTargetToEditor() {
     }
   }
   renderCopyMode(target);
+  renderFirstCommentField(target, account);
   if (scheduled) {
     if (target?.scheduledAt) {
       const date = new Date(target.scheduledAt);
@@ -194,6 +212,15 @@ export function buildTargetsPayload(draft) {
     const copyOverride = currentCopy.trim() && currentCopy.trim() !== String(motherCopy || '').trim()
       ? currentCopy
       : null;
+    const previousFirstComment = previous?.delivery?.firstComment || previous?.firstComment || {};
+    const firstCommentText = isActive
+      ? String($('#targetFirstComment')?.value || '').trim()
+      : String(previousFirstComment.text || '').trim();
+    const firstCommentStatus = firstCommentText
+      ? (firstCommentText === String(previousFirstComment.text || '').trim()
+        ? (previousFirstComment.status || 'pending')
+        : 'pending')
+      : 'disabled';
     return {
       id: previous?.id,
       accountId,
@@ -211,6 +238,15 @@ export function buildTargetsPayload(draft) {
       externalId: previous?.externalId || null,
       publishedAt: previous?.publishedAt || null,
       lastError: previous?.lastError || null,
+      delivery: {
+        firstComment: {
+          status: firstCommentStatus,
+          text: firstCommentText,
+          externalId: previousFirstComment.externalId || null,
+          lastError: previousFirstComment.lastError || null,
+          ...(previousFirstComment.publishedAt ? { publishedAt: previousFirstComment.publishedAt } : {}),
+        },
+      },
     };
   });
 }

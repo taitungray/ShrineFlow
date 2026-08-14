@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.53" />
+    <link rel="stylesheet" href="/style.css?v=0.5.54" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -230,6 +230,11 @@
               <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
               <input id="targetScheduledAt" type="datetime-local" />
               <p class="helper" id="targetScheduleHint"></p>
+            </div>
+            <div class="field is-hidden" id="targetFirstCommentField">
+              <label for="targetFirstComment" class="field-label">Instagram 首則留言 <span class="field-optional">(選填)</span></label>
+              <textarea id="targetFirstComment" rows="3" maxlength="2000" placeholder="發布後自動留下第一則留言"></textarea>
+              <p class="helper" id="targetFirstCommentHint"></p>
             </div>
           </fieldset>
 
@@ -597,7 +602,7 @@
             </div>
           </div>
           <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
-          <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">選取內容可進入編輯</span></div>
+          <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">桌面可拖曳卡片改期；手機請使用改時間</span></div>
           <div id="scheduleList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📅</span>
@@ -727,6 +732,7 @@
           </div>
           <div id="insightsPlatformGrid" class="insights-platform-grid" aria-live="polite"></div>
           <div id="insightsTargetGrid" class="insights-target-grid is-hidden" aria-live="polite"></div>
+          <section class="form-group-card best-times-card" id="bestTimesCard" aria-live="polite"></section>
         </section>
         <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
           <div class="panel-heading compact">
@@ -1013,6 +1019,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.53" type="module"></script>
+    <script src="/app.js?v=0.5.54" type="module"></script>
   </body>
 </html>

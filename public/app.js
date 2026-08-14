@@ -39,10 +39,11 @@ import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modu
 import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
 import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
 import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
+import { renderBestTimes } from './modules/best-times.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -52,6 +53,7 @@ async function refreshLists() {
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
     api(clientQuery('/api/crisis-pause')).catch(() => null),
+    api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -63,6 +65,7 @@ async function refreshLists() {
   state.notifications = notifications;
   state.savedReplies = savedReplies;
   state.crisisPause = crisisPause;
+  state.bestTimes = bestTimes;
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
   renderPosts();
   renderSchedule();
@@ -76,6 +79,7 @@ async function refreshLists() {
   renderCampaigns();
   renderInsights();
   renderInbox();
+  renderBestTimes();
 }
 
 function applyClientAccounts() {
@@ -118,7 +122,7 @@ async function loadData() {
   applyPermissionUi();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -128,6 +132,7 @@ async function loadData() {
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
     api(clientQuery('/api/crisis-pause')).catch(() => null),
+    api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
   ]);
 
   const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
@@ -146,6 +151,7 @@ async function loadData() {
   state.notifications = notifications;
   state.savedReplies = savedReplies;
   state.crisisPause = crisisPause;
+  state.bestTimes = bestTimes;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
@@ -173,6 +179,7 @@ async function loadData() {
   renderCampaigns();
   renderInsights();
   renderInbox();
+  renderBestTimes();
   await loadTeamManagement();
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
 
@@ -211,7 +218,7 @@ async function initApp() {
   initInboxListeners();
   initContentFilters(refreshLists);
   initReviewListeners(refreshLists);
-  initCalendarControls();
+  initCalendarControls(refreshLists);
   initMediaLibrary();
   initTemplateManager(loadData);
 
