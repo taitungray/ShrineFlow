@@ -11,6 +11,7 @@ export const state = {
   posts: [],
   schedule: [],
   queueSettings: null,
+  remoteSchedule: null,
   templates: [],
   campaigns: [],
   insights: null,

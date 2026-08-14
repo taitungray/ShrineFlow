@@ -354,6 +354,16 @@ export function updateLivePreview() {
   }
   const hashtagsPreview = $('#hashtagsPreview');
   if (hashtagsPreview) hashtagsPreview.textContent = $('#hashtagsText')?.value?.trim() || '';
+  const storyNotice = $('#storyPreviewNotice');
+  if (storyNotice) {
+    const isStory = contentType === 'story';
+    storyNotice.hidden = !isStory;
+    storyNotice.textContent = isStory
+      ? (state.selectedPlatform === 'facebook'
+        ? 'Facebook Story 目前只能立即發布；發布後約 24 小時到期。'
+        : 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。')
+      : '';
+  }
   const previewCard = document.querySelector('.copy-card');
   if (previewCard) {
     previewCard.dataset.platform = state.selectedPlatform;

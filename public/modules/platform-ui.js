@@ -79,29 +79,32 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
   container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>'
     + settings.map((setting) => renderSettingField(setting, 'data-content-setting', 'schedule-setting')).join('');
   const isStory = contentType.id === 'story';
+  const blocksStoryScheduling = isStory && platformId === 'facebook';
   const isQueueMode = fieldValue($('#scheduleMode')) === 'queue';
   const timeInput = $('#scheduledAt');
   const timeHint = $('#scheduledAtHint');
   if (timeInput) {
-    timeInput.classList.toggle('is-hidden', isStory);
-    timeInput.disabled = isStory || isQueueMode;
-    timeInput.required = !isStory && !isQueueMode;
+    timeInput.classList.toggle('is-hidden', blocksStoryScheduling);
+    timeInput.disabled = blocksStoryScheduling || isQueueMode;
+    timeInput.required = !blocksStoryScheduling && !isQueueMode;
   }
   if (timeHint) {
-    timeHint.textContent = isQueueMode && !isStory
+    timeHint.textContent = isQueueMode && !blocksStoryScheduling
       ? '將依目前平台連線的下一個可用佇列時段排程。'
+      : blocksStoryScheduling
+      ? 'Facebook 限時動態無法原生排程，只能立刻發。'
       : isStory
-      ? '限時動態無法排程，只能立刻發。'
+      ? 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。'
       : (platformId === 'facebook'
         ? '將交 Facebook 粉專排程佇列；關機仍會到點公開。'
         : '本機到期真發，服務需開著。');
   }
   const submit = $('#scheduleSubmitButton');
   if (submit) {
-    const blocked = !contentType.canPublish || isStory;
+    const blocked = !contentType.canPublish || blocksStoryScheduling;
     submit.disabled = blocked;
-    submit.title = isStory
-      ? '限時動態無法排程，請改用貼文或 Reel'
+    submit.title = blocksStoryScheduling
+      ? 'Facebook 限時動態無法排程，請改用貼文或 Reel'
       : (contentType.canPublish ? '' : '此格式尚未串接發布功能');
   }
 }
@@ -255,14 +258,16 @@ export function updateTargetScheduleAvailability(contentTypeId = fieldValue($('#
   const hint = $('#targetScheduleHint');
   if (!scheduled) return;
   const contentType = contentTypeId || fieldValue($('#targetContentType'));
-  const blocked = contentType === 'story';
+  const blocked = contentType === 'story' && platformId === 'facebook';
   scheduled.disabled = blocked;
   scheduled.classList.toggle('is-hidden', blocked);
   scheduled.title = blocked ? '限時動態無法排程' : '';
   if (blocked) scheduled.value = '';
   if (hint) {
     hint.textContent = blocked
-      ? '限時動態無法排程，只能立刻發。'
+      ? 'Facebook 限時動態無法原生排程，只能立刻發。'
+      : contentType === 'story'
+      ? 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。'
       : (platformId === 'facebook'
         ? '選填。交 Facebook 粉專排程佇列；關機仍會到點公開。'
         : '選填。本機到期真發，服務需開著。');

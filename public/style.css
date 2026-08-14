@@ -2993,6 +2993,16 @@ select:focus, textarea:focus, input:focus {
   background: var(--brand-soft);
 }
 
+.story-preview-notice {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent);
+  color: var(--text-secondary);
+  background: var(--accent-light);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
 .calendar-item[draggable="true"] {
   cursor: grab;
 }
@@ -3413,6 +3423,27 @@ button.module-summary-card:focus-visible {
   font-weight: 800;
 }
 
+.platform-capability-statuses {
+  padding-top: 4px;
+  border-top: 1px dashed var(--border);
+}
+
+.capability-status[data-status="supported"] {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+
+.capability-status[data-status="permission_required"] {
+  color: #9a5b00;
+  border-color: #e4c38a;
+  background: #fff8e7;
+}
+
+.capability-status[data-status="not_configured"],
+.capability-status[data-status="not_available"] {
+  color: var(--text-tertiary);
+}
+
 .platform-connection-footer {
   display: flex;
   align-items: center;
@@ -3471,6 +3502,41 @@ button.module-summary-card:focus-visible {
 .crisis-pause-card {
   margin-top: 20px;
   background: color-mix(in srgb, var(--danger-soft) 38%, var(--bg-card));
+}
+
+.remote-schedule-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  background: var(--bg-soft);
+}
+
+.remote-schedule-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.remote-schedule-heading h3 {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+}
+
+.remote-schedule-status {
+  color: var(--success);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.remote-schedule-status[data-status="unavailable"] {
+  color: #9a5b00;
+}
+
+.remote-schedule-sources {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
 }
 
 .crisis-pause-card .helper {

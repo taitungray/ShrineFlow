@@ -212,8 +212,10 @@ API／權限 Spike
 
 #### Package 5：平台能力增強
 
-- IG Story 預覽／提醒、FB Story capability、Reel 封面、遠端 Planner 唯讀對帳。
-- 只有 API spike 通過的項目才進入實作。
+- [x] IG Story 預覽與本機排程說明；明確標示發布後約 24 小時到期，Facebook Story 仍不可原生排程。
+- [x] 平台連線頁顯示 Story 排程、首則留言、Reel 封面與 Meta Planner 唯讀 capability 狀態。
+- [x] 遠端 Planner 唯讀 API 邊界；未完成 connector 驗證時固定回 `remote_schedule_unavailable`，不回傳假空資料。
+- [ ] Reel 封面與 Meta 遠端排程 connector；仍需完成 endpoint／權限／帳號類型 spike 後才能宣稱支援。
 
 #### Package 6：檔期產能
 

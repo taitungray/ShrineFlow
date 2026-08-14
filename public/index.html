@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.55" />
+    <link rel="stylesheet" href="/style.css?v=0.5.56" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -315,6 +315,7 @@
                 <h4>貼文預覽</h4>
                 <div id="facebookPreview" class="copy-text">尚未產生文案</div>
                 <p id="hashtagsPreview" class="hashtags"></p>
+                <p id="storyPreviewNotice" class="story-preview-notice" hidden></p>
               </article>
           </div>
         </section>
@@ -609,6 +610,7 @@
               <p>還沒有排程</p>
             </div>
           </div>
+          <section class="form-group-card remote-schedule-card" id="remoteScheduleCard" aria-live="polite"></section>
           <fieldset class="form-group-card crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
             <legend class="group-title">⛔ 危機暫停</legend>
             <p class="helper">只處理 ShrineFlow 管理的排程；Facebook 遠端排程會逐筆嘗試取消。取消失敗會明確標示，恢復時再處理，不會假裝已安全停止。</p>
@@ -1019,6 +1021,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.55" type="module"></script>
+    <script src="/app.js?v=0.5.56" type="module"></script>
   </body>
 </html>

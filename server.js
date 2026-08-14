@@ -25,6 +25,7 @@ import { createQueuesRouter } from './lib/routes/queues.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createInsightsRouter } from './lib/routes/insights.js';
 import { createBestTimesRouter } from './lib/routes/best-times.js';
+import { createRemoteScheduleRouter } from './lib/routes/remote-schedule.js';
 import { createInboxRouter } from './lib/routes/inbox.js';
 import { createSavedRepliesRouter } from './lib/routes/saved-replies.js';
 import { createSystemRouter } from './lib/routes/system.js';
@@ -311,6 +312,10 @@ app.use('/api', (request, response, next) => createInboxRouter({
   resolveThreadsInbox,
 })(request, response, next));
 app.use('/api', createBestTimesRouter({ repositories }));
+app.use('/api', (request, response, next) => createRemoteScheduleRouter({
+  resolveFacebookPublisher,
+  repositories,
+})(request, response, next));
 app.use('/api', createSavedRepliesRouter({ repositories }));
 app.use('/api', createGodsRouter({ repositories }));
 app.use('/api', createPostsRouter({ repositories }));
