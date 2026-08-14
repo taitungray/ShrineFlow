@@ -18,10 +18,16 @@ import { createPostsRouter } from './lib/routes/posts.js';
 import { createGenerateRouter } from './lib/routes/generate.js';
 import { createScheduleRouter } from './lib/routes/schedule.js';
 import { createPublishRouter } from './lib/routes/publish.js';
+import { createInsightsRouter } from './lib/routes/insights.js';
 import { createSettingsRouter } from './lib/routes/settings.js';
 import { createClientsRouter } from './lib/routes/clients.js';
 import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
+import {
+  createFacebookInsightsClient,
+  createInstagramInsightsClient,
+  createThreadsInsightsClient,
+} from './lib/insights.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +80,36 @@ async function resolveThreadsPublisher(context) {
     graphVersion: process.env.THREADS_GRAPH_VERSION || 'v1.0',
     graphBaseUrl: process.env.THREADS_GRAPH_BASE_URL || 'https://graph.threads.net',
     publicMediaBaseUrl: process.env.PUBLIC_MEDIA_BASE_URL,
+  });
+}
+
+async function resolveFacebookInsights(context) {
+  const account = await resolveAccount(context);
+  return createFacebookInsightsClient({
+    pageId: account?.credentials?.pageId || process.env.FACEBOOK_PAGE_ID,
+    pageAccessToken: account?.credentials?.pageAccessToken || process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
+    graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
+    graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
+  });
+}
+
+async function resolveInstagramInsights(context) {
+  const account = await resolveAccount(context);
+  return createInstagramInsightsClient({
+    userId: account?.credentials?.userId,
+    accessToken: account?.credentials?.accessToken,
+    graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
+    graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
+  });
+}
+
+async function resolveThreadsInsights(context) {
+  const account = await resolveAccount(context);
+  return createThreadsInsightsClient({
+    userId: account?.credentials?.userId,
+    accessToken: account?.credentials?.accessToken,
+    graphVersion: process.env.THREADS_GRAPH_VERSION || 'v1.0',
+    graphBaseUrl: process.env.THREADS_GRAPH_BASE_URL || 'https://graph.threads.net',
   });
 }
 
@@ -143,6 +179,11 @@ app.use('/api', createClientsRouter({
 }));
 app.use('/api', createTemplatesRouter());
 app.use('/api', createCampaignsRouter());
+app.use('/api', (request, response, next) => createInsightsRouter({
+  resolveFacebookInsights,
+  resolveInstagramInsights,
+  resolveThreadsInsights,
+})(request, response, next));
 app.use('/api', createGodsRouter());
 app.use('/api', createPostsRouter());
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));

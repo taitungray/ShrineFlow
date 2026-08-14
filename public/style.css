@@ -3375,6 +3375,14 @@ button.module-summary-card:focus-visible {
   line-height: 1.55;
 }
 
+.insights-external-stats[data-status="synced"] {
+  color: var(--accent);
+}
+
+.insights-external-stats[data-status="error"] {
+  color: var(--danger);
+}
+
 .inbox-platform-card {
   min-height: 190px;
   align-content: start;

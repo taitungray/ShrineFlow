@@ -35,16 +35,18 @@ import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } f
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
 async function refreshLists() {
-  const [posts, schedule, templates, campaigns] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
+    api(clientQuery('/api/insights')).catch(() => ({ status: 'unavailable', sources: [] })),
   ]);
   state.posts = posts;
   state.schedule = schedule;
   state.templates = templates;
   state.campaigns = campaigns;
+  state.insights = insights;
   renderPosts();
   renderSchedule();
   renderOverview();
@@ -92,11 +94,12 @@ async function loadData() {
   }
   renderClientSwitcher();
 
-  const [posts, schedule, templates, campaigns] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
+    api(clientQuery('/api/insights')).catch(() => ({ status: 'unavailable', sources: [] })),
   ]);
 
   const facebookStatus = await api('/api/facebook/status').catch((error) => ({
@@ -109,6 +112,7 @@ async function loadData() {
   state.schedule = schedule;
   state.templates = templates;
   state.campaigns = campaigns;
+  state.insights = insights;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
