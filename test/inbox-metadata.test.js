@@ -6,9 +6,12 @@ import path from 'node:path';
 
 import {
   applyInboxItemMetadata,
+  clearInboxSyncHint,
   getInboxCursor,
+  getInboxSyncHint,
   inboxItemKey,
   INBOX_METADATA_POLICY,
+  markInboxSyncHint,
   saveInboxCursor,
   updateInboxItemMetadata,
 } from '../lib/inbox-metadata.js';
@@ -32,6 +35,17 @@ test('inbox metadata persists unread, tags, notes and one cursor without message
 
     await saveInboxCursor(identity, 'opaque-next-cursor');
     assert.equal((await getInboxCursor(identity)).value, 'opaque-next-cursor');
+    const syncHint = await markInboxSyncHint(identity, {
+      eventType: 'messages',
+      eventCount: 2,
+      receivedAt: '2026-08-14T00:00:00.000Z',
+    });
+    assert.equal(syncHint.pending, true);
+    assert.equal(syncHint.eventCount, 2);
+    assert.equal(await getInboxCursor(identity), null);
+    assert.equal((await getInboxSyncHint(identity)).eventType, 'messages');
+    await clearInboxSyncHint(identity);
+    assert.equal(await getInboxSyncHint(identity), null);
     await saveInboxCursor(identity, '');
     assert.equal(await getInboxCursor(identity), null);
     const raw = await readJson(jsonFiles.inboxMetadata, {});

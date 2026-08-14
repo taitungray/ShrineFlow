@@ -12,6 +12,7 @@ import {
   InboxApiError,
 } from '../lib/inbox.js';
 import { createInboxRouter } from '../lib/routes/inbox.js';
+import { getInboxSyncHint, markInboxSyncHint, saveInboxCursor } from '../lib/inbox-metadata.js';
 import { jsonFiles } from '../lib/store.js';
 
 function response(payload, status = 200) {
@@ -233,5 +234,48 @@ test('Inbox reply route returns provider sent state and never stores reply body'
     assert.equal(JSON.stringify(payload).includes('provider reply'), false);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('Inbox provider refresh ignores a stale cursor after a webhook sync hint', async () => {
+  const originalPath = jsonFiles.inboxMetadata;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-inbox-webhook-refresh-'));
+  jsonFiles.inboxMetadata = path.join(temporaryDirectory, 'inbox-metadata.json');
+  const afterValues = [];
+  const identity = { clientId: 'client-1', accountId: 'facebook:page-1', platformId: 'facebook' };
+  await saveInboxCursor(identity, 'stale-cursor');
+  await markInboxSyncHint(identity, { eventType: 'messages' });
+  const app = express();
+  app.use('/api', createInboxRouter({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: identity.accountId, platformId: identity.platformId, name: 'Facebook brand', configured: true, credentials: { pageId: 'page-1' } }],
+    }],
+    resolveFacebookInbox: async () => ({
+      configured: true,
+      async fetchRecent({ after }) {
+        afterValues.push(after);
+        return {
+          platformId: 'facebook',
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-14T00:00:00.000Z',
+          items: [],
+          paging: null,
+        };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+  try {
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/inbox?useCursor=true`);
+    const payload = await result.json();
+    assert.equal(result.status, 200);
+    assert.deepEqual(afterValues, ['']);
+    assert.equal(payload.sources[0].syncPending, true);
+    assert.equal(await getInboxSyncHint(identity), null);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    jsonFiles.inboxMetadata = originalPath;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });

@@ -4,7 +4,8 @@ import { clientQuery, state, PLATFORM_NAMES } from './state.js';
 
 function sourceStatus(source, connected) {
   if (source?.status === 'synced') {
-    return '已同步 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '最新資料');
+    return '已同步 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '最新資料')
+      + (source.syncPending ? ' · 已依平台更新重新同步' : '');
   }
   if (source?.status === 'error') return '同步失敗：' + (source.error?.message || '請檢查權限');
   if (source?.status === 'not_configured' || !connected) return '尚未連線或未授權';

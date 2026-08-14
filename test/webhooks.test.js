@@ -2,8 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import express from 'express';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
-import { createWebhookRouter, verifyMetaWebhookSignature } from '../lib/routes/webhooks.js';
+import {
+  createWebhookRouter,
+  syncMetaWebhookPayload,
+  verifyMetaWebhookSignature,
+} from '../lib/routes/webhooks.js';
+import { getInboxCursor, getInboxSyncHint, saveInboxCursor } from '../lib/inbox-metadata.js';
+import { jsonFiles, readJson } from '../lib/store.js';
 
 function signature(rawBody, secret) {
   return 'sha256=' + crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
@@ -58,5 +67,32 @@ test('Meta webhook POST acknowledges valid signed event without storing payload'
     assert.equal(invalid.status, 403);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('Meta webhook maps provider owners to bounded inbox sync hints and clears the cursor', async () => {
+  const originalPath = jsonFiles.inboxMetadata;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-webhook-sync-'));
+  jsonFiles.inboxMetadata = path.join(temporaryDirectory, 'inbox-metadata.json');
+  try {
+    const identity = { clientId: 'client-1', accountId: 'facebook:page-1', platformId: 'facebook' };
+    await saveInboxCursor(identity, 'stale-cursor');
+    const sync = await syncMetaWebhookPayload({
+      object: 'page',
+      entry: [{ id: 'page-1', messaging: [{ message: 'private body' }, { message: 'another body' }] }],
+    }, {
+      listClients: async () => [{
+        id: 'client-1',
+        accounts: [{ id: 'facebook:page-1', platformId: 'facebook', credentials: { pageId: 'page-1' } }],
+      }],
+    });
+
+    assert.deepEqual(sync, { receivedSignals: 1, matched: 1, unmatched: 0 });
+    assert.equal(await getInboxCursor(identity), null);
+    assert.equal((await getInboxSyncHint(identity)).eventCount, 2);
+    assert.equal(JSON.stringify(await readJson(jsonFiles.inboxMetadata, {})).includes('private body'), false);
+  } finally {
+    jsonFiles.inboxMetadata = originalPath;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });

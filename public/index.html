@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.19" />
+    <link rel="stylesheet" href="/style.css?v=0.5.20" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -35,7 +35,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.19</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.20</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
@@ -427,7 +427,7 @@
 
           <fieldset class="form-group-card">
             <legend class="group-title">🛡️ 備份與儲存管理</legend>
-            <p class="helper">備份包含 JSON 內容、排程、品牌、平台快照與發布紀錄；不包含 `.env`、Token 或其他秘密。還原前會自動建立目前資料的安全備份。備份最多保留最近 30 份，且超過 180 天會自動清理；發布事件與 Insights 歷史最多保留 24 個月，單月檔案也有紀錄數上限。</p>
+            <p class="helper">備份包含 JSON 內容、排程、品牌、平台快照與發布紀錄；不包含 `.env`、Token 或其他秘密。還原前會自動建立目前資料的安全備份。備份最多保留最近 30 份，且超過 180 天會自動清理；發布事件與 Insights 歷史最多保留 24 個月，單月檔案也有紀錄數上限。Inbox webhook 只保留最多 200 筆同步提示。</p>
             <div class="field-row">
               <div class="field">
                 <label for="backupIncludeMedia" class="field-label">備份素材</label>
@@ -625,7 +625,7 @@
             <div><p class="section-tag">INBOX</p><h2>收件匣</h2><p class="panel-lede">集中查看平台最近對話與回覆；只顯示 API 真實回傳，不建立永久訊息倉儲。</p></div>
             <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
           </div>
-          <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註與同步 cursor 只保存本機 metadata，不建立永久訊息倉儲。回覆與 webhook 會在平台寫入權限確認後再加入。</span></div>
+            <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註、同步 cursor 與 webhook 同步提示只保存本機 metadata，不建立永久訊息倉儲。Webhook 會讓下一次讀取從最新資料重新同步。</span></div>
           <div id="inboxPlatformGrid" class="inbox-platform-grid" aria-live="polite"></div>
         </section>
         <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
@@ -773,6 +773,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.19" type="module"></script>
+    <script src="/app.js?v=0.5.20" type="module"></script>
   </body>
 </html>

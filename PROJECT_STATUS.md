@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14（v0.5.19）
+更新日期：2026-08-14（v0.5.20）
 
 ## 專案定位
 
@@ -69,10 +69,10 @@
 - [x] Insights 同步成功時保存完整月份快照；即時同步失敗時可回退到有時間戳的 cached 資料。
 - [x] Insights 按 post target 保存，並補齊各平台貼文 Insights endpoint；可在成效頁切換平台總覽／已發布內容，歷史快照按月份保存且每次查詢最多回傳 100 筆；歷史最多保留 24 個月，每月最多 5,000 筆。
 - [x] Inbox 第一階段接入 Facebook／Instagram 對話與 Threads 回覆，只讀 provider-backed 資料，不建立永久訊息倉儲。
-- [x] Inbox 未讀／標籤／備註與同步 cursor：只保存本機 metadata，不保存訊息全文；無註記暫存狀態最多 2,000 筆，cursor 每個平台連線只留一份。
+- [x] Inbox 未讀／標籤／備註與同步 cursor：只保存本機 metadata，不保存訊息全文；無註記暫存狀態最多 2,000 筆，cursor 每個平台連線只留一份；Webhook 同步提示最多 200 筆，單一提示事件計數封頂。
 - [x] Inbox provider 回覆：Facebook／Instagram／Threads 只在 capability 與識別資料具備時送出；不保存回覆全文。
 - [x] Inbox webhook 驗證邊界：GET verify token、POST HMAC 簽章驗證，事件只回 ACK 不落地。
-- [ ] Inbox webhook 事件同步與 provider cursor 自動推進。
+- [x] Inbox webhook 事件同步與 provider cursor 自動推進：驗證簽章後依品牌平台擁有者 ID 對應帳戶，清除舊 cursor 並建立有上限的同步提示；下一次 provider 讀取會從最新資料開始，成功後清除提示，不保存 webhook 訊息正文。
 - [x] 備份／匯出、還原與媒體清理策略：備份不含秘密、還原自動先建立安全備份，未使用素材必須明確確認才刪除；備份最多 30 份／180 天，事件與 Insights 歷史最多 24 個月且單月有上限，避免持久化資料無限膨脹。
 - [x] 平台 Token 健康檢查與到期提示：保存最後驗證／失敗狀態，設定頁支援選填到期日；未提供日期時不猜測。
 
