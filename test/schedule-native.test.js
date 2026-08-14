@@ -30,11 +30,13 @@ before(async () => {
     posts: path.join(temporaryDataDirectory, 'posts.json'),
     schedule: path.join(temporaryDataDirectory, 'schedule.json'),
     clients: path.join(temporaryDataDirectory, 'clients.json'),
+    errorLog: path.join(temporaryDataDirectory, 'error-log.json'),
   });
   await Promise.all([
     writeJson(jsonFiles.posts, []),
     writeJson(jsonFiles.schedule, []),
     writeJson(jsonFiles.clients, []),
+    writeJson(jsonFiles.errorLog, { version: 1, items: [] }),
   ]);
 });
 
@@ -228,6 +230,67 @@ test('POST /schedule calls Facebook before persisting scheduled target', async (
     const posts = await readJson(jsonFiles.posts, []);
     assert.equal(posts[0].targets[0].status, 'scheduled');
     assert.equal(posts[0].targets[0].externalId, 'graph-1');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('POST /schedule compensates remote success when local version changes before persistence', async () => {
+  const calls = [];
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        calls.push('publish');
+        const currentPosts = await readJson(jsonFiles.posts, []);
+        await writeJson(jsonFiles.posts, currentPosts.map((post) => ({
+          ...post,
+          version: Number(post.version || 1) + 1,
+        })));
+        return { externalId: 'graph-orphan' };
+      },
+      async deleteScheduled(id) {
+        calls.push(['delete', id]);
+        return { deleted: true, externalId: id };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-version-race',
+      version: 1,
+      clientId: 'client-1',
+      facebook: 'Schedule version race',
+      targets: [],
+    }]);
+
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'post-version-race',
+        accountId: 'facebook:1',
+        channel: 'facebook',
+        contentType: 'post',
+        scheduledAt: '2026-08-15T10:00:00.000Z',
+      }),
+    });
+
+    assert.equal(response.status, 409);
+    const body = await response.json();
+    assert.equal(body.code, 'SCHEDULE_LOCAL_SYNC_FAILED');
+    assert.deepEqual(calls, ['publish', ['delete', 'graph-orphan']]);
+    const posts = await readJson(jsonFiles.posts, []);
+    assert.equal(posts[0].targets.length, 0);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -53,7 +53,9 @@ export function renderPublishingLogs() {
     const post = state.posts.find((record) => record.id === item.postId);
     const status = item.status || 'draft';
     const error = item.lastError?.message ? '<p class="publishing-log-error">' + escapeHtml(item.lastError.message) + '</p>' : '';
-    const action = status === 'failed' || status === 'retrying'
+    const retryBlocked = ['REMOTE_PUBLISH_RECONCILIATION_REQUIRED', 'REMOTE_SCHEDULE_RECONCILIATION_REQUIRED']
+      .includes(item.lastError?.code);
+    const action = !retryBlocked && (status === 'failed' || status === 'retrying')
       ? '<button class="btn-text" type="button" data-publishing-action="retry" data-target-id="' + escapeHtml(item.targetId) + '" data-post-id="' + escapeHtml(item.postId || '') + '">重試發布</button>'
       : status === 'scheduled'
         ? '<a class="btn-text" href="#/calendar">前往日曆</a>'

@@ -118,7 +118,9 @@ function scheduleActions(item) {
       + escapeHtml(item.targetId) + '">取消</button>',
     );
   }
-  if (item.status === 'failed' || item.status === 'retrying') {
+  const retryBlocked = ['REMOTE_PUBLISH_RECONCILIATION_REQUIRED', 'REMOTE_SCHEDULE_RECONCILIATION_REQUIRED']
+    .includes(item.lastError?.code);
+  if (!retryBlocked && (item.status === 'failed' || item.status === 'retrying')) {
     buttons.push(
       '<button class="btn-text schedule-action" type="button" data-schedule-action="retry" data-target-id="'
       + escapeHtml(item.targetId) + '" data-post-id="'

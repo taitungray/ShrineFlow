@@ -26,6 +26,13 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
         if (context.accountId === 'instagram:graph-error') {
           throw new InstagramPublishError('Instagram Graph API rejected the media container.');
         }
+        if (context.accountId === 'instagram:version-race') {
+          const currentPosts = await readJson(jsonFiles.posts, []);
+          await writeJson(jsonFiles.posts, currentPosts.map((post) => ({
+            ...post,
+            version: Number(post.version || 1) + 1,
+          })));
+        }
         calls.push({ platformId: 'instagram', context, post, options });
         return { externalId: 'ig-media-1' };
       },
@@ -59,6 +66,7 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
         { id: 'instagram:missing', platformId: 'instagram', configured: false },
         { id: 'instagram:no-public-url', platformId: 'instagram', configured: true },
         { id: 'instagram:graph-error', platformId: 'instagram', configured: true },
+        { id: 'instagram:version-race', platformId: 'instagram', configured: true },
         { id: 'threads:1', platformId: 'threads', configured: true },
         { id: 'threads:no-public-url', platformId: 'threads', configured: true },
       ],
@@ -417,6 +425,42 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
       assert.equal(target.status, 'failed');
       assert.match(target.lastError?.message || '', /Graph API|rejected/i);
       assert.equal(target.publishAttempts[0].status, 'failed');
+    });
+
+    await t.test('local version change after provider success requires reconciliation and blocks retry', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-version-race',
+        clientId: 'client-1',
+        facebook: 'Version race',
+        mediaPaths: ['/uploads/version-race.jpg'],
+        targets: [{
+          id: 'target-version-race',
+          accountId: 'instagram:version-race',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'draft',
+        }],
+      }]);
+
+      const first = await publish({
+        postId: 'post-version-race',
+        targetId: 'target-version-race',
+      });
+
+      assert.equal(first.status, 409);
+      const afterFirst = (await readJson(jsonFiles.posts, []))[0].targets[0];
+      assert.equal(afterFirst.status, 'failed');
+      assert.equal(afterFirst.externalId, 'ig-media-1');
+      assert.equal(afterFirst.lastError?.code, 'REMOTE_PUBLISH_RECONCILIATION_REQUIRED');
+
+      const second = await publish({
+        postId: 'post-version-race',
+        targetId: 'target-version-race',
+      });
+
+      assert.equal(second.status, 409);
+      assert.equal(calls.length, 1);
     });
 
     const attemptArchiveNames = await fs.readdir(directories.publishAttempts);
