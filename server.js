@@ -32,7 +32,8 @@ import { createWebhookRouter } from './lib/routes/webhooks.js';
 import { cleanupOrphanUploads } from './lib/storage-management.js';
 import { appendErrorLog } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
-import { createAuthMiddleware, createAuthRouter, createAuthService } from './lib/auth.js';
+import { createAuthMiddleware, createAuthRouter } from './lib/auth.js';
+import { createEnvironmentAuthService } from './lib/firebase-auth.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
@@ -197,7 +198,7 @@ async function initServices() {
 
 await initServices();
 const aiService = createAiService();
-const authService = createAuthService();
+const authService = createEnvironmentAuthService({ repositories });
 const processDueSchedules = (now) => scheduler.processDueSchedules(now);
 
 app.use(express.json({

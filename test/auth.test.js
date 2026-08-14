@@ -38,14 +38,14 @@ test('single operator auth expires sessions and locks repeated bad passwords', (
   assert.equal(auth.status(result.token).authenticated, false);
 });
 
-test('legacy auth middleware attaches an owner actor for gradual permission rollout', () => {
+test('legacy auth middleware attaches an owner actor for gradual permission rollout', async () => {
   const auth = createAuthService({
     env: { SHRINEFLOW_OPERATOR_PASSWORD: 'correct', SHRINEFLOW_SESSION_SECRET: 'secret' },
   });
   const token = auth.login({ password: 'correct', clientKey: 'client' }).token;
   const request = { path: '/posts', headers: { cookie: `${AUTH_COOKIE_NAME}=${token}` } };
   let called = false;
-  createAuthMiddleware(auth)(request, {}, () => { called = true; });
+  await createAuthMiddleware(auth)(request, {}, () => { called = true; });
   assert.equal(called, true);
   assert.equal(request.actor.uid, 'legacy:operator');
   assert.equal(request.actor.systemRole, 'owner');

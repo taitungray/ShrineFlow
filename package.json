@@ -1,6 +1,6 @@
 {
   "name": "social-ai-editor",
-  "version": "0.5.44",
+  "version": "0.5.45",
   "private": true,
   "description": "本機 JSON 版多平台社群發布工作台：建立內容、平台預覽與排程資料。",
   "type": "module",
@@ -16,6 +16,7 @@
     "@google/genai": "^2.16.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "firebase-admin": "^14.2.0",
     "multer": "^2.0.2"
   }
 }
