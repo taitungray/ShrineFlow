@@ -62,6 +62,23 @@ async function refreshSystemHealth() {
   return health;
 }
 
+async function refreshReadiness() {
+  const readiness = await api('/api/system/readiness');
+  const result = $('#readinessResult');
+  const list = $('#readinessList');
+  const statusText = readiness.status === 'ready' ? '可部署' : (readiness.status === 'warning' ? '有警告' : '尚未就緒');
+  if (result) {
+    result.textContent = `${statusText} · 這是單一操作員 JSON 模式檢查，不代表已完成登入與 HTTPS。`;
+    result.className = 'helper ' + (readiness.status === 'ready' ? 'text-success' : 'text-danger');
+  }
+  if (list) {
+    list.innerHTML = '<div class="backup-list-heading"><strong>部署前置條件</strong><span>' + escapeHtml(statusText) + '</span></div>' + (readiness.checks || []).map((item) => (
+      '<div class="backup-row"><div><strong>' + escapeHtml(item.id) + ' · ' + escapeHtml(item.status) + '</strong><small>' + escapeHtml(item.message) + '</small></div></div>'
+    )).join('');
+  }
+  return readiness;
+}
+
 export function initSystemTools(onRestored) {
   $('#btnCreateBackup')?.addEventListener('click', async () => {
     try {
@@ -99,6 +116,15 @@ export function initSystemTools(onRestored) {
     try {
       await refreshSystemHealth();
       setMessage('系統健康狀態已更新。', 'success');
+    } catch (error) {
+      setMessage(error.message, 'danger');
+    }
+  });
+
+  $('#btnRefreshReadiness')?.addEventListener('click', async () => {
+    try {
+      await refreshReadiness();
+      setMessage('部署前置檢查已更新。', 'success');
     } catch (error) {
       setMessage(error.message, 'danger');
     }
@@ -150,4 +176,5 @@ export function initSystemTools(onRestored) {
   refreshStorageHealth().catch(() => {});
   refreshErrorLog().catch(() => {});
   refreshSystemHealth().catch(() => {});
+  refreshReadiness().catch(() => {});
 }

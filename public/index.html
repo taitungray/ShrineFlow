@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.28" />
+    <link rel="stylesheet" href="/style.css?v=0.5.29" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -35,7 +35,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.28</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.29</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
@@ -453,6 +453,7 @@
               <button type="button" id="btnCreateBackup" class="btn-secondary" aria-label="建立 JSON 備份">💾 建立備份</button>
               <button type="button" id="btnRefreshStorage" class="btn-test" aria-label="檢查儲存空間">🔎 檢查儲存</button>
               <button type="button" id="btnRefreshSystemHealth" class="btn-test" aria-label="檢查系統健康狀態">🩺 系統健康</button>
+              <button type="button" id="btnRefreshReadiness" class="btn-test" aria-label="檢查部署前置條件">🚦 部署檢查</button>
               <button type="button" id="btnCleanupMedia" class="btn-test" aria-label="清理未使用素材">🧹 清理未使用素材</button>
               <span id="systemStorageMessage" class="test-result"></span>
             </div>
@@ -462,6 +463,8 @@
               <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
             </div>
             <div id="errorLogList" class="backup-list" aria-live="polite"></div>
+            <p class="helper" id="readinessResult">部署檢查只提供準備度提示，不取代登入／HTTPS／反向代理設定。</p>
+            <div id="readinessList" class="backup-list" aria-live="polite"></div>
           </fieldset>
 
           <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
@@ -790,6 +793,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.28" type="module"></script>
+    <script src="/app.js?v=0.5.29" type="module"></script>
   </body>
 </html>
