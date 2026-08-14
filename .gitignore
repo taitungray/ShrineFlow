@@ -12,6 +12,9 @@ data/publish-attempts/*.json
 data/insights/*.json
 data/backups/*
 !data/backups/.gitkeep
+data/*.json.bak
+data/*.json.lock
+data/*.json.*.tmp
 dev-server*.log
 start-last.log
 .superpowers/
