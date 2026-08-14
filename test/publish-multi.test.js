@@ -336,6 +336,89 @@ test('POST /publish/target dispatches Instagram and Threads publishers', async (
       assert.equal(target.publishAttempts.length, 0);
     });
 
+    await t.test('missing targetId returns 404 instead of selecting another target', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-missing-target',
+        clientId: 'client-1',
+        facebook: 'Missing target',
+        targets: [{
+          id: 'target-existing',
+          accountId: 'instagram:1',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'draft',
+        }],
+      }]);
+
+      const response = await publish({
+        postId: 'post-missing-target',
+        targetId: 'target-does-not-exist',
+      });
+
+      assert.equal(response.status, 404);
+      assert.equal(calls.length, 0);
+      const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+      assert.equal(target.status, 'draft');
+    });
+
+    await t.test('ambiguous publish target requires an explicit targetId', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-ambiguous-target',
+        clientId: 'client-1',
+        facebook: 'Ambiguous target',
+        targets: [
+          {
+            id: 'target-instagram-one',
+            accountId: 'instagram:1',
+            platformId: 'instagram',
+            contentType: 'feed',
+            status: 'draft',
+          },
+          {
+            id: 'target-instagram-two',
+            accountId: 'instagram:graph-error',
+            platformId: 'instagram',
+            contentType: 'feed',
+            status: 'draft',
+          },
+        ],
+      }]);
+
+      const response = await publish({ postId: 'post-ambiguous-target' });
+
+      assert.equal(response.status, 409);
+      assert.equal(calls.length, 0);
+      const targets = (await readJson(jsonFiles.posts, []))[0].targets;
+      assert.deepEqual(targets.map((target) => target.status), ['draft', 'draft']);
+    });
+
+    await t.test('provider failure without targetId marks the resolved target failed', async () => {
+      calls.length = 0;
+      await writeJson(jsonFiles.posts, [{
+        id: 'post-fallback-failure',
+        clientId: 'client-1',
+        facebook: 'Fallback failure',
+        mediaPaths: ['/uploads/fallback-failure.jpg'],
+        targets: [{
+          id: 'target-fallback-failure',
+          accountId: 'instagram:graph-error',
+          platformId: 'instagram',
+          contentType: 'feed',
+          status: 'draft',
+        }],
+      }]);
+
+      const response = await publish({ postId: 'post-fallback-failure' });
+
+      assert.equal(response.status, 502);
+      const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+      assert.equal(target.status, 'failed');
+      assert.match(target.lastError?.message || '', /Graph API|rejected/i);
+      assert.equal(target.publishAttempts[0].status, 'failed');
+    });
+
     const attemptArchiveNames = await fs.readdir(directories.publishAttempts);
     assert.ok(attemptArchiveNames.length >= 1);
     const archivedEvents = [];
