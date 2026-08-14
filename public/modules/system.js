@@ -60,10 +60,12 @@ async function refreshSystemHealth() {
   const contentUsage = postUsage?.maxItems
     ? ` · 內容 ${postUsage.itemCount || 0}/${postUsage.maxItems}`
     : '';
-  const status = health.status === 'ok' ? '正常' : '需要注意';
-  result.textContent = `${status} · JSON ${files.healthy || 0}/${files.total || 0}${contentUsage} · 備份 ${backups} 份 · 排程器 ${health.scheduler?.running ? '運作中' : '待命'}`;
-  result.className = 'helper ' + (health.status === 'ok' ? 'text-success' : 'text-danger');
-  return health;
+  const hasUsageWarning = Object.values(files.details || {}).some((item) => item.usage?.status === 'warning')
+    || health.storage?.uploads?.usage?.status === 'warning';
+  const status = health.status !== 'ok' ? '需要注意' : (hasUsageWarning ? '接近上限' : '正常');
+  const usageNotice = hasUsageWarning ? ' · 配額已達 80% 請先整理或封存' : '';
+  result.textContent = `${status} · JSON ${files.healthy || 0}/${files.total || 0}${contentUsage}${usageNotice} · 備份 ${backups} 份 · 排程器 ${health.scheduler?.running ? '運作中' : '待命'}`;
+  result.className = 'helper ' + (status === '正常' ? 'text-success' : 'text-danger');  return health;
 }
 
 async function refreshReadiness() {

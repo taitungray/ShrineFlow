@@ -1,7 +1,7 @@
 # ShrineFlow 未完成項目與補強計畫
 
 > 建立日期：2026-08-14  
-> 依據版本：v0.5.37
+> 依據版本：v0.5.38
 > 目前驗收結果：PASS WITH ISSUES  
 > 適用範圍：單一操作員、無資料庫、JSON 儲存、多品牌、多平台
 
@@ -367,7 +367,7 @@ Target 狀態仍是實際發布真相，Post 狀態只是彙總結果；不能�
 ## 9. 建議下一個實作批次
 
 （歷史快照）當時建議先做 P0 的 `partial_success`，再做 P1 的 Autosave；這些項目目前已完成並通過測試，後續依本文件最後的 Current implementation update 執行。
-## Current implementation update (2026-08-14, v0.5.37)
+## Current implementation update (2026-08-14, v0.5.38)
 
 This section is an additive status update. Earlier assessment notes remain above as historical records.
 
@@ -383,6 +383,7 @@ This section is an additive status update. Earlier assessment notes remain above
 - Content list UI exposes archive, restore, and duplicate actions with an archived filter and mobile-safe touch targets.
 - Deployment readiness now surfaces incomplete Meta webhook configuration, while `.env.example` and the local deployment runbook document the required operator, media URL, and webhook variables.
 - Deployment readiness also warns when the newest backup is older than seven days or lacks a valid timestamp.
+- System health now returns 80% usage warnings for JSON item／byte limits and uploads file／byte quotas; the Settings panel surfaces the warning with a cleanup or archive hint.
 - Verification completed: `npm test` passes 161/161; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
 
 ### Next planned work
