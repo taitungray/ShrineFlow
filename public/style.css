@@ -266,6 +266,7 @@ body::before {
 }
 
 .is-hidden { display: none !important; }
+.permission-hidden { display: none !important; }
 
 /* Grid Layouts */
 .workspace-grid { display: grid; gap: 20px; min-height: 560px; }
@@ -2139,6 +2140,315 @@ select:focus, textarea:focus, input:focus {
 
   .mobile-bottom-nav .mobile-nav-create small {
     color: var(--brand);
+  }
+}
+
+/* P3: Multi-user identity, team management and audit trail */
+.auth-google-button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.auth-google-button span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--brand);
+  background: #fff;
+  font-family: "Outfit", sans-serif;
+  font-weight: 800;
+}
+
+.user-identity {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.user-avatar,
+.team-member-avatar {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  font-family: "Outfit", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.user-identity-copy {
+  display: grid;
+  max-width: 150px;
+  line-height: 1.15;
+}
+
+.user-identity-copy strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-identity-copy small {
+  margin-top: 3px;
+  color: var(--text-tertiary);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.team-section-tabs {
+  min-height: 44px;
+  margin-bottom: 18px;
+}
+
+.team-section-tab {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.team-section-tab:hover,
+.team-section-tab:focus-visible,
+.team-section-tab.active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.team-section {
+  min-height: 360px;
+}
+
+.team-list,
+.audit-list {
+  display: grid;
+  gap: 10px;
+}
+
+.team-member-card {
+  display: grid;
+  grid-template-columns: 42px minmax(180px, 1fr) minmax(280px, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.team-member-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.team-member-copy strong,
+.team-invitation-card strong,
+.audit-event-card strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-member-copy small,
+.team-invitation-card small,
+.audit-event-card small {
+  color: var(--text-tertiary);
+  font-size: 0.66rem;
+}
+
+.team-status {
+  width: fit-content;
+  margin-top: 3px;
+  padding: 3px 7px;
+  border-radius: var(--r-full);
+  color: var(--success);
+  background: var(--success-soft);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.team-status[data-status="suspended"] {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.team-member-controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.compact-field {
+  min-width: 138px;
+  margin: 0;
+}
+
+.compact-field .field-label {
+  margin-bottom: 3px;
+  font-size: 0.64rem;
+}
+
+.compact-field select {
+  min-height: 44px;
+}
+
+.team-remove-button,
+.team-suspend-button {
+  min-height: 44px;
+}
+
+.team-remove-button,
+.team-suspend-button[data-next-status="suspended"] {
+  color: var(--danger);
+}
+
+.team-invitation-card,
+.audit-event-card {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.team-invitation-card > div,
+.audit-event-card > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.team-invitation-card p,
+.audit-event-card p {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.invitation-link-result {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--success) 36%, var(--border));
+  border-radius: var(--r-md);
+  background: var(--success-soft);
+}
+
+.invitation-link-result .field {
+  margin: 0;
+}
+
+.audit-event-card {
+  justify-content: flex-start;
+}
+
+.audit-event-mark {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--brand);
+  background: var(--brand-soft);
+  font-weight: 800;
+}
+
+@media (max-width: 920px) {
+  .user-identity-copy {
+    display: none;
+  }
+
+  .user-identity {
+    padding-right: 6px;
+  }
+
+  .team-member-card {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .team-member-controls {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-left: 54px;
+  }
+}
+
+@media (max-width: 767px) {
+  .user-identity,
+  .status-pill {
+    display: none;
+  }
+
+  .team-panel .module-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-section-tabs {
+    flex-wrap: wrap;
+  }
+
+  .team-section-tab {
+    flex: 1 1 120px;
+  }
+
+  .team-member-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .team-member-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-left: 0;
+  }
+
+  .compact-field {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .team-invitation-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .team-invitation-card button {
+    width: 100%;
+    min-height: 44px;
   }
 }
 

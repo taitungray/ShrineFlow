@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.46" />
+    <link rel="stylesheet" href="/style.css?v=0.5.47" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -16,16 +16,17 @@
     <section class="auth-gate is-hidden" id="authGate" aria-labelledby="authTitle">
       <div class="auth-card">
         <p class="section-tag">SHRINEFLOW</p>
-        <h1 id="authTitle">單一操作員登入</h1>
-        <p class="panel-lede">此環境已啟用登入保護；session 不寫入資料庫，逾期或服務重啟後需重新登入。</p>
+        <h1 id="authTitle">登入工作台</h1>
+        <p class="panel-lede" id="authDescription">此環境已啟用登入保護。</p>
+        <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
         <form id="authForm">
           <div class="field">
             <label for="authPassword" class="field-label">操作員密碼</label>
             <input id="authPassword" name="password" type="password" autocomplete="current-password" required />
           </div>
           <button class="primary-button" type="submit">登入工作台</button>
-          <p class="helper text-danger" id="authMessage" aria-live="polite"></p>
         </form>
+        <p class="helper text-danger" id="authMessage" aria-live="polite"></p>
       </div>
     </section>
 
@@ -44,6 +45,10 @@
             <select id="currentClientSelect" aria-label="切換品牌"></select>
           </div>
           <div class="status-pill" id="apiStatus">檢查連線中…</div>
+          <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
+            <span class="user-avatar" id="userAvatar" aria-hidden="true">U</span>
+            <span class="user-identity-copy"><strong id="userDisplayName">使用者</strong><small id="userRoleLabel">—</small></span>
+          </div>
           <button class="btn-text is-hidden" id="authLogoutButton" type="button">登出</button>
         </div>
       </div>
@@ -70,8 +75,9 @@
         <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
       </nav>
       <div class="sidebar-footer">
+        <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
         <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
-        <a class="app-nav-item" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
+        <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
       </div>
     </aside>
     <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
@@ -312,7 +318,7 @@
             </div>
           </div>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="system.manage">
             <legend class="group-title">🤖 Gemini AI 設定</legend>
             <div class="field">
               <div class="field-label-group">
@@ -336,7 +342,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="system.manage">
             <legend class="group-title">🔐 憑證保存狀態</legend>
             <p class="helper">設定 `SHRINEFLOW_MASTER_KEY` 後，下一次儲存會以 AES-256-GCM 加密 `.env` 與品牌平台 Token。主密鑰遺失時無法解密，系統不會替你猜測或重設。</p>
             <p class="helper" id="secretStorageStatus">正在檢查憑證保存狀態…</p>
@@ -356,7 +362,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="system.manage">
             <legend class="group-title">🏷️ 品牌管理</legend>
             <div class="field-row">
               <div class="field">
@@ -373,7 +379,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📘 目前品牌的 Facebook</legend>
             <p class="helper">連線憑證只存在此品牌底下，不會跟其他品牌混用。</p>
             <div class="field">
@@ -411,7 +417,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📸 目前品牌的 Instagram</legend>
             <p class="helper">填 Instagram User ID＋Token。有圖／影發布前請確認上方「公開媒體基底網址」可被 Meta 讀取。配額或權限錯誤時請檢查 App 權限與當日發布上限。</p>
             <div class="field">
@@ -440,7 +446,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">🧵 目前品牌的 Threads</legend>
             <p class="helper">Threads User ID＋Token。純文字可不設公開媒體網址；有圖／影則必須。文字請勿過長；影片處理較慢，失敗可稍後再試。</p>
             <div class="field">
@@ -466,7 +472,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="form-group-card">
+          <fieldset class="form-group-card" data-required-permission="system.manage">
             <legend class="group-title">🛡️ 備份與儲存管理</legend>
             <p class="helper">備份包含 JSON 內容、排程、品牌、平台快照與發布紀錄；不包含 `.env`、Token 或其他秘密。JSON 寫入採單檔鎖定、原子替換與單一復原快照；主要集合另有筆數／檔案大小硬上限，達上限時停止新增，不自動刪除內容。還原前會自動建立目前資料的安全備份。備份最多保留最近 30 份，且超過 180 天會自動清理；發布事件與 Insights 歷史最多保留 24 個月，單月檔案也有紀錄數上限。Inbox webhook 只保留最多 200 筆同步提示。</p>
             <div class="field-row">
@@ -503,7 +509,7 @@
             <div id="readinessList" class="backup-list" aria-live="polite"></div>
           </fieldset>
 
-          <button class="primary-button" type="submit" id="saveSettingsBtn" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
+          <button class="primary-button" type="submit" id="saveSettingsBtn" data-required-permission="system.manage" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
         </form>
 
         <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
@@ -694,6 +700,72 @@
           <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
           <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
         </section>
+
+        <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
+          <div class="panel-heading compact">
+            <div>
+              <p class="section-tag">TEAM & ACCESS</p>
+              <h2>團隊與權限</h2>
+              <p class="panel-lede">管理目前品牌的成員、邀請、角色與操作紀錄。</p>
+            </div>
+            <button class="btn-text" id="refreshTeamButton" type="button">↻ 重新整理</button>
+          </div>
+          <div class="module-summary-grid" id="teamSummary" aria-label="團隊摘要"></div>
+          <div class="radio-pill-group team-section-tabs" id="teamSectionTabs" role="tablist" aria-label="團隊管理區段">
+            <button class="team-section-tab active" type="button" role="tab" aria-selected="true" data-team-section="members">成員</button>
+            <button class="team-section-tab" type="button" role="tab" aria-selected="false" data-team-section="invitations">邀請</button>
+            <button class="team-section-tab" type="button" role="tab" aria-selected="false" data-team-section="audit">操作紀錄</button>
+          </div>
+
+          <div class="team-section" data-team-section-panel="members">
+            <fieldset class="form-group-card" id="teamInviteCard">
+              <legend class="group-title">邀請新成員</legend>
+              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 帳號登入。</p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="teamInviteEmail" class="field-label">Email <span class="field-required">*</span></label>
+                  <input id="teamInviteEmail" type="email" autocomplete="email" placeholder="member@example.com" />
+                </div>
+                <div class="field">
+                  <label for="teamInviteRole" class="field-label">角色 <span class="field-required">*</span></label>
+                  <select id="teamInviteRole">
+                    <option value="editor">Editor · 編輯</option>
+                    <option value="reviewer">Reviewer · 審核</option>
+                    <option value="publisher">Publisher · 發布</option>
+                    <option value="viewer">Viewer · 檢視</option>
+                    <option value="admin">Admin · 管理</option>
+                    <option value="owner">Owner · 擁有者</option>
+                  </select>
+                </div>
+              </div>
+              <div class="action-box">
+                <button class="btn-secondary" id="createInvitationButton" type="button">＋ 建立邀請</button>
+                <span class="test-result" id="teamInviteStatus" aria-live="polite"></span>
+              </div>
+              <div class="invitation-link-result is-hidden" id="invitationLinkResult">
+                <div class="field">
+                  <label for="invitationLink" class="field-label">一次性邀請連結</label>
+                  <div class="input-action"><input id="invitationLink" type="text" readonly /><button class="btn-test" id="copyInvitationLink" type="button">複製</button></div>
+                </div>
+              </div>
+            </fieldset>
+            <div class="team-list" id="teamMemberList" aria-live="polite"></div>
+          </div>
+
+          <div class="team-section is-hidden" data-team-section-panel="invitations">
+            <div class="team-list" id="teamInvitationList" aria-live="polite"></div>
+          </div>
+
+          <div class="team-section is-hidden" data-team-section-panel="audit">
+            <div class="module-toolbar">
+              <div class="field module-search-field">
+                <label for="auditSearch" class="field-label">搜尋紀錄</label>
+                <input id="auditSearch" type="search" placeholder="搜尋動作、操作者或資源…" autocomplete="off" />
+              </div>
+            </div>
+            <div class="audit-list" id="auditEventList" aria-live="polite"></div>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -831,6 +903,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.46" type="module"></script>
+    <script src="/app.js?v=0.5.47" type="module"></script>
   </body>
 </html>

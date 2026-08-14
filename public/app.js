@@ -32,9 +32,10 @@ import { renderInsights, initInsightsListeners } from './modules/insights.js';
 import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
-import { initializeAuth, initAuthListeners } from './modules/auth.js';
+import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
+import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
@@ -101,6 +102,8 @@ async function loadData() {
     setCurrentClientId(state.clients[0]?.id || '');
   }
   renderClientSwitcher();
+  renderUserIdentity();
+  applyPermissionUi();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
   const [posts, schedule, templates, campaigns, insights, inbox, notifications] = await Promise.all([
@@ -150,6 +153,7 @@ async function loadData() {
   renderCampaigns();
   renderInsights();
   renderInbox();
+  await loadTeamManagement();
 
   const status = $('#apiStatus');
   if (status) {
@@ -284,6 +288,7 @@ async function initApp() {
   initScheduleDialog(refreshLists);
   initPublishingLogs(refreshLists);
   initCampaignManager(loadData);
+  initTeamListeners();
   initTargetListeners({
     onActiveTargetChange: () => {
       renderPreviewPlatformTabs();
@@ -293,14 +298,20 @@ async function initApp() {
   initClientListeners({
     onClientChanged: async () => {
       applyClientAccounts();
+      renderUserIdentity();
+      applyPermissionUi();
       await refreshLists();
+      await loadTeamManagement();
       loadClientFacebookFields();
     },
     onClientsUpdated: async () => {
       state.clients = await api('/api/clients');
       renderClientSwitcher();
       applyClientAccounts();
+      renderUserIdentity();
+      applyPermissionUi();
       await refreshLists();
+      await loadTeamManagement();
     },
   });
   initSettingsListeners(async () => {

@@ -14,6 +14,7 @@ const VIEW_ROUTES = {
   inbox: 'inbox',
   platforms: 'platforms',
   settings: 'settings',
+  team: 'team',
 };
 
 const PAGE_META = {
@@ -30,6 +31,7 @@ const PAGE_META = {
   inbox: ['INBOX', '收件匣'],
   platforms: ['PLATFORMS', '平台連線'],
   settings: ['SETTINGS', '設定'],
+  team: ['TEAM & ACCESS', '團隊與權限'],
 };
 
 function normalizeView(view = '') {

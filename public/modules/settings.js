@@ -2,6 +2,7 @@ import { $, setFormMessage, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentClient } from './state.js';
 import { loadClientFacebookFields } from './clients-ui.js';
+import { hasPermission } from './state.js';
 
 function tokenHealthMessage(health) {
   if (!health) return '';
@@ -13,6 +14,10 @@ function tokenHealthMessage(health) {
 }
 
 export async function loadSettings() {
+  if (!hasPermission('system.manage')) {
+    loadClientFacebookFields();
+    return;
+  }
   try {
     const data = await api('/api/settings');
     const geminiKey = $('#settingGeminiApiKey');

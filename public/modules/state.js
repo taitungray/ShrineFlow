@@ -27,6 +27,7 @@ export const state = {
   selectedPlatform: 'facebook',
   platforms: [],
   accounts: [],
+  actor: null,
 };
 
 export const DEFAULT_HASHTAGS = ['#品牌內容', '#社群經營', '#內容行銷'];
@@ -50,6 +51,18 @@ export function mediaPathsOf(record = {}) {
 
 export function currentClient() {
   return state.clients.find((client) => client.id === state.currentClientId) || state.clients[0] || null;
+}
+
+export function currentMembership() {
+  return (state.actor?.memberships || []).find((membership) => (
+    membership.clientId === state.currentClientId && membership.status === 'active'
+  )) || null;
+}
+
+export function hasPermission(permission) {
+  if (state.actor?.legacy) return true;
+  if (permission === 'system.manage') return state.actor?.systemRole === 'owner';
+  return Boolean(currentMembership()?.permissions?.includes(permission));
 }
 
 export function setCurrentClientId(clientId) {
