@@ -28,7 +28,7 @@ import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-l
 import { renderPlatformConnections } from './modules/platform-connections.js';
 import { renderTemplates, initTemplateManager } from './modules/templates.js';
 import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
-import { renderInsights } from './modules/insights.js';
+import { renderInsights, initInsightsListeners } from './modules/insights.js';
 import { renderInbox } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
@@ -36,12 +36,13 @@ import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } f
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
 async function refreshLists() {
+  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
   const [posts, schedule, templates, campaigns, insights, inbox] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
-    api(clientQuery('/api/insights')).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
   ]);
   state.posts = posts;
@@ -49,6 +50,7 @@ async function refreshLists() {
   state.templates = templates;
   state.campaigns = campaigns;
   state.insights = insights;
+  state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
   renderPosts();
   renderSchedule();
@@ -97,12 +99,13 @@ async function loadData() {
   }
   renderClientSwitcher();
 
+  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
   const [posts, schedule, templates, campaigns, insights, inbox] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
     api(clientQuery('/api/campaigns')),
-    api(clientQuery('/api/insights')).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
   ]);
 
@@ -117,6 +120,7 @@ async function loadData() {
   state.templates = templates;
   state.campaigns = campaigns;
   state.insights = insights;
+  state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
@@ -171,6 +175,7 @@ async function loadData() {
 
 function initApp() {
   initTabs();
+  initInsightsListeners();
   initContentFilters();
   initCalendarControls();
   initMediaLibrary();

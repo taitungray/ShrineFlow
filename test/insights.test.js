@@ -7,7 +7,7 @@ import path from 'node:path';
 
 import { createInsightsRouter } from '../lib/routes/insights.js';
 import { directories } from '../lib/store.js';
-import { appendInsightsSnapshot, findLatestInsightsSnapshot } from '../lib/insights-snapshots.js';
+import { appendInsightsSnapshot, findLatestInsightsSnapshot, listInsightsSnapshots } from '../lib/insights-snapshots.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -72,6 +72,26 @@ test('Facebook and Threads adapters use their platform insight endpoints', async
 
   assert.match(requests[0], /\/v25\.0\/page-1\/insights/);
   assert.match(requests[1], /\/v1\.0\/threads-user-1\/threads_insights/);
+});
+
+test('post Insights adapters request the platform object insights endpoint', async () => {
+  let requestUrl = '';
+  const client = createThreadsInsightsClient({
+    userId: 'threads-user-1',
+    accessToken: 'threads-token',
+    fetchImpl: async (url) => {
+      requestUrl = String(url);
+      return response({ data: [{ name: 'views', value: 11 }] });
+    },
+  });
+  const result = await client.fetchPostInsights({
+    externalId: 'thread-99',
+    metrics: ['views'],
+  });
+  assert.equal(result.scope, 'post');
+  assert.equal(result.externalId, 'thread-99');
+  assert.match(requestUrl, /\/v1\.0\/thread-99\/insights/);
+  assert.match(requestUrl, /metric=views/);
 });
 
 test('Insights adapter returns classified Graph API errors and rejects ranges over 90 days', async () => {
@@ -207,5 +227,102 @@ test('Insights route falls back to a dated cached snapshot when live sync fails'
     assert.equal(payload.sources[0].error.category, 'cached');
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('Insights route reads published targets and keeps post scope separate', async () => {
+  const saved = [];
+  const app = express();
+  app.use('/api', createInsightsRouter({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{
+        id: 'threads:1',
+        name: 'Threads brand',
+        platformId: 'threads',
+        configured: true,
+      }],
+    }],
+    listPosts: async () => [{
+      id: 'post-1',
+      clientId: 'client-1',
+      contentTopic: '測試內容',
+      targets: [{
+        id: 'target-1',
+        accountId: 'threads:1',
+        platformId: 'threads',
+        status: 'published',
+        externalId: 'thread-1',
+        publishedAt: '2026-08-14T00:00:00.000Z',
+      }],
+    }],
+    resolveThreadsInsights: async () => ({
+      configured: true,
+      async fetchPostInsights({ externalId }) {
+        return {
+          platformId: 'threads',
+          scope: 'post',
+          externalId,
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-14T00:00:00.000Z',
+          data: [{ name: 'views', value: 11 }],
+        };
+      },
+    }),
+    findSnapshot: async () => null,
+    saveSnapshot: async (snapshot) => {
+      saved.push(snapshot);
+      return snapshot;
+    },
+  }));
+  const server = app.listen(0);
+  try {
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/insights?scope=posts`);
+    const payload = await result.json();
+    assert.equal(result.status, 200);
+    assert.equal(payload.scope, 'posts');
+    assert.equal(payload.sources[0].status, 'synced');
+    assert.equal(payload.sources[0].targetId, 'target-1');
+    assert.equal(saved[0].scope, 'post');
+    assert.equal(saved[0].targetId, 'target-1');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('post Insights snapshots can be queried by target and remain bounded per request', async () => {
+  const originalDirectory = directories.insights;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-post-insights-'));
+  directories.insights = temporaryDirectory;
+  try {
+    await appendInsightsSnapshot({
+      clientId: 'client-1',
+      accountId: 'threads:1',
+      platformId: 'threads',
+      scope: 'post',
+      targetId: 'target-1',
+      fetchedAt: '2026-08-14T00:00:00.000Z',
+      data: [{ name: 'views', value: 11 }],
+    });
+    const history = await listInsightsSnapshots({
+      clientId: 'client-1',
+      accountId: 'threads:1',
+      platformId: 'threads',
+      scope: 'post',
+      targetId: 'target-1',
+      limit: 1,
+    });
+    assert.equal(history.length, 1);
+    assert.equal(history[0].scope, 'post');
+    assert.equal((await findLatestInsightsSnapshot({
+      clientId: 'client-1',
+      accountId: 'threads:1',
+      platformId: 'threads',
+      scope: 'post',
+      targetId: 'target-1',
+    })).targetId, 'target-1');
+  } finally {
+    directories.insights = originalDirectory;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });

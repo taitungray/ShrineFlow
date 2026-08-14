@@ -7,6 +7,7 @@ export const state = {
   templates: [],
   campaigns: [],
   insights: null,
+  insightsScope: 'account',
   inbox: null,
   config: null,
   clients: [],

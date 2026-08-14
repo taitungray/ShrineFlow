@@ -1,5 +1,6 @@
 import { $, escapeHtml, formatDate } from './dom.js';
-import { state, PLATFORM_NAMES } from './state.js';
+import { api } from './api.js';
+import { clientQuery, state, PLATFORM_NAMES } from './state.js';
 
 function targetsOf(post) {
   return Array.isArray(post.targets) && post.targets.length
@@ -32,12 +33,51 @@ function sourceStatusText(source) {
   if (source.status === 'error') {
     return '同步失敗：' + escapeHtml(source.error?.message || '請檢查平台權限與 Token');
   }
+  if (source.status === 'not_available') {
+    return escapeHtml(source.error?.message || '此 target 尚無可用的貼文 Insights。');
+  }
+  if (source.status === 'not_configured') {
+    return escapeHtml(source.error?.message || '尚未設定此平台 Insights 憑證');
+  }
   return '尚未設定此平台 Insights 憑證';
+}
+
+async function loadInsightsScope(scope) {
+  state.insightsScope = scope;
+  state.insights = await api(clientQuery('/api/insights?scope=' + encodeURIComponent(scope)));
+  renderInsights();
+}
+
+export function initInsightsListeners() {
+  const filter = $('#insightsScopeFilter');
+  filter?.addEventListener('change', async (event) => {
+    const scope = event.target.value === 'posts' ? 'posts' : 'account';
+    try {
+      await loadInsightsScope(scope);
+    } catch (error) {
+      const notice = $('#insightsSourceNotice');
+      if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
+    }
+  });
+
+  $('#btnRefreshInsights')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await loadInsightsScope(state.insightsScope || 'account');
+    } catch (error) {
+      const notice = $('#insightsSourceNotice');
+      if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
+    } finally {
+      button.disabled = false;
+    }
+  });
 }
 
 export function renderInsights() {
   const summary = $('#insightsOperationalSummary');
   const platformGrid = $('#insightsPlatformGrid');
+  const targetGrid = $('#insightsTargetGrid');
   const notice = $('#insightsSourceNotice');
   if (!summary || !platformGrid) return;
   const posts = state.posts || [];
@@ -47,6 +87,10 @@ export function renderInsights() {
   const failed = targets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
   summary.innerHTML = [['內容總數', posts.length, '目前品牌'], ['已發布目標', published, '本機發布狀態'], ['排程中', scheduled, '待處理目標'], ['需處理', failed, '失敗或重試']].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
   const insights = state.insights || { status: 'unavailable', sources: [] };
+  const scope = insights.scope || state.insightsScope || 'account';
+  state.insightsScope = scope;
+  const scopeInput = document.querySelector('#insightsScopeFilter input[value="' + scope + '"]');
+  if (scopeInput) scopeInput.checked = true;
   if (notice) {
     const latest = posts.map((post) => post.updatedAt || post.createdAt).filter(Boolean).sort().pop();
     const externalText = insights.status === 'synced' || insights.status === 'partial'
@@ -65,4 +109,16 @@ export function renderInsights() {
       : sourceStatusText(source);
     return '<article class="insights-platform-card"><div class="insights-platform-heading"><span class="platform-mark" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml((platformLabel(platformId)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(platformLabel(platformId)) + '</h3><span>本機發布摘要</span></div></div><div class="insights-platform-stats"><span>目標 <strong>' + platformTargets.length + '</strong></span><span>成功 <strong>' + platformPublished + '</strong></span><span>需處理 <strong>' + platformFailed + '</strong></span></div><p class="insights-external-stats" data-status="' + escapeHtml(source?.status || 'unavailable') + '">' + externalStats + '</p></article>';
   }).join('');
+
+  if (targetGrid) {
+    targetGrid.classList.toggle('is-hidden', scope !== 'posts');
+    if (scope === 'posts') {
+      const sources = insights.sources || [];
+      targetGrid.innerHTML = sources.length
+        ? sources.map((source) => '<article class="insights-target-card"><div class="insights-target-heading"><span class="platform-mark" data-platform="' + escapeHtml(source.platformId) + '">' + escapeHtml((platformLabel(source.platformId)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(source.postTitle || source.postId || source.targetId || '未命名內容') + '</h3><small>' + escapeHtml(source.accountName || source.accountId || '') + '</small></div></div><p class="insights-external-stats" data-status="' + escapeHtml(source.status || 'unavailable') + '">' + (['synced', 'cached'].includes(source.status) ? metricSummary(source) + ' · ' : '') + sourceStatusText(source) + '</p></article>').join('')
+        : '<p class="helper">目前品牌沒有已發布且帶有平台貼文 ID 的 target。</p>';
+    } else {
+      targetGrid.innerHTML = '';
+    }
+  }
 }
