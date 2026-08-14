@@ -93,12 +93,20 @@ export function applyActiveTargetToEditor() {
     || targets.find((item) => item.id === state.activeTargetId);
   const account = accountById(state.activeTargetId);
   const fb = $('#facebookText');
+  const reel = $('#reelText');
   const scheduled = $('#targetScheduledAt');
   if (fb) {
-    if (target?.copyOverride != null && String(target.copyOverride).trim() !== '') {
+    if (target?.contentType !== 'reel' && target?.copyOverride != null && String(target.copyOverride).trim() !== '') {
       fb.value = target.copyOverride;
     } else {
       fb.value = post.facebook || fb.value || '';
+    }
+  }
+  if (reel) {
+    if (target?.contentType === 'reel' && target?.copyOverride != null && String(target.copyOverride).trim() !== '') {
+      reel.value = target.copyOverride;
+    } else {
+      reel.value = post.reel || reel.value || '';
     }
   }
   if (scheduled) {
@@ -156,7 +164,7 @@ export function buildTargetsPayload(draft) {
       contentType,
       contentSettings: isActive ? activeContentSettings : (previous?.contentSettings || {}),
       copyOverride: isActive
-        ? ($('#facebookText')?.value || '')
+        ? ((contentType === 'reel' ? $('#reelText')?.value : $('#facebookText')?.value) || '')
         : (previous?.copyOverride ?? null),
       mediaPaths: previous?.mediaPaths ?? null,
       scheduledAt,
@@ -195,7 +203,7 @@ export function initTargetListeners({ onActiveTargetChange } = {}) {
       const platformId = account?.platformId || 'facebook';
       const selected = fieldValue($('#targetContentType')) || 'post';
       renderTargetContentSettings(platformId, selected);
-      updateTargetFormatDependentUi(selected);
+      updateTargetFormatDependentUi(selected, platformId);
       if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
     });
   }

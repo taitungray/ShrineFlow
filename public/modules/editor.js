@@ -185,7 +185,12 @@ export function initEditorListeners(refreshListsFn) {
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const draft = currentDraft();
-      if (!draft.facebook.trim()) return setPreviewMessage('Facebook 文案不能是空白。', 'error');
+      const type = fieldValue($('#targetContentType')) || draft.contentType || 'post';
+      if (type === 'reel') {
+        if (!String(draft.reel || '').trim()) return setPreviewMessage('Reel 文案不能是空白。', 'error');
+      } else if (!String(draft.facebook || '').trim()) {
+        return setPreviewMessage('文案不能是空白。', 'error');
+      }
       try {
         const saved = state.savedPost
           ? await api('/api/posts/' + state.savedPost.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) })

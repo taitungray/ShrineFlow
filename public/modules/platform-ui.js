@@ -24,33 +24,12 @@ function renderRadioPills(container, items, { name, selected } = {}) {
 }
 
 function renderSettingField(setting, dataAttr, namePrefix) {
+  if (setting.type === 'select') return '';
   const fieldId = namePrefix + '-' + setting.id;
-  const options = setting.options || [];
-  if (setting.type === 'select' && options.length > 0 && options.length <= 4) {
-    const pills = options.map((option, index) => {
-      const inputId = fieldId + '-' + option.value;
-      return '<label class="radio-pill">'
-        + '<input type="radio" id="' + escapeHtml(inputId) + '" name="' + escapeHtml(fieldId) + '" value="' + escapeHtml(option.value) + '" '
-        + dataAttr + '="' + escapeHtml(setting.id) + '"'
-        + (index === 0 ? ' checked' : '')
-        + ' />'
-        + '<span>' + escapeHtml(option.label) + '</span>'
-        + '</label>';
-    }).join('');
-    return '<div class="field">'
-      + '<span class="field-label" id="' + escapeHtml(fieldId) + '-label">' + escapeHtml(setting.name) + '</span>'
-      + '<div class="radio-pill-group" role="radiogroup" aria-labelledby="' + escapeHtml(fieldId) + '-label">' + pills + '</div>'
-      + '</div>';
-  }
-  if (setting.type === 'select') {
-    return '<div class="field">'
-      + '<label for="' + escapeHtml(fieldId) + '" class="field-label">' + escapeHtml(setting.name) + '</label>'
-      + '<select id="' + escapeHtml(fieldId) + '" ' + dataAttr + '="' + escapeHtml(setting.id) + '">'
-      + options.map((option) => '<option value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</option>').join('')
-      + '</select></div>';
-  }
   return '<div class="field">'
-    + '<label for="' + escapeHtml(fieldId) + '" class="field-label">' + escapeHtml(setting.name) + '</label>'
+    + '<label for="' + escapeHtml(fieldId) + '" class="field-label">' + escapeHtml(setting.name)
+    + (setting.placeholder ? ' <span class="field-optional">(選填)</span>' : '')
+    + '</label>'
     + '<input id="' + escapeHtml(fieldId) + '" type="text" ' + dataAttr + '="' + escapeHtml(setting.id) + '" placeholder="' + escapeHtml(setting.placeholder || '') + '" />'
     + '</div>';
 }
@@ -99,12 +78,27 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
   const settings = contentType.settings || [];
   container.innerHTML = '<p class="content-type-description">' + escapeHtml(contentType.description || '') + '</p>'
     + settings.map((setting) => renderSettingField(setting, 'data-content-setting', 'schedule-setting')).join('');
+  const isStory = contentType.id === 'story';
+  const timeInput = $('#scheduledAt');
+  const timeHint = $('#scheduledAtHint');
+  if (timeInput) {
+    timeInput.classList.toggle('is-hidden', isStory);
+    timeInput.disabled = isStory;
+    timeInput.required = !isStory;
+  }
+  if (timeHint) {
+    timeHint.textContent = isStory
+      ? '限時動態無法排程，只能立刻發。'
+      : (platformId === 'facebook'
+        ? '將交 Facebook 粉專排程佇列；關機仍會到點公開。'
+        : '本機到期真發，服務需開著。');
+  }
   const submit = $('#scheduleSubmitButton');
   if (submit) {
-    const blocked = !contentType.canPublish || contentType.id === 'story';
+    const blocked = !contentType.canPublish || isStory;
     submit.disabled = blocked;
-    submit.title = contentType.id === 'story'
-      ? 'Facebook 限時動態無法排程，請改用貼文或 Reel'
+    submit.title = isStory
+      ? '限時動態無法排程，請改用貼文或 Reel'
       : (contentType.canPublish ? '' : '此格式尚未串接發布功能');
   }
 }
@@ -217,7 +211,7 @@ export function renderTargetContentTypeControls({
         + '此平台不支援母稿格式「' + escapeHtml(motherLabel) + '」。'
         + '請改產文格式，或取消勾選此平台。</p>';
     }
-    updateTargetFormatDependentUi(mapped || motherType || 'post');
+    updateTargetFormatDependentUi(mapped || motherType || 'post', platform?.id || platformId);
     return;
   }
 
@@ -227,39 +221,47 @@ export function renderTargetContentTypeControls({
     disabled: !contentType.canPublish,
   })), { name: 'targetContentType', selected: preferred });
 
-  typeGroup.title = '可依平台調整；下方選項會跟著格式變動';
+  typeGroup.title = '選格式後，下方會寫出此平台此格式的規則';
   renderTargetContentSettings(platform?.id || platformId, preferred, contentSettings);
-  updateTargetFormatDependentUi(preferred);
+  updateTargetFormatDependentUi(preferred, platform?.id || platformId);
 }
 
 export function readTargetContentSettings() {
   return readDataSettings('target-content-setting');
 }
 
-/** 依發布格式顯示／隱藏相關欄位（Reel 文案、排程等）。 */
-export function updateTargetFormatDependentUi(contentTypeId = fieldValue($('#targetContentType')) || 'post') {
+/** 依發布格式寫出對應欄位（Reel 文案、排程規則等）。 */
+export function updateTargetFormatDependentUi(contentTypeId = fieldValue($('#targetContentType')) || 'post', platformId = state.selectedPlatform || 'facebook') {
   const type = contentTypeId || 'post';
+  const isReel = type === 'reel';
+  const copyField = $('#platformCopyField');
   const reelField = $('#reelTextField');
-  if (reelField) reelField.classList.toggle('is-hidden', type !== 'reel');
+  if (copyField) copyField.classList.toggle('is-hidden', isReel);
+  if (reelField) reelField.classList.toggle('is-hidden', !isReel);
 
   const copyLabel = $('#accountCopyLabel');
   if (copyLabel) {
-    copyLabel.textContent = type === 'reel'
-      ? '此平台文案（貼文母稿，選填）'
-      : type === 'story'
-        ? '此平台文案（限時）'
-        : '此平台文案';
+    copyLabel.textContent = type === 'story' ? '此平台文案（限時）' : '此平台文案';
   }
 
-  updateTargetScheduleAvailability(type);
+  updateTargetScheduleAvailability(type, platformId);
 }
 
-export function updateTargetScheduleAvailability(contentTypeId = fieldValue($('#targetContentType'))) {
+export function updateTargetScheduleAvailability(contentTypeId = fieldValue($('#targetContentType')), platformId = state.selectedPlatform || 'facebook') {
   const scheduled = $('#targetScheduledAt');
+  const hint = $('#targetScheduleHint');
   if (!scheduled) return;
   const contentType = contentTypeId || fieldValue($('#targetContentType'));
   const blocked = contentType === 'story';
   scheduled.disabled = blocked;
-  scheduled.title = blocked ? 'Facebook 限時動態無法排程' : '';
+  scheduled.classList.toggle('is-hidden', blocked);
+  scheduled.title = blocked ? '限時動態無法排程' : '';
   if (blocked) scheduled.value = '';
+  if (hint) {
+    hint.textContent = blocked
+      ? '限時動態無法排程，只能立刻發。'
+      : (platformId === 'facebook'
+        ? '選填。交 Facebook 粉專排程佇列；關機仍會到點公開。'
+        : '選填。本機到期真發，服務需開著。');
+  }
 }
