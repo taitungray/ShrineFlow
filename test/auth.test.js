@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { AUTH_POLICY, createAuthService } from '../lib/auth.js';
+import { AUTH_COOKIE_NAME, AUTH_POLICY, createAuthMiddleware, createAuthService } from '../lib/auth.js';
 
 test('single operator auth keeps bounded sessions and authenticates without storing plaintext tokens', () => {
   let current = 1_000;
@@ -36,4 +36,17 @@ test('single operator auth expires sessions and locks repeated bad passwords', (
   assert.equal(auth.status(result.token).authenticated, true);
   current += AUTH_POLICY.sessionTtlMs + 1;
   assert.equal(auth.status(result.token).authenticated, false);
+});
+
+test('legacy auth middleware attaches an owner actor for gradual permission rollout', () => {
+  const auth = createAuthService({
+    env: { SHRINEFLOW_OPERATOR_PASSWORD: 'correct', SHRINEFLOW_SESSION_SECRET: 'secret' },
+  });
+  const token = auth.login({ password: 'correct', clientKey: 'client' }).token;
+  const request = { path: '/posts', headers: { cookie: `${AUTH_COOKIE_NAME}=${token}` } };
+  let called = false;
+  createAuthMiddleware(auth)(request, {}, () => { called = true; });
+  assert.equal(called, true);
+  assert.equal(request.actor.uid, 'legacy:operator');
+  assert.equal(request.actor.systemRole, 'owner');
 });

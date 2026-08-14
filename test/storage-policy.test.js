@@ -17,6 +17,7 @@ test('storage policy rejects collection growth beyond hard limits', () => {
     () => assertCollectionCapacity('posts', COLLECTION_STORAGE_POLICY.posts.maxItems, 1),
     (error) => error instanceof StorageLimitError && error.code === 'STORAGE_LIMIT_REACHED' && error.status === 409,
   );
+  assert.doesNotThrow(() => assertCollectionCapacity('memberships', COLLECTION_STORAGE_POLICY.memberships.maxItems - 1, 1));
   assert.throws(
     () => assertNestedCollectionCapacity('clients', COLLECTION_STORAGE_POLICY.clients.maxAccountsPerClient, 1),
     (error) => error instanceof StorageLimitError && error.code === 'STORAGE_NESTED_LIMIT_REACHED',
@@ -25,6 +26,7 @@ test('storage policy rejects collection growth beyond hard limits', () => {
 
 test('storage policy exposes bounded JSON size and collection usage', () => {
   assert.equal(getJsonStoragePolicy('data/posts.json').maxBytes, 64 * 1024 * 1024);
+  assert.equal(getJsonStoragePolicy('data/audit-events.json').maxBytes, 32 * 1024 * 1024);
   const serialized = serializeJsonWithinLimit('data/posts.json', [{ id: 'post-1' }]);
   assert.equal(serialized.bytes, Buffer.byteLength(serialized.serialized, 'utf8'));
   assert.equal(countStoredItems('notifications', { version: 1, items: [{ id: 'n-1' }] }), 1);

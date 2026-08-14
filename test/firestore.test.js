@@ -6,7 +6,7 @@ import {
   decodeFirestoreDocument,
   encodeFirestoreDocument,
 } from '../lib/firestore-rest.js';
-import { createFirestoreRepositories } from '../lib/repositories.js';
+import { RepositoryConflictError, createFirestoreRepositories } from '../lib/repositories.js';
 
 function response(payload, status = 200) {
   return {
@@ -56,6 +56,36 @@ test('Firestore REST client adds the bearer token and paginates documents', asyn
   assert.equal(documents.length, 1);
   assert.match(calls[0].url, /projects%2Fdemo|projects\/demo/);
   assert.equal(calls[0].options.headers.Authorization, 'Bearer test-token');
+});
+
+test('Firestore REST client builds structured equality queries', async () => {
+  const calls = [];
+  const client = createFirestoreClient({
+    env: {
+      FIRESTORE_PROJECT_ID: 'demo',
+      SHRINEFLOW_FIRESTORE_ACCESS_TOKEN: 'test-token',
+    },
+    apiBaseUrl: 'https://firestore.test/v1',
+    fetchImpl: async (url, options) => {
+      calls.push({ url: String(url), options });
+      return response([{ document: {
+        name: 'projects/demo/databases/(default)/documents/memberships/m-1',
+        fields: { userId: { stringValue: 'user-1' } },
+      } }]);
+    },
+  });
+  const documents = await client.runQuery('memberships', {
+    filters: { userId: 'user-1', status: 'active' },
+    orderBy: 'createdAt',
+    direction: 'desc',
+    limit: 20,
+  });
+  assert.equal(documents.length, 1);
+  assert.match(calls[0].url, /:runQuery$/);
+  const body = JSON.parse(calls[0].options.body);
+  assert.equal(body.structuredQuery.where.compositeFilter.filters.length, 2);
+  assert.equal(body.structuredQuery.orderBy[0].direction, 'DESCENDING');
+  assert.equal(body.structuredQuery.limit, 20);
 });
 
 function createFakeFirestoreClient() {
@@ -113,4 +143,19 @@ test('Firestore repositories keep array and singleton collection shapes', async 
     version: 1,
     items: [{ id: 'notice-1', readAt: null }],
   });
+});
+
+test('Firestore repositories support document create, query, optimistic update and delete', async () => {
+  const repositories = createFirestoreRepositories({ client: createFakeFirestoreClient() });
+  await repositories.users.create({ id: 'user-1', email: 'one@example.com', version: 1, status: 'active' });
+  await repositories.users.create({ id: 'user-2', email: 'two@example.com', version: 1, status: 'suspended' });
+  assert.equal((await repositories.users.query({ filters: { status: 'active' } })).length, 1);
+  const updated = await repositories.users.update('user-1', { displayName: 'One', version: 2 }, { expectedVersion: 1 });
+  assert.equal(updated.displayName, 'One');
+  await assert.rejects(
+    () => repositories.users.update('user-1', { displayName: 'Stale' }, { expectedVersion: 1 }),
+    (error) => error instanceof RepositoryConflictError && error.status === 409,
+  );
+  assert.equal(await repositories.users.deleteById('user-2'), true);
+  assert.equal(await repositories.users.getById('user-2'), null);
 });
