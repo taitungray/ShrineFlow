@@ -752,6 +752,7 @@ select:focus, textarea:focus, input:focus {
 .btn-test:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
 
 .action-row { display: flex; gap: 10px; }
+.action-row .primary-button { width: auto; flex: 1; }
 .form-hint { min-height: 20px; margin: 8px 0 0; color: var(--text-tertiary); font-size: 0.75rem; }
 .form-hint[data-type="error"] { color: var(--danger); font-weight: 600; }
 .form-hint[data-type="success"] { color: var(--success); font-weight: 600; }
@@ -1330,7 +1331,8 @@ select:focus, textarea:focus, input:focus {
   }
 
   .review-editor .action-row .btn-secondary,
-  .review-editor .action-row .btn-dark {
+  .review-editor .action-row .btn-dark,
+  .review-editor .action-row .primary-button {
     flex: 0 0 auto;
     width: auto;
     min-height: 44px;

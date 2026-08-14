@@ -263,6 +263,7 @@ export function initScheduleDialog(refreshListsFn) {
     scheduleBtn.addEventListener('click', () => {
       reschedulingItem = null;
       if (!state.savedPost) return setPreviewMessage('請先儲存草稿，再安排時間。', 'error');
+      if (state.editorDirty) return setPreviewMessage('內容有未儲存變更，請先儲存草稿。', 'error');
       const dialog = $('#scheduleDialog');
       const now = new Date(Date.now() + 60 * 60 * 1000);
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());

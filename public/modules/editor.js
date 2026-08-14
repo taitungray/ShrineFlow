@@ -89,8 +89,30 @@ export function renderSavedMedia(items = []) {
   if (wrap) wrap.classList.toggle('empty', normalized.length === 0);
 }
 
+function syncEditorActions() {
+  const hasSavedPost = Boolean(state.savedPost);
+  const isDirty = Boolean(state.editorDirty);
+  const scheduleButton = $('#scheduleButton');
+  const publishButton = $('#publishNowButton');
+  if (scheduleButton) scheduleButton.disabled = !hasSavedPost || isDirty;
+  if (publishButton) {
+    publishButton.disabled = !hasSavedPost || isDirty || publishButton.dataset.busy === 'true';
+  }
+  const badge = $('#draftState');
+  if (badge && hasSavedPost) {
+    badge.textContent = isDirty ? '有未儲存變更' : '已儲存';
+    badge.classList.toggle('ready', !isDirty);
+  }
+}
+
+export function markEditorDirty(isDirty = true) {
+  state.editorDirty = Boolean(isDirty);
+  syncEditorActions();
+}
+
 export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   state.generated = generated;
+  state.editorDirty = !state.savedPost;
   if (syncSelectedMedia && state.selectedMediaItems.length) {
     const paths = mediaPathsOf(generated);
     state.selectedMediaItems.forEach((item, index) => {
@@ -136,7 +158,8 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   const saveBtn = $('#saveButton');
   if (saveBtn) saveBtn.disabled = false;
   const scheduleBtn = $('#scheduleButton');
-  if (scheduleBtn) scheduleBtn.disabled = !state.savedPost;
+  if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
+  syncEditorActions();
   renderSavedMedia(mediaPathsOf(generated));
   renderPreviewPlatformTabs();
   updateLivePreview();
@@ -185,6 +208,22 @@ export function initEditorListeners(refreshListsFn) {
   const tagsText = $('#hashtagsText');
   if (tagsText) tagsText.addEventListener('input', updateLivePreview);
 
+  const composerForm = $('#generateForm');
+  composerForm?.addEventListener('input', (event) => {
+    const target = event.target;
+    if (target?.matches?.('#contentTopic, #extraNotes, #defaultHashtags, #facebookText, #reelText, #hashtagsText, #targetScheduledAt')
+      || target?.closest?.('#targetContentSettings')) {
+      markEditorDirty();
+    }
+  });
+  composerForm?.addEventListener('change', (event) => {
+    const target = event.target;
+    if (target?.closest?.('#targetAccountChecks, #targetContentType, #targetContentSettings')
+      || target?.matches?.('#targetScheduledAt')) {
+      markEditorDirty();
+    }
+  });
+
   const saveBtn = $('#saveButton');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
@@ -201,10 +240,10 @@ export function initEditorListeners(refreshListsFn) {
           : await api('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
         state.savedPost = saved;
         state.generated = saved;
+        state.editorDirty = false;
         const badge = $('#draftState');
         if (badge) badge.textContent = '已儲存';
-        const scheduleBtn = $('#scheduleButton');
-        if (scheduleBtn) scheduleBtn.disabled = false;
+        syncEditorActions();
         if (typeof refreshListsFn === 'function') await refreshListsFn();
         setPreviewMessage('草稿已儲存到 data/posts.json。', 'success');
         showToast('草稿已儲存', 'success');
@@ -213,4 +252,58 @@ export function initEditorListeners(refreshListsFn) {
       }
     });
   }
+
+  const publishButton = $('#publishNowButton');
+  publishButton?.addEventListener('click', async () => {
+    const post = state.savedPost;
+    if (!post) return setPreviewMessage('請先儲存草稿，再立即發布。', 'error');
+    if (state.editorDirty) return setPreviewMessage('內容有未儲存變更，請先儲存草稿。', 'error');
+
+    const targets = Array.isArray(post.targets) ? post.targets : [];
+    const target = targets.find((item) => item.id === state.activeTargetId || item.accountId === state.activeTargetId)
+      || targets[0];
+    if (!target?.id) return setPreviewMessage('請先選擇要發布的平台。', 'error');
+
+    const platformName = PLATFORM_NAMES[target.platformId] || target.platformId;
+    if (['scheduled', 'publishing', 'pending'].includes(target.status)) {
+      return setPreviewMessage(
+        target.status === 'scheduled'
+          ? `${platformName} 已排程，請先取消排程再立即發布。`
+          : `${platformName} 正在處理中，請稍後再試。`,
+        'error',
+      );
+    }
+    if (target.status === 'published') {
+      return setPreviewMessage(`${platformName} 已經發布，請建立副本後再重新發布。`, 'error');
+    }
+    if (!window.confirm(`確定立即發布到 ${platformName}？`)) return;
+
+    publishButton.dataset.busy = 'true';
+    syncEditorActions();
+    setPreviewMessage(`正在發布到 ${platformName}…`, 'info');
+    try {
+      await api('/api/publish/target', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id, targetId: target.id }),
+      });
+      if (typeof refreshListsFn === 'function') await refreshListsFn();
+      const refreshedPost = state.posts.find((item) => item.id === post.id);
+      if (refreshedPost) {
+        state.savedPost = refreshedPost;
+        state.generated = refreshedPost;
+        state.editorDirty = false;
+        renderGenerated(refreshedPost);
+      }
+      setPreviewMessage(`${platformName} 已發布。`, 'success');
+      showToast(`${platformName} 已發布。`, 'success');
+    } catch (error) {
+      if (typeof refreshListsFn === 'function') await refreshListsFn();
+      setPreviewMessage(error.message || `${platformName} 發布失敗。`, 'error');
+      showToast(error.message || `${platformName} 發布失敗。`, 'error');
+    } finally {
+      publishButton.dataset.busy = 'false';
+      syncEditorActions();
+    }
+  });
 }

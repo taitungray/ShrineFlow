@@ -1,6 +1,7 @@
 export const state = {
   generated: null,
   savedPost: null,
+  editorDirty: false,
   posts: [],
   schedule: [],
   templates: [],

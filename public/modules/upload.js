@@ -133,6 +133,7 @@ export function previewSelectedMedia(fileList, renderSavedMediaFn) {
 
   clearUploadPreview(renderSavedMediaFn);
   state.generated = null;
+  state.editorDirty = true;
   state.selectedMediaItems = files.map((file) => {
     const source = URL.createObjectURL(file);
     state.uploadPreviewUrls.push(source);
@@ -152,6 +153,8 @@ export function previewSelectedMedia(fileList, renderSavedMediaFn) {
   if (saveBtn) saveBtn.disabled = true;
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = true;
+  const publishBtn = $('#publishNowButton');
+  if (publishBtn) publishBtn.disabled = true;
   const imageCount = files.filter((file) => file.type.startsWith('image/')).length;
   const videoCount = files.length - imageCount;
   setFormMessage('已選擇 ' + files.length + ' 個檔案（圖片 ' + imageCount + '、影片 ' + videoCount + '）。', 'success');
