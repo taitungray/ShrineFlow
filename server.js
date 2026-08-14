@@ -20,6 +20,7 @@ import { createScheduleRouter } from './lib/routes/schedule.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createInsightsRouter } from './lib/routes/insights.js';
 import { createInboxRouter } from './lib/routes/inbox.js';
+import { createSystemRouter } from './lib/routes/system.js';
 import { createSettingsRouter } from './lib/routes/settings.js';
 import { createClientsRouter } from './lib/routes/clients.js';
 import { createTemplatesRouter } from './lib/routes/templates.js';
@@ -215,6 +216,7 @@ app.use('/api', createClientsRouter({
 }));
 app.use('/api', createTemplatesRouter());
 app.use('/api', createCampaignsRouter());
+app.use('/api', createSystemRouter());
 app.use('/api', (request, response, next) => createInsightsRouter({
   resolveFacebookInsights,
   resolveInstagramInsights,

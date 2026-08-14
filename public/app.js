@@ -31,6 +31,7 @@ import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
 import { renderInsights } from './modules/insights.js';
 import { renderInbox } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
+import { initSystemTools } from './modules/system.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
@@ -292,6 +293,7 @@ function initApp() {
     await loadData();
     await loadSettings();
   });
+  initSystemTools(loadData);
 
   const refreshBtn = $('#refreshButton');
   if (refreshBtn) {

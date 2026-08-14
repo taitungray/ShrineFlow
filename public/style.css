@@ -3417,6 +3417,53 @@ button.module-summary-card:focus-visible {
   margin-top: 3px;
 }
 
+.checkbox-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.backup-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.backup-list-heading,
+.backup-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.backup-list-heading {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.backup-row {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.backup-row > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.backup-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-row small {
+  color: var(--text-muted);
+}
+
 .insights-external-stats[data-status="synced"] {
   color: var(--accent);
 }

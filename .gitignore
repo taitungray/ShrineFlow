@@ -7,6 +7,8 @@ data/schedule.json
 data/clients.json
 data/publish-attempts/*.json
 data/insights/*.json
+data/backups/*
+!data/backups/.gitkeep
 dev-server*.log
 start-last.log
 .superpowers/
