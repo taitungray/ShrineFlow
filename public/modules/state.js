@@ -3,6 +3,8 @@ export const state = {
   savedPost: null,
   posts: [],
   schedule: [],
+  templates: [],
+  campaigns: [],
   config: null,
   clients: [],
   currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',

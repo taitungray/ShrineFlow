@@ -26,19 +26,35 @@ import { renderOverview } from './modules/overview.js';
 import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
 import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js';
 import { renderPlatformConnections } from './modules/platform-connections.js';
+import { renderTemplates, initTemplateManager } from './modules/templates.js';
+import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
+import { renderInsights } from './modules/insights.js';
+import { renderInbox } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 
 async function refreshLists() {
-  state.posts = await api(clientQuery('/api/posts'));
-  state.schedule = await api(clientQuery('/api/schedule'));
+  const [posts, schedule, templates, campaigns] = await Promise.all([
+    api(clientQuery('/api/posts')),
+    api(clientQuery('/api/schedule')),
+    api(clientQuery('/api/templates')),
+    api(clientQuery('/api/campaigns')),
+  ]);
+  state.posts = posts;
+  state.schedule = schedule;
+  state.templates = templates;
+  state.campaigns = campaigns;
   renderPosts();
   renderSchedule();
   renderOverview();
   renderMediaLibrary();
   renderPublishingLogs();
   renderPlatformConnections();
+  renderTemplates();
+  renderCampaigns();
+  renderInsights();
+  renderInbox();
 }
 
 function applyClientAccounts() {
@@ -76,9 +92,11 @@ async function loadData() {
   }
   renderClientSwitcher();
 
-  const [posts, schedule] = await Promise.all([
+  const [posts, schedule, templates, campaigns] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
+    api(clientQuery('/api/templates')),
+    api(clientQuery('/api/campaigns')),
   ]);
 
   const facebookStatus = await api('/api/facebook/status').catch((error) => ({
@@ -89,6 +107,8 @@ async function loadData() {
 
   state.posts = posts;
   state.schedule = schedule;
+  state.templates = templates;
+  state.campaigns = campaigns;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();
@@ -105,6 +125,13 @@ async function loadData() {
   renderPosts();
   renderSchedule();
   renderOverview();
+  renderMediaLibrary();
+  renderPublishingLogs();
+  renderPlatformConnections();
+  renderTemplates();
+  renderCampaigns();
+  renderInsights();
+  renderInbox();
 
   const status = $('#apiStatus');
   if (status) {
@@ -138,6 +165,7 @@ function initApp() {
   initContentFilters();
   initCalendarControls();
   initMediaLibrary();
+  initTemplateManager(loadData);
 
   const imageInput = $('#imageInput');
   if (imageInput) {
@@ -232,6 +260,7 @@ function initApp() {
   initEditorListeners(refreshLists);
   initScheduleDialog(refreshLists);
   initPublishingLogs(refreshLists);
+  initCampaignManager(loadData);
   initTargetListeners({
     onActiveTargetChange: () => {
       renderPreviewPlatformTabs();

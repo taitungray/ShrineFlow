@@ -20,6 +20,8 @@ import { createScheduleRouter } from './lib/routes/schedule.js';
 import { createPublishRouter } from './lib/routes/publish.js';
 import { createSettingsRouter } from './lib/routes/settings.js';
 import { createClientsRouter } from './lib/routes/clients.js';
+import { createTemplatesRouter } from './lib/routes/templates.js';
+import { createCampaignsRouter } from './lib/routes/campaigns.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -139,6 +141,8 @@ app.use('/api', (request, response, next) => {
 app.use('/api', createClientsRouter({
   onAccountsChanged: refreshPublishingState,
 }));
+app.use('/api', createTemplatesRouter());
+app.use('/api', createCampaignsRouter());
 app.use('/api', createGodsRouter());
 app.use('/api', createPostsRouter());
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));

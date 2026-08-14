@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-14
+更新日期：2026-08-14（v0.5.0）
 
 ## 專案定位
 
@@ -35,6 +35,7 @@
 - [x] UI-2：單頁 Composer、母稿、平台策略提示與即時預覽。
 - [x] UI-3：月／週／列表日曆與手機行程列表。
 - [x] UI-4：素材庫、發布紀錄、平台連線與設定入口。
+- [x] UI-5：模板建立／編輯／套用、Campaign 內容關聯與發布進度，以及不虛構數據的 Insights／Inbox 狀態頁。
 - [x] 編輯與即時預覽在同一個畫面，避免反覆切換。
 - [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示。
 - [x] 桌機左右布局、平板單欄、手機單欄與 44px 觸控區域。
@@ -49,6 +50,7 @@
 - [x] Facebook 支援文字貼文、多張圖片、單一影片發布。
 - [x] Facebook 排程器每 30 秒檢查到期項目，暫時性發布錯誤最多重試 3 次。
 - [x] 平台與連線設定分離，已建立多平台發布目標資料模型。
+- [x] 模板保存於 `data/templates.json`，Campaign 保存於 `data/campaigns.json`，不引入資料庫。
 
 ### 可編輯設定
 
@@ -61,9 +63,9 @@
 
 ### 下一階段
 
-- [ ] Templates：保存母稿結構、語氣、Hashtag、CTA 與平台預設。
-- [ ] Campaigns：將多篇內容整理為活動並查看發布進度。
 - [ ] 發布 attempt 歷史、idempotency 與更完整的錯誤分類／reconciliation。
+- [ ] 接入 Facebook／Instagram／Threads Insights API，顯示觸及、互動與點擊等真實成效。
+- [ ] 接入 Facebook／Instagram／Threads 留言與訊息 API，完成 Inbox 未讀、標籤與處理流程。
 - [ ] 備份、匯出、還原與媒體清理策略。
 - [ ] 平台 Token 健康檢查、到期提示與成效回看。
 
@@ -136,4 +138,6 @@ npm test         # 執行全部測試
 | `data/gods.json` | 舊版神明資料，僅供 legacy 相容 |
 | `data/posts.json` | 草稿與貼文資料 |
 | `data/schedule.json` | 排程資料 |
+| `data/templates.json` | 可重用內容模板 |
+| `data/campaigns.json` | Campaign 與內容關聯 |
 

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.4.0" />
+    <link rel="stylesheet" href="/style.css?v=0.5.0" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -34,7 +34,7 @@
 
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.4.0</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.0</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
@@ -48,6 +48,8 @@
         <a class="app-nav-item" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
         <a class="app-nav-item" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
         <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
+        <a class="app-nav-item" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">◌</span>成效</a>
+        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
       </nav>
       <div class="sidebar-footer">
         <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
@@ -485,13 +487,31 @@
           <p class="module-summary" id="mediaSummary" aria-live="polite"></p>
           <div id="mediaGrid" class="media-library-grid" aria-live="polite"></div>
         </section>
-        <section class="panel scaffold-panel is-hidden" id="templatesPanel" data-view-panel="templates">
-          <div class="panel-heading"><div><p class="section-tag">TEMPLATES</p><h2>模板</h2><p class="panel-lede">把常用內容結構保存成可重用模板。</p></div></div>
-          <div class="scaffold-message"><span aria-hidden="true">◇</span><h3>模板模組即將接入</h3><p>後續會支援母稿、平台覆寫與品牌內容策略。</p></div>
+        <section class="panel module-panel is-hidden" id="templatesPanel" data-view-panel="templates">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">TEMPLATES</p><h2>模板</h2><p class="panel-lede">保存常用內容結構、語氣、Hashtag 與平台預設。</p></div>
+            <button class="btn-secondary" id="newTemplateButton" type="button">＋ 建立模板</button>
+          </div>
+          <div class="module-toolbar" aria-label="模板工具">
+            <div class="field module-search-field">
+              <label for="templateSearch" class="field-label">搜尋模板</label>
+              <input id="templateSearch" type="search" placeholder="搜尋名稱、用途或主題提示…" autocomplete="off" />
+            </div>
+          </div>
+          <div id="templatesGrid" class="templates-grid" aria-live="polite"></div>
         </section>
-        <section class="panel scaffold-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
-          <div class="panel-heading"><div><p class="section-tag">CAMPAIGNS</p><h2>活動</h2><p class="panel-lede">以活動整理內容、平台與發布節奏。</p></div></div>
-          <div class="scaffold-message"><span aria-hidden="true">◈</span><h3>活動模組即將接入</h3><p>先保留路由與頁面位置，避免未來新增功能時再次改動主導覽。</p></div>
+        <section class="panel module-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">CAMPAIGNS</p><h2>活動</h2><p class="panel-lede">集中整理多篇內容、日期範圍與發布進度。</p></div>
+            <button class="btn-secondary" id="newCampaignButton" type="button">＋ 建立活動</button>
+          </div>
+          <div class="module-toolbar" aria-label="活動工具">
+            <div class="field module-search-field">
+              <label for="campaignSearch" class="field-label">搜尋活動</label>
+              <input id="campaignSearch" type="search" placeholder="搜尋活動名稱、目標或備註…" autocomplete="off" />
+            </div>
+          </div>
+          <div id="campaignsGrid" class="campaigns-grid" aria-live="polite"></div>
         </section>
         <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
           <div class="panel-heading compact">
@@ -520,6 +540,23 @@
             </div>
           </div>
           <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="insightsPanel" data-view-panel="insights">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">INSIGHTS</p><h2>成效</h2><p class="panel-lede">先查看本機營運摘要；外部平台成效只顯示已同步的真實資料。</p></div>
+            <a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">管理平台 →</a>
+          </div>
+          <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="營運摘要"></div>
+          <div id="insightsSourceNotice" class="insights-source-note" role="note"></div>
+          <div id="insightsPlatformGrid" class="insights-platform-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
+          <div class="panel-heading compact">
+            <div><p class="section-tag">INBOX</p><h2>收件匣</h2><p class="panel-lede">集中處理平台留言與訊息；目前先呈現接入狀態，不虛構未同步資料。</p></div>
+            <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
+          </div>
+          <div class="inbox-source-note"><strong>訊息同步尚未開啟</strong><span>需要接入 Facebook／Instagram／Threads 的留言或訊息 API 後，才會在這裡顯示未讀、標籤與處理狀態。</span></div>
+          <div id="inboxPlatformGrid" class="inbox-platform-grid" aria-live="polite"></div>
         </section>
         <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
           <div class="panel-heading compact">
@@ -568,7 +605,104 @@
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
       </form>
     </dialog>
+    <dialog id="templateDialog" class="module-dialog">
+      <form method="dialog" id="templateForm">
+        <button class="close-button" value="cancel" aria-label="關閉">×</button>
+        <p class="section-tag">TEMPLATE</p>
+        <h3>建立可重用模板</h3>
+        <p class="dialog-lede">套用模板只會帶入欄位，不會直接覆蓋已保存內容。</p>
+        <fieldset class="form-group-card">
+          <legend class="group-title">🧩 模板內容</legend>
+          <div class="field">
+            <label for="templateName" class="field-label">模板名稱 <span class="field-required">*</span></label>
+            <input id="templateName" type="text" placeholder="例：新品上市公告" required />
+          </div>
+          <div class="field">
+            <label for="templatePurpose" class="field-label">用途說明 <span class="field-optional">(選填)</span></label>
+            <input id="templatePurpose" type="text" placeholder="例：新品、服務或活動首次公開" />
+          </div>
+          <div class="field">
+            <label for="templateTopicHint" class="field-label">主題提示 <span class="field-optional">(選填)</span></label>
+            <input id="templateTopicHint" type="text" placeholder="套用後帶入 Composer 的內容主題或對象" />
+          </div>
+          <div class="field">
+            <label for="templateNotes" class="field-label">共用補充說明 <span class="field-optional">(選填)</span></label>
+            <textarea id="templateNotes" rows="3" placeholder="提供給 AI 的固定背景、語氣或資訊…"></textarea>
+          </div>
+          <div class="field">
+            <label for="templateCallToAction" class="field-label">預設 CTA <span class="field-optional">(選填)</span></label>
+            <input id="templateCallToAction" type="text" placeholder="例：歡迎私訊了解更多" />
+          </div>
+          <div class="field">
+            <label for="templateHashtags" class="field-label">預設 Hashtag <span class="field-optional">(選填)</span></label>
+            <input id="templateHashtags" type="text" placeholder="#品牌內容 #新品上市" />
+          </div>
+        </fieldset>
+        <fieldset class="form-group-card">
+          <legend class="group-title">🚀 預設發布策略</legend>
+          <div class="field">
+            <span id="templatePostTypeLabel" class="field-label">內容方向</span>
+            <div class="radio-pill-group" role="radiogroup" aria-labelledby="templatePostTypeLabel">
+              <label class="radio-pill"><input type="radio" name="templatePostType" value="intro" checked /><span>品牌／作品介紹</span></label>
+              <label class="radio-pill"><input type="radio" name="templatePostType" value="announcement" /><span>活動／公告</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <span id="templatePlatformLabel" class="field-label">適用發布平台</span>
+            <div class="checkbox-pill-group" id="templatePlatformChecks" role="group" aria-labelledby="templatePlatformLabel">
+              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="facebook" checked /><span>Facebook</span></label>
+              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="instagram" /><span>Instagram</span></label>
+              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="threads" /><span>Threads</span></label>
+            </div>
+          </div>
+        </fieldset>
+        <div class="dialog-actions">
+          <button class="btn-secondary" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="templateSaveButton" value="default" type="submit">儲存模板</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="campaignDialog" class="module-dialog campaign-dialog">
+      <form method="dialog" id="campaignForm">
+        <button class="close-button" value="cancel" aria-label="關閉">×</button>
+        <p class="section-tag">CAMPAIGN</p>
+        <h3>建立內容活動</h3>
+        <p class="dialog-lede">活動只整理內容與發布進度，不會改變內容本身。</p>
+        <fieldset class="form-group-card">
+          <legend class="group-title">◈ 活動資訊</legend>
+          <div class="field">
+            <label for="campaignName" class="field-label">活動名稱 <span class="field-required">*</span></label>
+            <input id="campaignName" type="text" placeholder="例：秋季新品宣傳" required />
+          </div>
+          <div class="field">
+            <label for="campaignObjective" class="field-label">活動目標 <span class="field-optional">(選填)</span></label>
+            <input id="campaignObjective" type="text" placeholder="例：提高新品認知與門市來客" />
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="campaignStartDate" class="field-label">開始日期</label><input id="campaignStartDate" type="date" /></div>
+            <div class="field"><label for="campaignEndDate" class="field-label">結束日期</label><input id="campaignEndDate" type="date" /></div>
+          </div>
+          <div class="field">
+            <span id="campaignStatusLabel" class="field-label">活動狀態</span>
+            <div class="radio-pill-group" role="radiogroup" aria-labelledby="campaignStatusLabel">
+              <label class="radio-pill"><input type="radio" name="campaignStatus" value="planned" checked /><span>規劃中</span></label>
+              <label class="radio-pill"><input type="radio" name="campaignStatus" value="active" /><span>進行中</span></label>
+              <label class="radio-pill"><input type="radio" name="campaignStatus" value="completed" /><span>已完成</span></label>
+            </div>
+          </div>
+          <div class="field"><label for="campaignDescription" class="field-label">備註 <span class="field-optional">(選填)</span></label><textarea id="campaignDescription" rows="3" placeholder="補充活動背景或內部備註…"></textarea></div>
+        </fieldset>
+        <fieldset class="form-group-card">
+          <legend class="group-title">📝 加入內容</legend>
+          <div id="campaignPostSelection" class="campaign-post-selection"></div>
+        </fieldset>
+        <div class="dialog-actions">
+          <button class="btn-secondary" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="campaignSaveButton" value="default" type="submit">儲存活動</button>
+        </div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.4.0" type="module"></script>
+    <script src="/app.js?v=0.5.0" type="module"></script>
   </body>
 </html>
