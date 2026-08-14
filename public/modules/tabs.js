@@ -65,10 +65,12 @@ function closeMobileNavigation() {
   const scrim = $('#sidebarScrim');
   const menuButton = $('#mobileMenuToggle');
   const moreButton = $('#mobileMoreToggle');
+  const closeButton = $('#mobileSidebarClose');
   sidebar?.classList.remove('is-open');
   scrim?.classList.remove('is-visible');
   menuButton?.setAttribute('aria-expanded', 'false');
   moreButton?.setAttribute('aria-expanded', 'false');
+  closeButton?.setAttribute('aria-expanded', 'false');
   document.body.classList.remove('nav-open');
 }
 
@@ -125,6 +127,7 @@ function initMobileNavigation() {
   const scrim = $('#sidebarScrim');
   const menuButton = $('#mobileMenuToggle');
   const moreButton = $('#mobileMoreToggle');
+  const closeButton = $('#mobileSidebarClose');
   const setOpen = (isOpen) => {
     sidebar?.classList.toggle('is-open', isOpen);
     scrim?.classList.toggle('is-visible', isOpen);
@@ -135,6 +138,7 @@ function initMobileNavigation() {
 
   menuButton?.addEventListener('click', () => setOpen(!sidebar?.classList.contains('is-open')));
   moreButton?.addEventListener('click', () => setOpen(!sidebar?.classList.contains('is-open')));
+  closeButton?.addEventListener('click', () => setOpen(false));
   scrim?.addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') setOpen(false);
