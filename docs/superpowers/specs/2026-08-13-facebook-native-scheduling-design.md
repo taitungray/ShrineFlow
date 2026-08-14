@@ -51,7 +51,7 @@
 - `scheduledAt`：預計公開時間（ISO）  
 - `status: scheduled`：**語意改為**「已交 FB 排程佇列」（不再是「等本機 scheduler 發」）  
 - `externalId`：FB 排程貼／影片 ID（改時間、取消、除錯用）  
-- 仍以 target 為單位；一則貼文多帳號各自排各自的  
+- 仍以 target 為單位；一則貼文多平台各自排各自的
 
 `2026-08-13-multi-client-publishing-design.md` 中「到期由排程器處理」對 **Facebook 貼文／Reel** 改為本規格；其他平台 Phase 1 仍不真排。
 
