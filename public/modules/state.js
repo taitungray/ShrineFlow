@@ -7,6 +7,7 @@ export const state = {
   templates: [],
   campaigns: [],
   insights: null,
+  inbox: null,
   config: null,
   clients: [],
   currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',

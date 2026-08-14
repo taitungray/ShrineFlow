@@ -3375,6 +3375,48 @@ button.module-summary-card:focus-visible {
   line-height: 1.55;
 }
 
+.inbox-platform-card[data-status="error"] {
+  border-color: var(--danger);
+}
+
+.inbox-item-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.inbox-item-list li {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.inbox-item-list li > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inbox-item-list li > div span,
+.inbox-item-list li small,
+.inbox-empty-source {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.inbox-item-list li p {
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-item-list li small {
+  display: block;
+  margin-top: 3px;
+}
+
 .insights-external-stats[data-status="synced"] {
   color: var(--accent);
 }
