@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.11" />
+    <link rel="stylesheet" href="/style.css?v=0.5.12" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -35,7 +35,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.11</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.5.12</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
@@ -330,6 +330,11 @@
                 <button type="button" id="toggleFbToken" class="btn-icon" aria-label="顯示或隱藏 Page Access Token">顯示</button>
               </div>
             </div>
+            <div class="field">
+              <label for="settingFacebookTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingFacebookTokenExpiresAt" type="date" />
+              <p class="helper">若 Meta 未提供到期日可留白；系統不會猜測期限。</p>
+            </div>
 
             <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
             <div class="field">
@@ -362,6 +367,11 @@
                 <button type="button" id="toggleInstagramToken" class="btn-icon" aria-label="顯示或隱藏 Instagram Access Token">顯示</button>
               </div>
             </div>
+            <div class="field">
+              <label for="settingInstagramTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingInstagramTokenExpiresAt" type="date" />
+              <p class="helper">若 Meta 未提供到期日可留白；系統不會猜測期限。</p>
+            </div>
             <div class="action-box">
               <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存品牌 Instagram 連線">💾 儲存此品牌 IG 連線</button>
               <button type="button" id="btnTestInstagram" class="btn-test" aria-label="測試 Instagram 連線">🧪 測試連線</button>
@@ -382,6 +392,11 @@
                 <input id="settingThreadsAccessToken" type="password" placeholder="THQVJ..." />
                 <button type="button" id="toggleThreadsToken" class="btn-icon" aria-label="顯示或隱藏 Threads Access Token">顯示</button>
               </div>
+            </div>
+            <div class="field">
+              <label for="settingThreadsTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingThreadsTokenExpiresAt" type="date" />
+              <p class="helper">若 Meta 未提供到期日可留白；系統不會猜測期限。</p>
             </div>
             <div class="action-box">
               <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存品牌 Threads 連線">💾 儲存此品牌 Threads 連線</button>
@@ -727,6 +742,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.11" type="module"></script>
+    <script src="/app.js?v=0.5.12" type="module"></script>
   </body>
 </html>

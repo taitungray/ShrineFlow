@@ -17,12 +17,14 @@ test('maskClient hides pageAccessToken', () => {
       name: 'Page',
       enabled: true,
       configured: true,
+      tokenExpiresAt: '2026-08-20T00:00:00.000Z',
       credentials: { pageId: '1', pageAccessToken: 'abcdefghijklmnop' },
     }],
   });
   assert.equal(masked.accounts[0].credentials.pageAccessToken.includes('...'), true);
   assert.equal(masked.accounts[0].credentials.pageId, '1');
   assert.notEqual(masked.accounts[0].credentials.pageAccessToken, 'abcdefghijklmnop');
+  assert.equal(masked.accounts[0].tokenHealth.status, 'expiring');
 });
 
 test('buildDefaultClientFromEnv creates facebook account when env set', () => {
@@ -58,6 +60,13 @@ test('normalizes Instagram credentials and requires user ID plus token', () => {
   assert.equal(configured.credentials.userId, 'ig-123');
   assert.equal(configured.credentials.accessToken, 'token-123');
   assert.equal(configured.configured, true);
+
+  const withExpiry = normalizeAccountInput({
+    platformId: 'instagram',
+    tokenExpiresAt: '2026-09-01',
+    credentials: { userId: 'ig-123', accessToken: 'token-123' },
+  });
+  assert.equal(withExpiry.tokenExpiresAt, '2026-09-01T00:00:00.000Z');
 
   const missingUser = normalizeAccountInput({
     platformId: 'instagram',

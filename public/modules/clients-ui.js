@@ -25,8 +25,10 @@ export function loadClientFacebookFields() {
   const facebook = (client?.accounts || []).find((account) => account.platformId === 'facebook');
   const pageId = $('#settingFacebookPageId');
   const token = $('#settingFacebookPageAccessToken');
+  const facebookExpiry = $('#settingFacebookTokenExpiresAt');
   if (pageId) pageId.value = facebook?.credentials?.pageId || '';
   if (token) token.value = facebook?.credentials?.pageAccessToken || '';
+  if (facebookExpiry) facebookExpiry.value = facebook?.tokenExpiresAt?.slice(0, 10) || '';
 
   [
     ['instagram', 'settingInstagramUserId', 'settingInstagramAccessToken'],
@@ -35,8 +37,10 @@ export function loadClientFacebookFields() {
     const account = (client?.accounts || []).find((item) => item.platformId === platformId);
     const userId = $('#' + userIdField);
     const accessToken = $('#' + tokenField);
+    const expiry = $('#' + (platformId === 'instagram' ? 'settingInstagramTokenExpiresAt' : 'settingThreadsTokenExpiresAt'));
     if (userId) userId.value = account?.credentials?.userId || '';
     if (accessToken) accessToken.value = account?.credentials?.accessToken || '';
+    if (expiry) expiry.value = account?.tokenExpiresAt?.slice(0, 10) || '';
   });
 }
 
@@ -95,6 +99,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
               pageId,
               pageAccessToken: $('#settingFacebookPageAccessToken')?.value || '',
             },
+            tokenExpiresAt: $('#settingFacebookTokenExpiresAt')?.value || '',
           }),
         });
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
@@ -114,6 +119,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
       buttonId: 'btnSaveClientInstagram',
       userIdField: 'settingInstagramUserId',
       tokenField: 'settingInstagramAccessToken',
+      expiryField: 'settingInstagramTokenExpiresAt',
     },
     {
       platformId: 'threads',
@@ -121,8 +127,9 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
       buttonId: 'btnSaveClientThreads',
       userIdField: 'settingThreadsUserId',
       tokenField: 'settingThreadsAccessToken',
+      expiryField: 'settingThreadsTokenExpiresAt',
     },
-  ].forEach(({ platformId, label, buttonId, userIdField, tokenField }) => {
+  ].forEach(({ platformId, label, buttonId, userIdField, tokenField, expiryField }) => {
     const saveButton = $('#' + buttonId);
     if (!saveButton) return;
     saveButton.addEventListener('click', async () => {
@@ -142,6 +149,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
               userId,
               accessToken: $('#' + tokenField)?.value || '',
             },
+            tokenExpiresAt: $('#' + expiryField)?.value || '',
           }),
         });
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));

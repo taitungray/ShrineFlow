@@ -3,6 +3,15 @@ import { api } from './api.js';
 import { currentClient } from './state.js';
 import { loadClientFacebookFields } from './clients-ui.js';
 
+function tokenHealthMessage(health) {
+  if (!health) return '';
+  if (health.status === 'expired') return 'Token 已過期';
+  if (health.status === 'expiring') return `Token 將於 ${health.expiresInDays} 天內到期`;
+  if (health.status === 'valid') return `Token 有效，剩餘 ${health.expiresInDays} 天`;
+  if (health.status === 'not_configured') return '尚未設定 Token';
+  return '尚未提供 Token 到期資訊';
+}
+
 export async function loadSettings() {
   try {
     const data = await api('/api/settings');
@@ -104,8 +113,9 @@ export function initSettingsListeners(onSettingsSavedFn) {
           const message = res.connected
             ? ('連線成功' + (res.page?.name ? '：' + res.page.name : ''))
             : (res.error || '連線失敗');
+          const healthMessage = tokenHealthMessage(res.tokenHealth);
           if (msg) {
-            msg.textContent = message;
+            msg.textContent = healthMessage ? message + ' · ' + healthMessage : message;
             msg.className = res.connected ? 'helper text-success' : 'helper text-danger';
           }
           showToast(message, res.connected ? 'success' : 'error');
@@ -159,8 +169,9 @@ export function initSettingsListeners(onSettingsSavedFn) {
         const message = res.connected
           ? ('連線成功' + (identity ? '：' + identity : ''))
           : (res.error || '連線失敗');
+        const healthMessage = tokenHealthMessage(res.tokenHealth);
         if (msg) {
-          msg.textContent = message;
+          msg.textContent = healthMessage ? message + ' · ' + healthMessage : message;
           msg.className = res.connected ? 'helper text-success' : 'helper text-danger';
         }
         showToast(message, res.connected ? 'success' : 'error');
