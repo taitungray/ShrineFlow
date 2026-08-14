@@ -24,7 +24,7 @@
 
 ## 安全邊界
 
-目前尚未加入登入／權限控管，因此 readiness 不是授權機制。要放到公網前，仍必須完成登入、反向代理 HTTPS、CORS／網路邊界與平台 App Review／Business Verification；在此之前只建議區域網或 VPN 內單一操作員使用。
+目前提供可選的單一操作員登入閘門，但 readiness 不是授權機制，也不提供多人角色／權限矩陣。要放到公網前，仍必須啟用登入、完成反向代理 HTTPS、CORS／網路邊界與平台 App Review／Business Verification；在此之前只建議區域網或 VPN 內單一操作員使用。
 
 ## 無限膨脹防護
 

@@ -90,7 +90,7 @@
 - [x] 維持免資料庫的 JSON 儲存，但補上單檔跨程序鎖定、逾時鎖回收、唯一暫存檔、原子替換與最多一份 `.bak` 復原快照；JSON 損壞時可回讀最近有效快照，並將鎖／暫存／復原檔排除在版本控制外。
 - [x] Token at-rest encryption：設定 SHRINEFLOW_MASTER_KEY 後，品牌平台 Token 與環境設定秘密下一次寫入以 AES-256-GCM 加密；未設定時明確顯示未啟用。
 - [x] Token rotation：設定頁可要求輸入目前主密鑰與新主密鑰，先驗證舊密鑰後，以安全備份與回復流程重新加密品牌平台 Token 與環境設定秘密；輪替備份只在請求期間存在，不累積歷史副本。
-- [ ] Facebook App Review／Business Verification。
+- [ ] Facebook App Review／Business Verification：外部審查尚未完成；執行清單見 [Meta App Review／Business Verification Checklist](docs/superpowers/specs/2026-08-14-meta-app-review-checklist.md)。
 - [x] 平台 API 速率限制、Webhook、監控與錯誤記錄：發布／Inbox／Insights 共用每平台每連線節流器，最小間隔 250ms、最多 2 個並行請求、等待佇列最多 20 筆；HTTP 429／5xx、scheduler 與清理錯誤寫入 `data/error-log.json`，最多 500 筆、保留 30 天並遮罩敏感欄位。
 - [x] 系統健康檢查：`/api/system/health` 顯示 JSON／復原快照、備份、素材配額、錯誤記錄與排程器狀態；不輸出檔案實體路徑或秘密，健康檢查頁可在設定中手動刷新。
 - [x] 部署前置檢查與手冊：`/api/system/readiness` 驗證主密鑰、HTTPS 媒體網址、production 模式、資料目錄可寫入與備份存在；詳細步驟記錄於 `docs/superpowers/specs/2026-08-14-local-deployment-runbook.md`。這不取代登入、HTTPS 反向代理或 App Review。
