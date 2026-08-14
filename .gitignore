@@ -5,6 +5,7 @@ uploads/*
 data/posts.json
 data/schedule.json
 data/clients.json
+data/inbox-metadata.json
 data/publish-attempts/*.json
 data/insights/*.json
 data/backups/*

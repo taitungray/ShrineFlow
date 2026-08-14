@@ -3405,6 +3405,42 @@ button.module-summary-card:focus-visible {
   padding-top: 8px;
 }
 
+.inbox-item-fields {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.inbox-item-fields .field-label {
+  font-size: 0.68rem;
+}
+
+.inbox-item-fields input,
+.inbox-item-fields textarea {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-soft);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.inbox-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+
+.inbox-platform-card[data-error]::after {
+  content: attr(data-error);
+  display: block;
+  color: var(--danger);
+  font-size: 0.72rem;
+}
+
 .inbox-item-list li > div {
   display: flex;
   justify-content: space-between;

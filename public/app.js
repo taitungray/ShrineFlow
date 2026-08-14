@@ -29,7 +29,7 @@ import { renderPlatformConnections } from './modules/platform-connections.js';
 import { renderTemplates, initTemplateManager } from './modules/templates.js';
 import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
 import { renderInsights, initInsightsListeners } from './modules/insights.js';
-import { renderInbox } from './modules/inbox.js';
+import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
@@ -176,6 +176,7 @@ async function loadData() {
 function initApp() {
   initTabs();
   initInsightsListeners();
+  initInboxListeners();
   initContentFilters();
   initCalendarControls();
   initMediaLibrary();

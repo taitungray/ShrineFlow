@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 import {
   createFacebookInboxClient,
@@ -9,6 +12,7 @@ import {
   InboxApiError,
 } from '../lib/inbox.js';
 import { createInboxRouter } from '../lib/routes/inbox.js';
+import { jsonFiles } from '../lib/store.js';
 
 function response(payload, status = 200) {
   return {
@@ -109,5 +113,62 @@ test('Inbox adapter classifies provider errors and route keeps provider-backed b
     assert.equal(payload.sources[0].items[0].text, 'Real reply');
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('Inbox route overlays local metadata and exposes provider cursor state', async () => {
+  const originalPath = jsonFiles.inboxMetadata;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-inbox-route-'));
+  jsonFiles.inboxMetadata = path.join(temporaryDirectory, 'inbox-metadata.json');
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createInboxRouter({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'threads:1', name: 'Threads brand', platformId: 'threads', configured: true }],
+    }],
+    resolveThreadsInbox: async () => ({
+      configured: true,
+      async fetchRecent() {
+        return {
+          platformId: 'threads',
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-14T00:00:00.000Z',
+          paging: { cursors: { after: 'next-page' } },
+          items: [{ id: 'reply-1', type: 'reply', text: 'Provider text', unread: true }],
+        };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+  try {
+    const base = `http://127.0.0.1:${server.address().port}/api/inbox`;
+    const first = await fetch(base);
+    const firstPayload = await first.json();
+    assert.equal(firstPayload.sources[0].cursor.available, true);
+    const update = await fetch(`${base}/items/reply-1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'client-1',
+        accountId: 'threads:1',
+        platformId: 'threads',
+        unread: false,
+        tags: ['VIP'],
+        note: '追蹤回覆',
+      }),
+    });
+    assert.equal(update.status, 200);
+    const second = await fetch(base);
+    const secondPayload = await second.json();
+    const item = secondPayload.sources[0].items[0];
+    assert.equal(item.unread, false);
+    assert.deepEqual(item.tags, ['VIP']);
+    assert.equal(item.note, '追蹤回覆');
+    assert.equal(JSON.stringify(secondPayload).includes('next-page'), true);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    jsonFiles.inboxMetadata = originalPath;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
 });
