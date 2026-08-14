@@ -25,6 +25,7 @@ import { createSettingsRouter } from './lib/routes/settings.js';
 import { createClientsRouter } from './lib/routes/clients.js';
 import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
+import { createWebhookRouter } from './lib/routes/webhooks.js';
 import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
@@ -181,7 +182,12 @@ async function initServices() {
 await initServices();
 const aiService = createAiService();
 
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (request, _response, buffer) => {
+    request.rawBody = Buffer.from(buffer);
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 
 const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
@@ -217,6 +223,7 @@ app.use('/api', createClientsRouter({
 app.use('/api', createTemplatesRouter());
 app.use('/api', createCampaignsRouter());
 app.use('/api', createSystemRouter());
+app.use('/api', createWebhookRouter());
 app.use('/api', (request, response, next) => createInsightsRouter({
   resolveFacebookInsights,
   resolveInstagramInsights,
