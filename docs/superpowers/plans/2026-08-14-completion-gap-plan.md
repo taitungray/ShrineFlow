@@ -384,7 +384,7 @@ This section is an additive status update. Earlier assessment notes remain above
 - Deployment readiness now surfaces incomplete Meta webhook configuration, while `.env.example` and the local deployment runbook document the required operator, media URL, and webhook variables.
 - Deployment readiness also warns when the newest backup is older than seven days or lacks a valid timestamp.
 - System health now returns 80% usage warnings for JSON item／byte limits and uploads file／byte quotas; the Settings panel surfaces the warning with a cleanup or archive hint.
-- Verification completed: `npm test` passes 161/161; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
+- Verification completed: `npm test` passes 163/163; targeted post, history-retention, and storage backup tests pass; changed JavaScript files pass `node --check`.
 
 ### Next planned work
 
