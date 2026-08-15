@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import express from 'express';
 
 import { parseBulkCsv, validateBulkCsv } from '../lib/bulk-import.js';
 import { createBulkImportRouter } from '../lib/routes/bulk-import.js';
+import { directories } from '../lib/store.js';
 
 test('bulk CSV parser supports quoted commas and maps supported aliases', () => {
   const parsed = parseBulkCsv([
@@ -63,5 +67,60 @@ test('bulk import preview route returns validation results and never creates pos
     assert.equal(payload.rows[0].fields.contentTopic, '批次內容');
   } finally {
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('bulk import commit is all-or-nothing and creates unscheduled drafts only after validation', async () => {
+  const versionDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-bulk-import-'));
+  const originalVersionDirectory = directories.postVersions;
+  directories.postVersions = versionDirectory;
+  const records = [];
+  const repositories = {
+    posts: {
+      async mutate(mutator) {
+        return mutator(records);
+      },
+    },
+  };
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createBulkImportRouter({
+    repositories,
+    listClients: async () => [{ id: 'client-1', name: 'Brand A' }],
+  }));
+  const server = app.listen(0);
+  try {
+    const validResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/commit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'client-1',
+        csv: 'contentTopic,facebook,platform,contentType,scheduledLocal,timeZone\n批次內容,批次文案,facebook,post,2026-08-20T10:00,Asia/Taipei',
+      }),
+    });
+    assert.equal(validResponse.status, 201);
+    const validPayload = await validResponse.json();
+    assert.equal(validPayload.createdCount, 1);
+    assert.equal(validPayload.drafts[0].status, 'draft');
+    assert.equal(validPayload.drafts[0].targets[0].scheduledAt, null);
+    assert.equal(validPayload.drafts[0].importedSchedule.requestedAt, '2026-08-20T02:00:00.000Z');
+    assert.equal(records.length, 1);
+
+    const invalidResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/commit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: 'client-1',
+        csv: 'contentTopic,facebook,platform\n,缺少主題,facebook\n另一列,正常文案,not-a-platform',
+      }),
+    });
+    assert.equal(invalidResponse.status, 400);
+    const invalidPayload = await invalidResponse.json();
+    assert.equal(invalidPayload.code, 'BULK_IMPORT_VALIDATION_FAILED');
+    assert.equal(records.length, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    directories.postVersions = originalVersionDirectory;
+    await fs.rm(versionDirectory, { recursive: true, force: true });
   }
 });

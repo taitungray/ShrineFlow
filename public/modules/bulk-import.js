@@ -1,6 +1,7 @@
 import { $, escapeHtml, showToast } from './dom.js';
 import { api } from './api.js';
 import { clientQuery, state } from './state.js';
+import { renderPosts } from './drafts.js';
 
 function rowIssueText(row) {
   const errors = Array.isArray(row.errors) ? row.errors : [];
@@ -13,6 +14,8 @@ export function renderBulkImportPreview() {
   const list = $('#bulkImportRows');
   if (!summary || !list) return;
   const preview = state.bulkImportPreview;
+  const commitButton = $('#bulkImportCommitButton');
+  if (commitButton) commitButton.disabled = !preview?.valid;
   if (!preview) {
     summary.textContent = '尚未執行 dry-run。';
     list.innerHTML = '';
@@ -65,6 +68,34 @@ export function initBulkImportListeners() {
     if (input) input.value = '';
     state.bulkImportPreview = null;
     renderBulkImportPreview();
+  });
+  $('#bulkImportCommitButton')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const csv = $('#bulkImportCsv')?.value || '';
+    if (!state.bulkImportPreview?.valid || !csv.trim()) return;
+    if (!window.confirm(`CSV 已通過驗證，確定建立 ${state.bulkImportPreview.validRowCount} 篇草稿嗎？這一步不會排程或發布。`)) return;
+    button.disabled = true;
+    button.textContent = '寫入中…';
+    try {
+      const result = await api(clientQuery('/api/bulk-import/commit'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: state.currentClientId, csv }),
+      });
+      state.posts = [...(result.drafts || []), ...(state.posts || [])];
+      renderPosts();
+      const input = $('#bulkImportCsv');
+      if (input) input.value = '';
+      state.bulkImportPreview = null;
+      renderBulkImportPreview();
+      showToast(`已建立 ${result.createdCount || 0} 篇草稿。`, 'success');
+    } catch (error) {
+      showToast(error.message || 'CSV 寫入失敗，未完成匯入。', 'error');
+      button.disabled = false;
+    } finally {
+      button.textContent = '建立草稿（不排程）';
+      if (!state.bulkImportPreview?.valid) button.disabled = true;
+    }
   });
   renderBulkImportPreview();
 }
