@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)] [string]$ProjectId,
   [Parameter(Mandatory = $true)] [string]$ServiceUrl,
   [string]$Region = 'asia-east1',
@@ -8,10 +8,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$Gcloud = (Get-Command gcloud.cmd -ErrorAction SilentlyContinue).Source
+if (-not $Gcloud) { $Gcloud = (Get-Command gcloud -ErrorAction SilentlyContinue).Source }
+if (-not $Gcloud) { throw 'gcloud CLI not found.' }
 if (-not $SchedulerToken) {
   $SchedulerToken = Read-Host 'Scheduler token used by ShrineFlow'
 }
-gcloud config set project $ProjectId
+& $Gcloud config set project $ProjectId
 
 $jobs = @(
   @{ Name = 'publish-due-targets'; Schedule = '* * * * *'; Path = '/api/internal/scheduler/publish-due' },
@@ -22,22 +25,29 @@ $jobs = @(
 foreach ($job in $jobs) {
   $jobName = $JobPrefix + '-' + $job.Name
   $uri = $ServiceUrl.TrimEnd('/') + $job.Path
-  $schedulerOptions = @(
+  $commonOptions = @(
     "--location=$SchedulerRegion",
     "--schedule=$($job.Schedule)",
     "--uri=$uri",
     '--http-method=POST',
-    "--headers=X-ShrineFlow-Scheduler-Token=$SchedulerToken",
     '--time-zone=Asia/Taipei',
     '--attempt-deadline=540s',
     '--quiet'
   )
-  & gcloud scheduler jobs describe $jobName --location=$SchedulerRegion 2>$null | Out-Null
-  $exists = $LASTEXITCODE -eq 0
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    & $Gcloud scheduler jobs describe $jobName --location=$SchedulerRegion 1>$null 2>$null
+    $exists = ($LASTEXITCODE -eq 0)
+  } catch {
+    $exists = $false
+  } finally {
+    $ErrorActionPreference = $previous
+  }
   if ($exists) {
-    & gcloud scheduler jobs update http $jobName @schedulerOptions
+    & $Gcloud scheduler jobs update http $jobName @commonOptions "--update-headers=X-ShrineFlow-Scheduler-Token=$SchedulerToken"
   } else {
-    & gcloud scheduler jobs create http $jobName @schedulerOptions
+    & $Gcloud scheduler jobs create http $jobName @commonOptions "--headers=X-ShrineFlow-Scheduler-Token=$SchedulerToken"
   }
   if ($LASTEXITCODE -ne 0) { throw "Scheduler job $jobName failed with exit code $LASTEXITCODE." }
 }

@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)] [string]$ProjectId,
   [string]$Region = 'asia-east1',
   [string]$ServiceName = 'shrineflow-api',
@@ -14,6 +14,7 @@ param(
   [string]$FirebaseApiKey = '',
   [string]$FirebaseAuthDomain = '',
   [string]$FirebaseAppId = '',
+  [string]$FirebaseProjectId = '',
   [string]$OwnerEmails = '',
   [string]$OwnerUids = '',
   [switch]$EnableMetaWebhook,
@@ -22,22 +23,62 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Assert-Command($name) {
-  if (-not (Get-Command $name -ErrorAction SilentlyContinue)) {
-    throw "找不到必要指令：$name。請先安裝並登入對應 CLI。"
+function Get-GcloudCommand {
+  $cmd = Get-Command gcloud.cmd -ErrorAction SilentlyContinue
+  if ($cmd) { return $cmd.Source }
+  $cmd = Get-Command gcloud -ErrorAction SilentlyContinue
+  if ($cmd) { return $cmd.Source }
+  throw 'gcloud CLI not found. Install Google Cloud SDK and open a new PowerShell window.'
+}
+
+$Gcloud = Get-GcloudCommand
+
+function Invoke-Gcloud {
+  & $Gcloud @args
+  if ($LASTEXITCODE -ne 0) {
+    throw ('gcloud failed: ' + ($args -join ' '))
   }
 }
 
-function Invoke-Gcloud {
-  & gcloud @args
-  if ($LASTEXITCODE -ne 0) {
-    throw ("gcloud 失敗：" + ($args -join ' '))
+function Invoke-GcloudRetry {
+  $max = 6
+  for ($attempt = 1; $attempt -le $max; $attempt++) {
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $code = 1
+    try {
+      & $Gcloud @args
+      $code = $LASTEXITCODE
+    } catch {
+      $code = 1
+    } finally {
+      $ErrorActionPreference = $previous
+    }
+    if ($code -eq 0) { return }
+    if ($attempt -eq $max) {
+      throw ('gcloud failed: ' + ($args -join ' '))
+    }
+    $delay = [Math]::Min(20, 2 * $attempt)
+    Write-Host "Retrying gcloud in ${delay}s (attempt $attempt/$max)..."
+    Start-Sleep -Seconds $delay
+  }
+}
+
+function Test-GcloudSuccess {
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    & $Gcloud @args 1>$null 2>$null
+    return ($LASTEXITCODE -eq 0)
+  } catch {
+    return $false
+  } finally {
+    $ErrorActionPreference = $previous
   }
 }
 
 function Test-GcloudSecret([string]$Name) {
-  & gcloud secrets describe $Name --project $ProjectId 1>$null 2>$null
-  return $LASTEXITCODE -eq 0
+  return Test-GcloudSuccess secrets describe $Name --project $ProjectId
 }
 
 function New-RandomSecretValue {
@@ -54,21 +95,19 @@ function Ensure-GcloudSecret {
   )
   if (Test-GcloudSecret $Name) { return $true }
   if ($Required -and -not $Generate) {
-    throw "缺少 Secret Manager 密鑰「$Name」。請先建立後再部署。"
+    throw "Missing Secret Manager secret '$Name'. Create it before deploying."
   }
   if (-not $Generate) { return $false }
   $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('shrineflow-secret-' + [guid]::NewGuid().ToString('N') + '.txt')
   try {
     [System.IO.File]::WriteAllText($tmp, (New-RandomSecretValue))
     Invoke-Gcloud secrets create $Name --data-file $tmp --project $ProjectId
-    Write-Host "已建立 Secret：$Name"
+    Write-Host "Created secret: $Name"
   } finally {
     Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
   }
   return $true
 }
-
-Assert-Command 'gcloud'
 
 $R2Endpoint = if ($R2Endpoint) {
   $R2Endpoint.TrimEnd('/')
@@ -78,7 +117,7 @@ $R2Endpoint = if ($R2Endpoint) {
 
 $publicMediaBaseUrl = $R2PublicBaseUrl.TrimEnd('/')
 if ($publicMediaBaseUrl -notmatch '^https://') {
-  throw 'R2PublicBaseUrl 必須是 HTTPS 公開網域，Instagram／Threads 才能抓圖。'
+  throw 'R2PublicBaseUrl must be an HTTPS public domain so Instagram/Threads can fetch media.'
 }
 
 if ($AuthMode -eq 'firebase') {
@@ -86,30 +125,35 @@ if ($AuthMode -eq 'firebase') {
   if (-not $FirebaseApiKey) { $missingFirebase += 'FirebaseApiKey' }
   if (-not $FirebaseAuthDomain) { $missingFirebase += 'FirebaseAuthDomain' }
   if (-not $FirebaseAppId) { $missingFirebase += 'FirebaseAppId' }
-  if (-not ($OwnerEmails -or $OwnerUids)) { $missingFirebase += 'OwnerEmails 或 OwnerUids' }
+  if (-not ($OwnerEmails -or $OwnerUids)) { $missingFirebase += 'OwnerEmails or OwnerUids' }
   if ($missingFirebase.Count -gt 0) {
-    throw 'Firebase 登入部署缺少參數：' + ($missingFirebase -join ', ') + '。'
+    throw ('Firebase deploy is missing: ' + ($missingFirebase -join ', '))
   }
 }
 
 Invoke-Gcloud config set project $ProjectId
 Invoke-Gcloud services enable run.googleapis.com firestore.googleapis.com cloudscheduler.googleapis.com cloudbuild.googleapis.com identitytoolkit.googleapis.com secretmanager.googleapis.com
 
-$databaseExists = $true
-& gcloud firestore databases describe --database="$FirestoreDatabaseId" --project $ProjectId 1>$null 2>$null
-if ($LASTEXITCODE -ne 0) {
-  $databaseExists = $false
-}
+$databaseExists = Test-GcloudSuccess firestore databases describe --database="$FirestoreDatabaseId" --project $ProjectId
 if (-not $databaseExists) {
   Invoke-Gcloud firestore databases create --location $Region --type firestore-native --database="$FirestoreDatabaseId" --project $ProjectId
-  Write-Host "已建立 Firestore Native database：$FirestoreDatabaseId"
+  Write-Host "Created Firestore Native database: $FirestoreDatabaseId"
 }
 
-$projectNumber = (& gcloud projects describe $ProjectId --format 'value(projectNumber)').Trim()
-if (-not $projectNumber) { throw '無法讀取 GCP project number。' }
+$projectNumber = (& $Gcloud projects describe $ProjectId --format 'value(projectNumber)').Trim()
+if (-not $projectNumber) { throw 'Could not read GCP project number.' }
 $runtimeSa = $projectNumber + '-compute@developer.gserviceaccount.com'
-Invoke-Gcloud projects add-iam-policy-binding $ProjectId --member ('serviceAccount:' + $runtimeSa) --role roles/datastore.user --quiet
-Invoke-Gcloud projects add-iam-policy-binding $ProjectId --member ('serviceAccount:' + $runtimeSa) --role roles/firebaseauth.admin --quiet
+Invoke-GcloudRetry projects add-iam-policy-binding $ProjectId --member ('serviceAccount:' + $runtimeSa) --role roles/datastore.user --quiet
+Start-Sleep -Seconds 2
+Invoke-GcloudRetry projects add-iam-policy-binding $ProjectId --member ('serviceAccount:' + $runtimeSa) --role roles/firebaseauth.admin --quiet
+Start-Sleep -Seconds 2
+Invoke-GcloudRetry projects add-iam-policy-binding $ProjectId --member ('serviceAccount:' + $runtimeSa) --role roles/secretmanager.secretAccessor --quiet
+$firebaseIamProject = if ($FirebaseProjectId) { $FirebaseProjectId } else { $ProjectId }
+if ($firebaseIamProject -ne $ProjectId) {
+  Start-Sleep -Seconds 2
+  Invoke-GcloudRetry projects add-iam-policy-binding $firebaseIamProject --member ('serviceAccount:' + $runtimeSa) --role roles/firebaseauth.admin --quiet
+}
+Start-Sleep -Seconds 8
 
 Ensure-GcloudSecret -Name 'shrineflow-scheduler-token' -Generate | Out-Null
 Ensure-GcloudSecret -Name 'shrineflow-master-key' -Generate | Out-Null
@@ -128,7 +172,6 @@ if ($EnableMetaWebhook) {
 
 $envVars = [ordered]@{
   NODE_ENV = 'production'
-  PORT = '8080'
   SHRINEFLOW_AUTH_MODE = $AuthMode
   SHRINEFLOW_STORAGE_BACKEND = 'firestore'
   SHRINEFLOW_MEDIA_BACKEND = 'r2'
@@ -154,7 +197,7 @@ $envVars = [ordered]@{
 if ($AuthMode -eq 'firebase') {
   $envVars.FIREBASE_API_KEY = $FirebaseApiKey
   $envVars.FIREBASE_AUTH_DOMAIN = $FirebaseAuthDomain
-  $envVars.FIREBASE_PROJECT_ID = $ProjectId
+  $envVars.FIREBASE_PROJECT_ID = $(if ($FirebaseProjectId) { $FirebaseProjectId } else { $ProjectId })
   $envVars.FIREBASE_APP_ID = $FirebaseAppId
   $envVars.SHRINEFLOW_OWNER_EMAILS = $OwnerEmails
   $envVars.SHRINEFLOW_OWNER_UIDS = $OwnerUids
@@ -169,7 +212,7 @@ $envFile = Join-Path ([System.IO.Path]::GetTempPath()) ('shrineflow-cloud-env-' 
 $envLines = foreach ($entry in $envVars.GetEnumerator()) {
   $entry.Key + ': ' + (ConvertTo-YamlScalar $entry.Value)
 }
-Set-Content -LiteralPath $envFile -Value ($envLines -join [Environment]::NewLine) -Encoding utf8
+Set-Content -LiteralPath $envFile -Value ($envLines -join [Environment]::NewLine) -Encoding ascii
 
 $secretBindings = @(
   'SHRINEFLOW_SCHEDULER_TOKEN=shrineflow-scheduler-token:latest',
@@ -194,12 +237,12 @@ if ($EnableMetaWebhook) {
   )
 }
 
-$source = if ($Image) {
-  @('gcloud', 'run', 'deploy', $ServiceName, '--image', $Image)
+$deployArgs = if ($Image) {
+  @('run', 'deploy', $ServiceName, '--image', $Image)
 } else {
-  @('gcloud', 'run', 'deploy', $ServiceName, '--source', '.')
+  @('run', 'deploy', $ServiceName, '--source', '.')
 }
-$source += @(
+$deployArgs += @(
   '--project', $ProjectId,
   '--region', $Region,
   '--allow-unauthenticated',
@@ -214,27 +257,27 @@ $source += @(
 )
 
 try {
-  & $source[0] $source[1..($source.Count - 1)]
+  & $Gcloud @deployArgs
   if ($LASTEXITCODE -ne 0) { throw "Cloud Run deployment failed with exit code $LASTEXITCODE." }
 } finally {
   Remove-Item -LiteralPath $envFile -Force -ErrorAction SilentlyContinue
 }
 
-$serviceUrl = (& gcloud run services describe $ServiceName --project $ProjectId --region $Region --format 'value(status.url)').Trim()
-if (-not $serviceUrl) { throw 'Cloud Run 部署後讀不到服務網址。' }
+$serviceUrl = (& $Gcloud run services describe $ServiceName --project $ProjectId --region $Region --format 'value(status.url)').Trim()
+if (-not $serviceUrl) { throw 'Cloud Run deploy finished but the service URL could not be read.' }
 
 if (-not $SkipScheduler) {
-  $schedulerToken = (& gcloud secrets versions access latest --secret shrineflow-scheduler-token --project $ProjectId).Trim()
+  $schedulerToken = (& $Gcloud secrets versions access latest --secret shrineflow-scheduler-token --project $ProjectId).Trim()
   $schedulerScript = Join-Path $PSScriptRoot 'cloud-scheduler.ps1'
   & $schedulerScript -ProjectId $ProjectId -ServiceUrl $serviceUrl -SchedulerRegion $Region -SchedulerToken $schedulerToken
 }
 
 Write-Host ''
-Write-Host 'Cloud Run 已就緒。後台請直接開這個網址（不要走 Firebase Hosting rewrite）：'
+Write-Host 'Cloud Run is ready. Open this URL (do not use Firebase Hosting rewrite):'
 Write-Host $serviceUrl
 Write-Host ''
-Write-Host '下一步：登入後台 → 填 Gemini Key 與品牌平台 Token → 開啟 /api/system/readiness 確認不是 blocked。'
+Write-Host 'Next: sign in -> set Gemini key and brand platform tokens -> open /api/system/readiness and confirm it is not blocked.'
 if (-not $geminiSecretReady) {
-  Write-Host '尚未綁定 GEMINI_API_KEY Secret；可在後台設定頁填入，會寫進 Firestore 並跨重啟保留。'
+  Write-Host 'GEMINI_API_KEY secret is not bound. You can set it in Settings; it is stored in Firestore across restarts.'
 }
-Write-Host '免費層重點：min-instances=0、max-instances=1、Scheduler 固定 3 個 job。'
+Write-Host 'Free-tier notes: min-instances=0, max-instances=1, three Scheduler jobs.'
