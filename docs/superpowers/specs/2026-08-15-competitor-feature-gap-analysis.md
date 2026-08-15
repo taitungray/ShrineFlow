@@ -219,7 +219,10 @@ API／權限 Spike
 
 #### Package 6：檔期產能
 
-- Ideas、已發布再製、CSV／整批影片、Evergreen。
+- [x] Ideas v1：以 `contentStage=idea` 保存，不進排程、不允許直接發布，轉成 `draft` 後才進入既有內容流程。
+- [ ] 已發布再製（帶成效）；只依真實 Insights 排名，不猜成效。
+- [ ] CSV／整批影片；先 dry-run、逐列驗證、逐列修正。
+- [ ] Evergreen；需遞迴 scheduler、上限、暫停、去重與失敗補償。
 - 每一項另寫獨立 plan，不再以一個「D 產能包」一次承包。
 
 ## 6. 資料／狀態落地約束
@@ -343,4 +346,4 @@ Package 0～4 已完成可驗證的核心閉環；下一步先做 **Package 5：
 4. 哪些 Instagram Professional 帳號已完成首則留言的正式權限與 App Review 驗證？目前資料流已具備，但 capability 預設仍不開啟。
 5. Meta Graph API 是否能可靠提供本產品需要的遠端 scheduled posts 列表與狀態？
 6. 最佳時段的最低樣本數、指標與資料保留期為何？
-7. Ideas 是否要作為 `contentStage`，而不是加入既有 post lifecycle status？
+7. [已決] Ideas 使用獨立的 `contentStage`，不加入既有 post lifecycle status；後續延伸功能仍各自拆包。

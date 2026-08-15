@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.56" />
+    <link rel="stylesheet" href="/style.css?v=0.5.57" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -551,6 +551,14 @@
                 <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
               </div>
             </div>
+            <div class="field content-filter-field">
+              <span id="contentStageFilterLabel" class="field-label">內容階段</span>
+              <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
+                <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+              </div>
+            </div>
             <div class="field content-filter-field content-platform-filter-field">
               <span id="contentPlatformFilterLabel" class="field-label">平台</span>
               <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
@@ -561,6 +569,25 @@
               </div>
             </div>
           </div>
+          <fieldset class="form-group-card idea-capture-card">
+            <legend class="group-title">💡 快速記下 Idea</legend>
+            <form id="ideaCaptureForm">
+              <div class="field-row">
+                <div class="field">
+                  <label for="ideaTopic" class="field-label">主題</label>
+                  <input id="ideaTopic" type="text" maxlength="200" placeholder="例：中元普渡前的供桌整理提醒" required />
+                </div>
+                <div class="field">
+                  <label for="ideaNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+                  <input id="ideaNotes" type="text" maxlength="500" placeholder="補充受眾、時機或素材想法" />
+                </div>
+              </div>
+              <div class="action-box">
+                <button class="btn-secondary" type="submit">保存 Idea</button>
+                <span class="helper">Idea 不會出現在排程，也不能直接發布；轉成草稿後才進入內容流程。</span>
+              </div>
+            </form>
+          </fieldset>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📝</span>
@@ -1021,6 +1048,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.56" type="module"></script>
+    <script src="/app.js?v=0.5.57" type="module"></script>
   </body>
 </html>

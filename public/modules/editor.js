@@ -59,7 +59,7 @@ function readRecoveryIndex() {
 function writeRecoverySnapshot(draft = currentDraft()) {
   if (!state.editorDirty || !draft) return;
   const fields = [
-    'clientId', 'contentTopic', 'godName', 'postType', 'extraNotes', 'defaultHashtags',
+    'clientId', 'contentStage', 'contentTopic', 'godName', 'postType', 'extraNotes', 'defaultHashtags',
     'channel', 'accountId', 'contentType', 'contentSettings', 'facebook', 'reel',
     'hashtags', 'imagePath', 'mediaPaths', 'targets',
   ];
@@ -149,6 +149,7 @@ export function restoreRecoverySnapshotForPost(post) {
 }
 
 function draftValidationMessage(draft) {
+  if (draft.contentStage === 'idea') return '';
   const type = fieldValue($('#targetContentType')) || draft.contentType || 'post';
   if (type === 'reel' && !String(draft.reel || '').trim()) return 'Reel 文案尚未完成。';
   if (type !== 'reel' && !String(draft.facebook || '').trim()) return '貼文文案尚未完成。';
@@ -492,6 +493,7 @@ async function runApprovalAction(action) {
 
 function syncEditorActions() {
   const isArchived = state.savedPost?.status === 'archived';
+  const isIdea = state.savedPost?.contentStage === 'idea';
   const hasSavedPost = Boolean(state.savedPost);
   const isDirty = Boolean(state.editorDirty);
   const isSaving = Boolean(state.autosaveInFlight);
@@ -500,13 +502,13 @@ function syncEditorActions() {
   document.getElementById('approveButton')?.addEventListener('click', () => runApprovalAction('approve'));
   document.getElementById('requestChangesButton')?.addEventListener('click', () => runApprovalAction('request-changes'));
   const publishButton = $('#publishNowButton');
-  if (scheduleButton) scheduleButton.disabled = isArchived || !hasSavedPost || isDirty || isSaving;
+  if (scheduleButton) scheduleButton.disabled = isArchived || isIdea || !hasSavedPost || isDirty || isSaving;
   if (publishButton) {
-    publishButton.disabled = isArchived || !hasSavedPost || isDirty || isSaving || publishButton.dataset.busy === 'true';
+    publishButton.disabled = isArchived || isIdea || !hasSavedPost || isDirty || isSaving || publishButton.dataset.busy === 'true';
   }
   const badge = $('#draftState');
   if (badge && hasSavedPost) {
-    badge.textContent = isDirty ? '尚未儲存' : postStatusLabel(state.savedPost.status);
+    badge.textContent = isIdea ? 'Idea' : isDirty ? '尚未儲存' : postStatusLabel(state.savedPost.status);
     badge.classList.toggle('ready', !isDirty && !isSaving);
   }
   syncArchivedEditorState();
@@ -600,6 +602,7 @@ export function currentDraft() {
   const contentTopic = $('#contentTopic')?.value || '';
   const draft = {
     ...(state.generated || {}),
+    contentStage: state.savedPost?.contentStage || state.generated?.contentStage || 'draft',
     clientId: state.currentClientId || '',
     contentTopic,
     godName: contentTopic,

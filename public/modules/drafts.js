@@ -3,7 +3,7 @@ import { api } from './api.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
 import { setActiveView } from './tabs.js';
-import { postStatusLabel, targetStatusSummary } from './status.js';
+import { contentStageLabel, postStatusLabel, targetStatusSummary } from './status.js';
 
 let refreshListsCallback = null;
 
@@ -11,6 +11,7 @@ const filters = {
   query: '',
   status: 'all',
   platform: 'all',
+  stage: 'all',
 };
 
 function targetsOf(post) {
@@ -35,7 +36,8 @@ function matchesFilters(post) {
       ? postStatus !== 'archived'
       : postStatus === filters.status;
   const platformMatches = filters.platform === 'all' || targets.some((target) => target.platformId === filters.platform);
-  if (!statusMatches || !platformMatches) return false;
+  const stageMatches = filters.stage === 'all' || String(post.contentStage || 'draft') === filters.stage;
+  if (!statusMatches || !platformMatches || !stageMatches) return false;
   if (!filters.query) return true;
   const haystack = [postTitle(post), postText(post), post.extraNotes, post.postType].join(' ').toLowerCase();
   return haystack.includes(filters.query.toLowerCase());
@@ -62,18 +64,21 @@ function renderEmpty(container, isFiltered) {
     filters.query = '';
     filters.status = 'all';
     filters.platform = 'all';
+    filters.stage = 'all';
     const search = $('#contentSearch');
     if (search) search.value = '';
     const allStatus = document.querySelector('input[name="contentStatus"][value="all"]');
     const allPlatform = document.querySelector('input[name="contentPlatform"][value="all"]');
+    const allStage = document.querySelector('input[name="contentStage"][value="all"]');
     if (allStatus) allStatus.checked = true;
     if (allPlatform) allPlatform.checked = true;
+    if (allStage) allStage.checked = true;
     renderPosts();
   });
 }
 
 async function runPostAction(action, postId) {
-  const actionNames = { archive: '封存', restore: '還原', duplicate: '複製' };
+  const actionNames = { archive: '封存', restore: '還原', duplicate: '複製', 'promote-idea': '轉成草稿' };
   const actionName = actionNames[action] || '操作';
   if (!window.confirm(`確定要${actionName}這篇貼文嗎？`)) return;
   try {
@@ -82,7 +87,15 @@ async function runPostAction(action, postId) {
       options.headers = { 'Content-Type': 'application/json' };
       options.body = JSON.stringify({});
     }
-    await api('/api/posts/' + encodeURIComponent(postId) + '/' + action, options);
+    if (action === 'promote-idea') {
+      options.method = 'PATCH';
+      options.headers = { 'Content-Type': 'application/json' };
+      options.body = JSON.stringify({ contentStage: 'draft', versionSource: 'manual' });
+    }
+    const endpoint = action === 'promote-idea'
+      ? '/api/posts/' + encodeURIComponent(postId)
+      : '/api/posts/' + encodeURIComponent(postId) + '/' + action;
+    await api(endpoint, options);
     showToast(`貼文已${actionName}`, 'success');
     if (refreshListsCallback) await refreshListsCallback();
     else renderPosts();
@@ -115,6 +128,8 @@ export function renderPosts() {
       .join('');
     const morePlatforms = targets.length > 3 ? '<span class="platform-chip platform-chip-more">+' + (targets.length - 3) + '</span>' : '';
     const status = String(post.status || 'draft');
+    const contentStage = String(post.contentStage || 'draft');
+    const stageLabel = contentStageLabel(contentStage);
     const targetSummary = targetStatusSummary(targets, PLATFORM_NAMES);
     const updated = post.updatedAt || post.createdAt;
     const meta = [
@@ -122,7 +137,9 @@ export function renderPosts() {
       scheduleTarget?.scheduledAt ? '排程：' + formatDate(scheduleTarget.scheduledAt) : '',
       post.archivedAt ? '封存：' + formatDate(post.archivedAt) : '',
     ].filter(Boolean).join(' · ');
-    const lifecycleActions = status === 'archived'
+    const lifecycleActions = contentStage === 'idea'
+      ? '<button class="content-card-action" type="button" data-post-action="promote-idea" data-post-id="' + escapeHtml(post.id) + '">轉成草稿</button>'
+      : status === 'archived'
       ? '<button class="content-card-action" type="button" data-post-action="restore" data-post-id="' + escapeHtml(post.id) + '">還原</button>'
       : '<button class="content-card-action" type="button" data-post-action="archive" data-post-id="' + escapeHtml(post.id) + '">封存</button>';
     return '<article class="record-card content-card" data-status="' + escapeHtml(status) + '">' +
@@ -130,7 +147,7 @@ export function renderPosts() {
       '<span class="record-thumb">' + thumbnail + '</span>' +
       '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>' +
       '</button>' +
-      '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">' + escapeHtml(statusLabel(status)) + '</em><span class="content-card-actions">' + lifecycleActions + '<button class="content-card-action" type="button" data-post-action="duplicate" data-post-id="' + escapeHtml(post.id) + '">複製</button></span></span>' +
+      '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(contentStage === 'idea' ? 'idea' : status) + '">' + escapeHtml(contentStage === 'idea' ? stageLabel : statusLabel(status)) + '</em><span class="content-card-actions">' + lifecycleActions + '<button class="content-card-action" type="button" data-post-action="duplicate" data-post-id="' + escapeHtml(post.id) + '">複製</button></span></span>' +
       '</article>';
   }).join('');
 
@@ -155,6 +172,34 @@ export function initContentFilters(refreshListsFn = null) {
     filters.platform = input.value;
     renderPosts();
   }));
+  document.querySelectorAll('input[name="contentStage"]').forEach((input) => input.addEventListener('change', () => {
+    filters.stage = input.value;
+    renderPosts();
+  }));
+  $('#ideaCaptureForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const topic = $('#ideaTopic')?.value?.trim() || '';
+    if (!topic) return setPreviewMessage('請先輸入 Idea 主題。', 'error');
+    try {
+      await api('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: state.currentClientId,
+          contentTopic: topic,
+          contentStage: 'idea',
+          facebook: '',
+          extraNotes: $('#ideaNotes')?.value?.trim() || '',
+        }),
+      });
+      $('#ideaTopic').value = '';
+      $('#ideaNotes').value = '';
+      showToast('Idea 已保存。', 'success');
+      if (refreshListsCallback) await refreshListsCallback();
+    } catch (error) {
+      showToast(error.message || 'Idea 保存失敗。', 'error');
+    }
+  });
 }
 
 export async function loadPost(postId) {
@@ -168,6 +213,8 @@ export async function loadPost(postId) {
   setActiveView('review');
   setPreviewMessage(restored
     ? '已從本機復原未儲存修改，請確認後等待自動儲存。'
+    : post.contentStage === 'idea'
+      ? 'Idea 已載入；先轉成草稿，再開始產生文案與排程。'
     : post.status === 'archived'
       ? '貼文已封存，請回到內容列表還原後再編輯。'
       : '已載入貼文。');

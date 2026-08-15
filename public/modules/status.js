@@ -8,6 +8,11 @@ export const POST_STATUS_LABELS = {
   archived: '已封存',
 };
 
+export const CONTENT_STAGE_LABELS = {
+  idea: 'Idea',
+  draft: '草稿',
+};
+
 export const TARGET_STATUS_LABELS = {
   pending: '待發布',
   scheduled: '已排程',
@@ -21,6 +26,10 @@ export const TARGET_STATUS_LABELS = {
 
 export function postStatusLabel(status) {
   return POST_STATUS_LABELS[status] || status || POST_STATUS_LABELS.draft;
+}
+
+export function contentStageLabel(stage) {
+  return CONTENT_STAGE_LABELS[stage] || CONTENT_STAGE_LABELS.draft;
 }
 
 export function targetStatusLabel(status) {
