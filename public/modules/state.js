@@ -18,6 +18,7 @@ export const state = {
   insightsScope: 'account',
   repurposeCandidates: null,
   bulkImportPreview: null,
+  bulkImportDrafts: [],
   bestTimes: null,
   inbox: null,
   inboxFilter: 'all',

@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import express from 'express';
 
-import { parseBulkCsv, validateBulkCsv } from '../lib/bulk-import.js';
+import { buildBulkDraft, parseBulkCsv, validateBulkCsv } from '../lib/bulk-import.js';
 import { createBulkImportRouter } from '../lib/routes/bulk-import.js';
 import { directories } from '../lib/store.js';
 
@@ -118,6 +118,84 @@ test('bulk import commit is all-or-nothing and creates unscheduled drafts only a
     const invalidPayload = await invalidResponse.json();
     assert.equal(invalidPayload.code, 'BULK_IMPORT_VALIDATION_FAILED');
     assert.equal(records.length, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    directories.postVersions = originalVersionDirectory;
+    await fs.rm(versionDirectory, { recursive: true, force: true });
+  }
+});
+
+test('bulk import schedule applies requested times atomically as local schedules', async () => {
+  const versionDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-bulk-schedule-'));
+  const originalVersionDirectory = directories.postVersions;
+  directories.postVersions = versionDirectory;
+  const records = [
+    buildBulkDraft({
+      rowNumber: 2,
+      fields: {
+        contentTopic: '可排程內容',
+        facebook: '可排程文案',
+        platformId: 'facebook',
+        contentType: 'post',
+        scheduledAt: '2026-08-20T02:00:00.000Z',
+        timeZone: 'Asia/Taipei',
+        mediaPaths: [],
+      },
+    }, { clientId: 'client-1', now: new Date('2026-08-15T00:00:00.000Z') }),
+    buildBulkDraft({
+      rowNumber: 3,
+      fields: {
+        contentTopic: '缺少排程內容',
+        facebook: '缺少排程文案',
+        platformId: 'facebook',
+        contentType: 'post',
+        mediaPaths: [],
+      },
+    }, { clientId: 'client-1', now: new Date('2026-08-15T00:00:00.000Z') }),
+  ];
+  const repositories = {
+    posts: {
+      async list() {
+        return records;
+      },
+      async mutate(mutator) {
+        return mutator(records);
+      },
+    },
+  };
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createBulkImportRouter({
+    repositories,
+    listClients: async () => [{ id: 'client-1', name: 'Brand A' }],
+  }));
+  const server = app.listen(0);
+  try {
+    const validResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: 'client-1', postIds: [records[0].id] }),
+    });
+    assert.equal(validResponse.status, 201);
+    const validPayload = await validResponse.json();
+    assert.equal(validPayload.scheduledCount, 1);
+    assert.equal(validPayload.scheduleMode, 'local');
+    assert.equal(validPayload.remoteScheduling, false);
+    assert.equal(records[0].targets[0].status, 'scheduled');
+    assert.equal(records[0].targets[0].scheduleSource, 'local');
+    assert.equal(records[0].targets[0].scheduledAt, '2026-08-20T02:00:00.000Z');
+
+    const originalStatus = records[1].targets[0].status;
+    const invalidResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: 'client-1', postIds: [records[0].id, records[1].id] }),
+    });
+    assert.equal(invalidResponse.status, 400);
+    const invalidPayload = await invalidResponse.json();
+    assert.equal(invalidPayload.code, 'BULK_SCHEDULE_VALIDATION_FAILED');
+    assert.equal(records[0].targets[0].status, 'scheduled');
+    assert.equal(records[1].targets[0].status, originalStatus);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     directories.postVersions = originalVersionDirectory;

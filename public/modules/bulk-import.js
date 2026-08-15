@@ -1,7 +1,8 @@
 import { $, escapeHtml, showToast } from './dom.js';
 import { api } from './api.js';
-import { clientQuery, state } from './state.js';
+import { clientQuery, hasPermission, state } from './state.js';
 import { renderPosts } from './drafts.js';
+import { renderSchedule } from './schedule.js';
 
 function rowIssueText(row) {
   const errors = Array.isArray(row.errors) ? row.errors : [];
@@ -16,6 +17,11 @@ export function renderBulkImportPreview() {
   const preview = state.bulkImportPreview;
   const commitButton = $('#bulkImportCommitButton');
   if (commitButton) commitButton.disabled = !preview?.valid;
+  const scheduleButton = $('#bulkImportScheduleButton');
+  if (scheduleButton) {
+    scheduleButton.disabled = !state.bulkImportDrafts?.length || !hasPermission('schedule.manage');
+    scheduleButton.classList.toggle('permission-hidden', !hasPermission('schedule.manage'));
+  }
   if (!preview) {
     summary.textContent = '尚未執行 dry-run。';
     list.innerHTML = '';
@@ -67,6 +73,7 @@ export function initBulkImportListeners() {
     const input = $('#bulkImportCsv');
     if (input) input.value = '';
     state.bulkImportPreview = null;
+    state.bulkImportDrafts = [];
     renderBulkImportPreview();
   });
   $('#bulkImportCommitButton')?.addEventListener('click', async (event) => {
@@ -83,6 +90,7 @@ export function initBulkImportListeners() {
         body: JSON.stringify({ clientId: state.currentClientId, csv }),
       });
       state.posts = [...(result.drafts || []), ...(state.posts || [])];
+      state.bulkImportDrafts = result.drafts || [];
       renderPosts();
       const input = $('#bulkImportCsv');
       if (input) input.value = '';
@@ -95,6 +103,38 @@ export function initBulkImportListeners() {
     } finally {
       button.textContent = '建立草稿（不排程）';
       if (!state.bulkImportPreview?.valid) button.disabled = true;
+    }
+  });
+  $('#bulkImportScheduleButton')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const drafts = state.bulkImportDrafts || [];
+    if (!drafts.length || !hasPermission('schedule.manage')) return;
+    if (!window.confirm(`確定將 ${drafts.length} 篇匯入草稿套用為本機排程嗎？不會建立 Meta Planner 或其他平台遠端排程。`)) return;
+    button.disabled = true;
+    button.textContent = '套用中…';
+    try {
+      const result = await api(clientQuery('/api/bulk-import/schedule'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: state.currentClientId,
+          postIds: drafts.map((draft) => draft.id),
+        }),
+      });
+      const updatedById = new Map((result.posts || []).map((post) => [post.id, post]));
+      state.posts = (state.posts || []).map((post) => updatedById.get(post.id) || post);
+      state.schedule = [...(result.items || []), ...(state.schedule || [])];
+      state.bulkImportDrafts = [];
+      renderPosts();
+      renderSchedule();
+      renderBulkImportPreview();
+      showToast(`已套用 ${result.scheduledCount || 0} 篇本機排程。`, 'success');
+    } catch (error) {
+      showToast(error.message || '批次排程失敗，未套用任何排程。', 'error');
+      button.disabled = false;
+    } finally {
+      button.textContent = '套用匯入排程（本機）';
+      if (!state.bulkImportDrafts?.length) button.disabled = true;
     }
   });
   renderBulkImportPreview();
