@@ -81,6 +81,37 @@ test('bulk CSV binds ready media assets and rejects missing media references', a
   }
 });
 
+test('bulk CSV strict video mode requires probeable metadata', async () => {
+  const uploadsDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-bulk-video-'));
+  try {
+    await fs.writeFile(path.join(uploadsDirectory, 'verified.mp4'), 'video-placeholder');
+    await fs.writeFile(path.join(uploadsDirectory, 'unverified.mp4'), 'video-placeholder');
+    const verified = await validateBulkCsv([
+      'contentTopic,facebook,platform,contentType,mediaPaths',
+      '可驗證影片,影片文案,instagram,reel,/uploads/verified.mp4',
+    ].join('\n'), {
+      clientId: 'client-1',
+      uploadsDirectory,
+      requireVideoMetadata: true,
+      probeMedia: async () => ({ kind: 'video', width: 1080, height: 1920, durationSeconds: 12 }),
+    });
+    assert.equal(verified.valid, true);
+
+    const unverified = await validateBulkCsv([
+      'contentTopic,facebook,platform,contentType,mediaPaths',
+      '未驗證影片,影片文案,instagram,reel,/uploads/unverified.mp4',
+    ].join('\n'), {
+      clientId: 'client-1',
+      uploadsDirectory,
+      requireVideoMetadata: true,
+    });
+    assert.equal(unverified.valid, false);
+    assert.ok(unverified.rows[0].errors.some((error) => error.code === 'VIDEO_METADATA_REQUIRED'));
+  } finally {
+    await fs.rm(uploadsDirectory, { recursive: true, force: true });
+  }
+});
+
 test('bulk import preview route returns validation results and never creates posts', async () => {
   const app = express();
   app.use(express.json());

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.63" />
+    <link rel="stylesheet" href="/style.css?v=0.5.64" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -615,7 +615,7 @@
           </fieldset>
           <fieldset class="form-group-card bulk-import-card" data-required-permission="content.create">
             <legend class="group-title">📄 CSV 批次匯入（dry-run）</legend>
-            <p class="helper">每列先驗證主題、文案、平台、格式、素材綁定與排程時間；匯入先建立草稿，不會自動排程或發布。可用 `mediaPaths` 指向既有 `/uploads/...`，或用 `mediaIds` 綁定 ready 素材資產；多個值都用 `|` 分隔。</p>
+            <p class="helper">每列先驗證主題、文案、平台、格式、素材綁定與排程時間；影片還必須取得可驗證的類型、長度與尺寸。匯入先建立草稿，不會自動排程或發布。可用 `mediaPaths` 指向既有 `/uploads/...`，或用 `mediaIds` 綁定 ready 素材資產；多個值都用 `|` 分隔。</p>
             <form id="bulkImportForm">
               <div class="field">
                 <label for="bulkImportCsv" class="field-label">CSV 內容</label>
@@ -1092,6 +1092,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.63" type="module"></script>
+    <script src="/app.js?v=0.5.64" type="module"></script>
   </body>
 </html>
