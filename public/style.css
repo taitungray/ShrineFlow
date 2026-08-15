@@ -3905,8 +3905,8 @@ button.module-summary-card:focus-visible {
   box-shadow: var(--shadow-lg);
 }
 
-.campaign-dialog {
-  width: min(760px, calc(100% - 32px));
+.reauth-dialog {
+  width: min(420px, calc(100% - 32px));
 }
 
 .module-dialog::backdrop {

@@ -3,7 +3,7 @@ import test from 'node:test';
 import express from 'express';
 
 import { createActor } from '../lib/access-control.js';
-import { createApiAuthorizationMiddleware } from '../lib/api-authorization.js';
+import { createApiAuthorizationMiddleware, resolveApiAuthorizationRule } from '../lib/api-authorization.js';
 
 function repository(records = []) {
   const values = records.map((record) => ({ ...record }));
@@ -44,6 +44,7 @@ test('API authorization derives scope from stored resources and hides cross-clie
     publisherB: actor('publisher-b', [['client-b', 'publisher']]),
     viewerA: actor('viewer-a', [['client-a', 'viewer']]),
     owner: actor('owner', [], 'owner'),
+    brandOwner: actor('brand-owner', [['client-a', 'owner']]),
   };
   const app = express();
   app.use(express.json());
@@ -100,14 +101,32 @@ test('API authorization derives scope from stored resources and hides cross-clie
       method: 'POST', headers: { 'X-Test-Actor': 'viewerA' },
     });
     assert.equal(settingsDenied.status, 403);
+    const brandOwnerSettings = await fetch(`${baseUrl}/settings`, {
+      method: 'POST', headers: { 'X-Test-Actor': 'brandOwner' },
+    });
+    assert.equal(brandOwnerSettings.status, 403);
     const settingsAllowed = await fetch(`${baseUrl}/settings`, {
       method: 'POST', headers: { 'X-Test-Actor': 'owner' },
     });
     assert.equal(settingsAllowed.status, 200);
+
+    const unknownDenied = await fetch(`${baseUrl}/not-a-registered-route`, {
+      method: 'POST', headers: { 'X-Test-Actor': 'editorA' },
+    });
+    assert.equal(unknownDenied.status, 403);
+    assert.equal((await unknownDenied.json()).code, 'PERMISSION_DENIED');
 
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.ok((await auditEvents.list()).some((event) => event.action === 'publish.executed'));
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('settings mutations use distinct audit actions', () => {
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings' }).action, 'system.settings_updated');
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings/test-gemini' }).action, 'system.gemini_tested');
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings/test-facebook' }).action, 'system.facebook_tested');
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings/rotate-secrets' }).action, 'system.secrets_rotated');
+  assert.equal(resolveApiAuthorizationRule({ method: 'GET', path: '/settings' }).action, '');
 });

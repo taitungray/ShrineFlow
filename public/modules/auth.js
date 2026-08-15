@@ -1,8 +1,14 @@
 import { $, showToast } from './dom.js';
-import { api } from './api.js';
+import { api, setReauthHandler, storeReauthToken } from './api.js';
 import { currentMembership, state } from './state.js';
 
 const FIREBASE_SDK_VERSION = '12.16.0';
+
+let authMode = '';
+let firebaseWebConfig = null;
+let firebaseSdk = null;
+let firebaseApp = null;
+let reauthInFlight = null;
 
 function setGateVisible(visible) {
   const gate = $('#authGate');
@@ -39,6 +45,8 @@ function firebaseLoginMessage(error) {
     'auth/user-disabled': '此 Email 帳號已被停用。',
     'auth/too-many-requests': '登入嘗試過於頻繁，請稍後再試。',
     'auth/operation-not-allowed': 'Firebase 尚未啟用 Email／密碼登入。',
+    'auth/popup-closed-by-user': '已取消 Google 視窗。',
+    'auth/cancelled-popup-request': '已取消 Google 視窗。',
   };
   return messages[error?.code] || error?.message || '登入失敗，請稍後再試。';
 }
@@ -67,6 +75,26 @@ async function firebaseModules() {
   return { initializeApp, ...authModule };
 }
 
+async function loadFirebase() {
+  if (!firebaseWebConfig) {
+    const config = await api('/api/auth/config');
+    firebaseWebConfig = config.firebase || {};
+  }
+  if (!firebaseSdk) firebaseSdk = await firebaseModules();
+  if (!firebaseApp) firebaseApp = firebaseSdk.initializeApp(firebaseWebConfig);
+  return firebaseSdk;
+}
+
+async function exchangeReauthToken(idToken) {
+  const data = await api('/api/auth/reauth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  storeReauthToken(data.token);
+  return data.token;
+}
+
 async function exchangeFirebaseSession(user, auth, signOut) {
   setAuthMessage('正在建立安全工作階段…');
   const { csrfToken } = await api('/api/auth/csrf');
@@ -82,6 +110,7 @@ async function exchangeFirebaseSession(user, auth, signOut) {
 }
 
 async function setupFirebaseLogin(firebaseConfig) {
+  firebaseWebConfig = firebaseConfig;
   const button = $('#authGoogleButton');
   const form = $('#authForm');
   const emailForm = $('#authEmailForm');
@@ -97,8 +126,7 @@ async function setupFirebaseLogin(firebaseConfig) {
     ? '你已收到 ShrineFlow 邀請，請使用相同 Email 的 Google 或 Email 帳號登入。'
     : '請使用已授權的 Google 帳號，或已建立並受邀的 Email 帳號登入。';
   try {
-    const firebase = await firebaseModules();
-    const firebaseApp = firebase.initializeApp(firebaseConfig);
+    const firebase = await loadFirebase();
     const auth = firebase.getAuth(firebaseApp);
     const redirected = await firebase.getRedirectResult(auth);
     if (redirected?.user) {
@@ -140,13 +168,112 @@ async function setupFirebaseLogin(firebaseConfig) {
   }
 }
 
+function setReauthMessage(message = '') {
+  const element = $('#reauthMessage');
+  if (element) element.textContent = message;
+}
+
+function promptReauth() {
+  const dialog = $('#reauthDialog');
+  if (!dialog) return Promise.reject(new Error('找不到二次驗證視窗。'));
+  const form = $('#reauthForm');
+  const passwordInput = $('#reauthPassword');
+  const googleButton = $('#reauthGoogleButton');
+  const cancelButton = $('#reauthCancelButton');
+  const isFirebase = authMode === 'firebase';
+  googleButton?.classList.toggle('is-hidden', !isFirebase);
+  if (passwordInput) passwordInput.value = '';
+  setReauthMessage('');
+  const description = $('#reauthDescription');
+  if (description) {
+    description.textContent = isFirebase
+      ? '變更成員、平台憑證或系統設定前，請用同一個 Google 或 Email 帳號再登入一次。'
+      : '變更成員、平台憑證或系統設定前，請再輸入操作員密碼。';
+  }
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+
+  return new Promise((resolve, reject) => {
+    const finish = (error, token) => {
+      form?.removeEventListener('submit', onSubmit);
+      googleButton?.removeEventListener('click', onGoogle);
+      cancelButton?.removeEventListener('click', onCancel);
+      dialog.removeEventListener('cancel', onCancel);
+      dialog.close?.();
+      if (error) reject(error);
+      else resolve(token);
+    };
+    const onCancel = (event) => {
+      event?.preventDefault?.();
+      finish(new Error('已取消身分確認。'));
+    };
+    const onSubmit = async (event) => {
+      event.preventDefault();
+      const password = String(passwordInput?.value || '');
+      if (!password) {
+        setReauthMessage('請輸入密碼。');
+        return;
+      }
+      setReauthMessage('確認中…');
+      try {
+        if (isFirebase) {
+          const email = state.actor?.email;
+          if (!email) throw new Error('找不到登入 Email。');
+          const firebase = await loadFirebase();
+          const auth = firebase.getAuth(firebaseApp);
+          const result = await firebase.signInWithEmailAndPassword(auth, email, password);
+          const idToken = await result.user.getIdToken(true);
+          await firebase.signOut(auth).catch(() => {});
+          finish(null, await exchangeReauthToken(idToken));
+          return;
+        }
+        const data = await api('/api/auth/reauth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        storeReauthToken(data.token);
+        finish(null, data.token);
+      } catch (error) {
+        setReauthMessage(firebaseLoginMessage(error));
+      }
+    };
+    const onGoogle = async () => {
+      setReauthMessage('正在開啟 Google 登入…');
+      try {
+        const firebase = await loadFirebase();
+        const auth = firebase.getAuth(firebaseApp);
+        const provider = new firebase.GoogleAuthProvider();
+        const result = await firebase.signInWithPopup(auth, provider);
+        const idToken = await result.user.getIdToken(true);
+        await firebase.signOut(auth).catch(() => {});
+        finish(null, await exchangeReauthToken(idToken));
+      } catch (error) {
+        setReauthMessage(firebaseLoginMessage(error));
+      }
+    };
+    form?.addEventListener('submit', onSubmit);
+    googleButton?.addEventListener('click', onGoogle);
+    cancelButton?.addEventListener('click', onCancel);
+    dialog.addEventListener('cancel', onCancel);
+  });
+}
+
+export function ensureReauth() {
+  if (reauthInFlight) return reauthInFlight;
+  reauthInFlight = promptReauth().finally(() => { reauthInFlight = null; });
+  return reauthInFlight;
+}
+
 export async function initializeAuth() {
   const status = await api('/api/auth/status');
+  authMode = status.mode || (status.enabled ? 'legacy' : 'disabled');
   if (!status.enabled || status.authenticated) {
     const me = status.actor ? { actor: status.actor } : await api('/api/me');
     state.actor = me.actor;
     setLogoutVisible(Boolean(status.enabled));
     renderUserIdentity();
+    if (status.enabled) setReauthHandler(ensureReauth);
     return true;
   }
 
@@ -186,6 +313,7 @@ export async function initializeAuth() {
 export function initAuthListeners() {
   $('#authLogoutButton')?.addEventListener('click', async () => {
     try {
+      storeReauthToken('');
       await api('/api/auth/logout', { method: 'POST' });
       window.location.reload();
     } catch (error) {

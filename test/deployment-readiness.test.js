@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { inspectDeploymentReadiness } from '../lib/deployment-readiness.js';
+import { assertProductionAuthEnabled, inspectDeploymentReadiness } from '../lib/deployment-readiness.js';
 
 test('deployment readiness blocks missing secrets and flags non-HTTPS media', async () => {
   const readiness = await inspectDeploymentReadiness({
@@ -65,6 +65,7 @@ test('deployment readiness accepts Firebase production authentication', async ()
       FIREBASE_APP_ID: 'web-app-id',
       SHRINEFLOW_OWNER_EMAILS: 'owner@example.com',
       SHRINEFLOW_MASTER_KEY: 'a-secure-master-key',
+      SHRINEFLOW_REAUTH_SECRET: 'reauth-secret',
       PUBLIC_MEDIA_BASE_URL: 'https://media.example.test',
       META_APP_SECRET: 'app-secret',
       META_WEBHOOK_VERIFY_TOKEN: 'verify-token',
@@ -77,6 +78,7 @@ test('deployment readiness accepts Firebase production authentication', async ()
   assert.equal(readiness.checks.find((item) => item.id === 'operator_auth').status, 'pass');
   assert.equal(readiness.checks.find((item) => item.id === 'firebase_auth_config').status, 'pass');
   assert.equal(readiness.checks.find((item) => item.id === 'firebase_owner_bootstrap').status, 'pass');
+  assert.equal(readiness.checks.find((item) => item.id === 'reauth_secret').status, 'pass');
 });
 
 test('deployment readiness blocks disabled production authentication', async () => {
@@ -93,4 +95,19 @@ test('deployment readiness blocks disabled production authentication', async () 
   });
   assert.equal(readiness.status, 'blocked');
   assert.equal(readiness.checks.find((item) => item.id === 'operator_auth').status, 'fail');
+});
+
+test('production boot refuses disabled authentication', () => {
+  assert.throws(
+    () => assertProductionAuthEnabled({ env: { NODE_ENV: 'production' }, authEnabled: false }),
+    (error) => error.code === 'PRODUCTION_AUTH_REQUIRED',
+  );
+  assert.doesNotThrow(() => assertProductionAuthEnabled({
+    env: { NODE_ENV: 'production' },
+    authEnabled: true,
+  }));
+  assert.doesNotThrow(() => assertProductionAuthEnabled({
+    env: { NODE_ENV: 'development' },
+    authEnabled: false,
+  }));
 });

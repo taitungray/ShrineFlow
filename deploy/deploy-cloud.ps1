@@ -113,6 +113,7 @@ Invoke-Gcloud projects add-iam-policy-binding $ProjectId --member ('serviceAccou
 
 Ensure-GcloudSecret -Name 'shrineflow-scheduler-token' -Generate | Out-Null
 Ensure-GcloudSecret -Name 'shrineflow-master-key' -Generate | Out-Null
+Ensure-GcloudSecret -Name 'shrineflow-reauth-secret' -Generate | Out-Null
 Ensure-GcloudSecret -Name 'shrineflow-r2-access-key' -Required | Out-Null
 Ensure-GcloudSecret -Name 'shrineflow-r2-secret-key' -Required | Out-Null
 $geminiSecretReady = Ensure-GcloudSecret -Name 'shrineflow-gemini-key'
@@ -173,6 +174,7 @@ Set-Content -LiteralPath $envFile -Value ($envLines -join [Environment]::NewLine
 $secretBindings = @(
   'SHRINEFLOW_SCHEDULER_TOKEN=shrineflow-scheduler-token:latest',
   'SHRINEFLOW_MASTER_KEY=shrineflow-master-key:latest',
+  'SHRINEFLOW_REAUTH_SECRET=shrineflow-reauth-secret:latest',
   'R2_ACCESS_KEY_ID=shrineflow-r2-access-key:latest',
   'R2_SECRET_ACCESS_KEY=shrineflow-r2-secret-key:latest'
 )

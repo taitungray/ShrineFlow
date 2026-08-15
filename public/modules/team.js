@@ -20,15 +20,33 @@ const ACTION_LABELS = Object.freeze({
   'user.reactivated': '恢復使用者',
   'client.created': '建立品牌',
   'client.updated': '更新品牌',
+  'client.workflow_updated': '更新審核流程',
   'platform_account.updated': '更新平台帳號',
   'post.created': '建立內容',
   'post.updated': '更新內容',
   'post.archived': '封存內容',
   'post.restored': '恢復內容',
+  'post.approved': '核准內容',
+  'post.review_submitted': '送出審核',
+  'post.changes_requested': '退回修改',
   'schedule.created': '建立排程',
   'schedule.updated': '調整排程',
   'schedule.deleted': '取消排程',
   'publish.executed': '執行發布',
+  'ai.generated': 'AI 產文',
+  'ai.rewritten': 'AI 改寫',
+  'system.settings_updated': '更新 Gemini／全站設定',
+  'system.gemini_tested': '測試 Gemini 連線',
+  'system.facebook_tested': '測試 Facebook 連線',
+  'system.secrets_rotated': '輪替主密鑰',
+  'system.backup': '建立備份',
+  'system.restore': '還原備份',
+  'security.login_succeeded': '登入成功',
+  'security.login_failed': '登入失敗',
+  'security.logout': '登出',
+  'security.reauth_succeeded': '二次驗證成功',
+  'security.reauth_failed': '二次驗證失敗',
+  'security.permission_denied': '權限被拒',
 });
 
 const teamState = {
@@ -155,7 +173,7 @@ function renderAudit() {
     list.innerHTML = '<div class="empty-state module-empty"><span class="empty-icon">◷</span><p>沒有符合條件的操作紀錄。</p></div>';
     return;
   }
-  list.innerHTML = events.map((event) => `<article class="audit-event-card"><span class="audit-event-mark" aria-hidden="true">◷</span><div><strong>${escapeHtml(auditLabel(event.action))}</strong><p>${escapeHtml(event.actorEmail || event.actorId)}${event.resourceType ? ` · ${escapeHtml(event.resourceType)}` : ''}${event.resourceId ? ` #${escapeHtml(event.resourceId)}` : ''}</p><small>${escapeHtml(formatDate(event.createdAt))}</small></div></article>`).join('');
+  list.innerHTML = events.map((event) => `<article class="audit-event-card"><span class="audit-event-mark" aria-hidden="true">◷</span><div><strong>${escapeHtml(auditLabel(event.action))}</strong><p>${escapeHtml(event.actorEmail || event.actorId)}${event.clientId ? '' : ' · 全站'}${event.resourceType ? ` · ${escapeHtml(event.resourceType)}` : ''}${event.resourceId ? ` #${escapeHtml(event.resourceId)}` : ''}</p><small>${escapeHtml(formatDate(event.createdAt))}</small></div></article>`).join('');
 }
 
 function renderSummary() {

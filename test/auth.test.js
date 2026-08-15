@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import express from 'express';
 
-import { AUTH_COOKIE_NAME, AUTH_POLICY, createAuthMiddleware, createAuthService } from '../lib/auth.js';
+import { AUTH_COOKIE_NAME, AUTH_POLICY, createAuthMiddleware, createAuthRouter, createAuthService } from '../lib/auth.js';
 
 test('single operator auth keeps bounded sessions and authenticates without storing plaintext tokens', () => {
   let current = 1_000;
@@ -49,4 +50,27 @@ test('legacy auth middleware attaches an owner actor for gradual permission roll
   assert.equal(called, true);
   assert.equal(request.actor.uid, 'legacy:operator');
   assert.equal(request.actor.systemRole, 'owner');
+});
+
+test('logout records a security audit event for the current operator', async () => {
+  const auth = createAuthService({
+    env: { SHRINEFLOW_OPERATOR_PASSWORD: 'correct', SHRINEFLOW_SESSION_SECRET: 'secret' },
+  });
+  const token = auth.login({ password: 'correct', clientKey: 'client' }).token;
+  const recorded = [];
+  auth.recordSecurity = async (event) => { recorded.push(event); };
+  const app = express();
+  app.use('/api', createAuthRouter({ authService: auth }));
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/auth/logout`, {
+      method: 'POST',
+      headers: { Cookie: `${AUTH_COOKIE_NAME}=${token}` },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(recorded.at(-1)?.type, 'logout');
+    assert.equal(recorded.at(-1)?.actor?.uid, 'legacy:operator');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });

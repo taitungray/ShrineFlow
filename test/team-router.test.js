@@ -122,6 +122,15 @@ test('team router enforces owner continuity, invitation safety and scoped audit 
     assert.equal(eventIds.includes('event-b'), false);
     assert.equal(eventIds.includes('event-global'), false);
 
+    const ownerAudit = await fetch(`${baseUrl}/audit-events?clientId=client-a`, {
+      headers: { 'X-Test-Actor': 'owner' },
+    });
+    assert.equal(ownerAudit.status, 200);
+    const ownerEventIds = (await ownerAudit.json()).events.map((event) => event.id);
+    assert.ok(ownerEventIds.includes('event-a'));
+    assert.ok(ownerEventIds.includes('event-global'));
+    assert.equal(ownerEventIds.includes('event-b'), false);
+
     const exportResponse = await fetch(`${baseUrl}/audit-events/export?clientId=client-a`, {
       headers: { 'X-Test-Actor': 'admin' },
     });

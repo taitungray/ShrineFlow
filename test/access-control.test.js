@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   PERMISSIONS,
+  actorHasAnyPermission,
   actorHasPermission,
   createActor,
   createLegacyOwnerActor,
@@ -51,6 +52,27 @@ function accessRepositories() {
   };
 }
 
+test('system.manage is limited to the system owner, not a brand owner membership', () => {
+  const brandOwner = createActor({
+    user: { uid: 'brand-owner', status: 'active' },
+    memberships: [{
+      userId: 'brand-owner', clientId: 'client-a', role: 'owner', status: 'active',
+    }],
+  });
+  const systemOwner = createActor({
+    user: { uid: 'sys-owner', status: 'active' },
+    systemRole: 'owner',
+    memberships: [{
+      userId: 'sys-owner', clientId: 'client-a', role: 'admin', status: 'active',
+    }],
+  });
+
+  assert.equal(actorHasAnyPermission(brandOwner, 'system.manage'), false);
+  assert.equal(actorHasPermission(brandOwner, 'system.manage', 'client-a'), false);
+  assert.equal(actorHasAnyPermission(systemOwner, 'system.manage'), true);
+  assert.equal(actorHasAnyPermission(createLegacyOwnerActor(), 'system.manage'), true);
+});
+
 test('role permissions enforce separation between editors, reviewers, publishers and admins', () => {
   assert.equal(roleHasPermission('editor', 'content.edit'), true);
   assert.equal(roleHasPermission('editor', 'publish.execute'), false);
@@ -60,6 +82,8 @@ test('role permissions enforce separation between editors, reviewers, publishers
   assert.equal(roleHasPermission('publisher', 'account.manage'), false);
   assert.equal(roleHasPermission('admin', 'member.manage'), true);
   assert.equal(roleHasPermission('admin', 'system.manage'), false);
+  assert.equal(roleHasPermission('owner', 'system.manage'), false);
+  assert.equal(roleHasPermission('owner', 'member.manage'), true);
   assert.ok(PERMISSIONS.includes('system.manage'));
 });
 

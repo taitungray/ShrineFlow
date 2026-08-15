@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.67" />
+    <link rel="stylesheet" href="/style.css?v=0.5.71" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -1006,6 +1006,23 @@
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
       </form>
     </dialog>
+    <dialog class="module-dialog reauth-dialog" id="reauthDialog" aria-labelledby="reauthTitle">
+      <form id="reauthForm">
+        <p class="section-tag">SECURITY</p>
+        <h3 id="reauthTitle">再次確認身分</h3>
+        <p class="dialog-lede" id="reauthDescription">變更成員、平台憑證或系統設定前，請再登入一次。</p>
+        <div class="field" id="reauthPasswordField">
+          <label for="reauthPassword" class="field-label">密碼</label>
+          <input id="reauthPassword" name="password" type="password" autocomplete="current-password" />
+        </div>
+        <p class="helper text-danger" id="reauthMessage" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button class="btn-text" id="reauthCancelButton" type="button">取消</button>
+          <button class="primary-button is-hidden" id="reauthGoogleButton" type="button">使用 Google 再次確認</button>
+          <button class="primary-button" id="reauthSubmitButton" type="submit">確認</button>
+        </div>
+      </form>
+    </dialog>
     <dialog id="templateDialog" class="module-dialog">
       <form method="dialog" id="templateForm">
         <button class="close-button" value="cancel" aria-label="關閉">×</button>
@@ -1104,6 +1121,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.67" type="module"></script>
+    <script src="/app.js?v=0.5.71" type="module"></script>
   </body>
 </html>

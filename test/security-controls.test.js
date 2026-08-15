@@ -98,7 +98,7 @@ test('security monitor emits an anomaly event after repeated failures', async ()
 test('high-risk API operations require a recent actor-bound reauthentication token', async () => {
   const repositories = {
     auditEvents: repository(),
-    posts: repository(),
+    posts: repository([{ id: 'post-a', clientId: 'client-a' }]),
     templates: repository(),
     campaigns: repository(),
     mediaAssets: repository(),
@@ -106,7 +106,13 @@ test('high-risk API operations require a recent actor-bound reauthentication tok
   };
   const actor = createActor({
     user: { uid: 'owner-1', email: 'owner@example.com', status: 'active' },
-    memberships: [],
+    memberships: [{
+      id: 'client-a__owner-1',
+      userId: 'owner-1',
+      clientId: 'client-a',
+      role: 'publisher',
+      status: 'active',
+    }],
     systemRole: 'owner',
   });
   const reauth = createReauthService({
@@ -122,6 +128,7 @@ test('high-risk API operations require a recent actor-bound reauthentication tok
   });
   app.use('/api', createApiAuthorizationMiddleware({ repositories, reauthService: reauth }));
   app.post('/api/settings', (_request, response) => response.json({ ok: true }));
+  app.post('/api/publish/target', (_request, response) => response.json({ ok: true }));
   const server = app.listen(0);
   const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
   try {
@@ -134,6 +141,13 @@ test('high-risk API operations require a recent actor-bound reauthentication tok
       headers: { 'X-Reauth-Token': token },
     });
     assert.equal(accepted.status, 200);
+
+    const publish = await fetch(`${baseUrl}/publish/target`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId: 'post-a' }),
+    });
+    assert.equal(publish.status, 200);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
