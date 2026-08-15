@@ -46,6 +46,7 @@ import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
 import { createBulkImportRouter } from './lib/routes/bulk-import.js';
+import { createEvergreenRouter } from './lib/routes/evergreen.js';
 import { createTeamRouter } from './lib/routes/team.js';
 import { createInvitationMailer } from './lib/invitation-mailer.js';
 import { createReviewRouter } from './lib/routes/review.js';
@@ -321,6 +322,7 @@ app.use('/api', (request, response, next) => createRemoteScheduleRouter({
 app.use('/api', createSavedRepliesRouter({ repositories }));
 app.use('/api', createGodsRouter({ repositories }));
 app.use('/api', createPostsRouter({ repositories }));
+app.use('/api', createEvergreenRouter({ repositories }));
 app.use('/api', (request, response, next) => createGenerateRouter({ aiService })(request, response, next));
 app.use('/api', (request, response, next) => createScheduleRouter({
   publishingPlatforms,

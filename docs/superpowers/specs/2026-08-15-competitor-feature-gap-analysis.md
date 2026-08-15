@@ -226,7 +226,8 @@ API／權限 Spike
 - [x] CSV 匯入排程本機套用 v1：確認後整批套用為 local schedule，任一列失敗或版本衝突就不部分更新；不宣稱已建立 Meta Planner 遠端排程。
 - [x] CSV 整批影片媒體綁定 v1：`mediaIds` 只接受目前品牌的 ready asset，`/uploads/...` 必須存在；素材不存在時該列不能匯入。
 - [ ] CSV 遠端／Meta 排程 connector、影片 metadata 強驗證與遠端失敗補償。
-- [ ] Evergreen；需遞迴 scheduler、上限、暫停、去重與失敗補償。
+- [x] Evergreen v1：已發布來源可建立固定間隔的本機再排程，具次數上限、暫停、去重與 lifecycle／版本紀錄；不繞過品牌審核。
+- [ ] Evergreen 既有排程取消、遠端 connector 與跨平台 metadata 強驗證。
 - 每一項另寫獨立 plan，不再以一個「D 產能包」一次承包。
 
 ## 6. 資料／狀態落地約束

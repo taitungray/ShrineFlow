@@ -1,5 +1,5 @@
 import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
-import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient } from './state.js';
+import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
 import {
   renderCreatePublishSpec,
   renderCreateContentSettings,
@@ -465,6 +465,79 @@ function syncApprovalActions() {
   if (changes) changes.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
 }
 
+function renderEvergreenControls() {
+  const post = state.savedPost;
+  const config = post?.evergreen || {};
+  const sourcePublished = Boolean(post?.targets?.some((target) => target.status === 'published'));
+  const card = $('#evergreenCard');
+  const enable = $('#evergreenEnableButton');
+  const pause = $('#evergreenPauseButton');
+  const disable = $('#evergreenDisableButton');
+  const interval = $('#evergreenIntervalDays');
+  const max = $('#evergreenMaxOccurrences');
+  const status = $('#evergreenStatus');
+  const active = Boolean(config.enabled);
+  if (interval && config.intervalDays) interval.value = String(config.intervalDays);
+  if (max && config.maxOccurrences) max.value = String(config.maxOccurrences);
+  if (card) card.classList.toggle('is-hidden', !hasPermission('schedule.manage'));
+  if (enable) enable.disabled = !post?.id || !sourcePublished || !hasPermission('schedule.manage');
+  if (pause) {
+    pause.disabled = !active || !hasPermission('schedule.manage');
+    pause.textContent = config.paused ? '恢復' : '暫停';
+  }
+  if (disable) disable.disabled = !active || !hasPermission('schedule.manage');
+  if (status) {
+    if (!post?.id) status.textContent = '請先儲存內容。';
+    else if (!sourcePublished) status.textContent = '需先有已發布 target 才能啟用 Evergreen。';
+    else if (!active) status.textContent = '尚未啟用 Evergreen。';
+    else {
+      const stateText = config.paused ? '已暫停' : '運作中';
+      const next = config.nextScheduledAt ? ` · 下一次 ${formatDate(config.nextScheduledAt)}` : '';
+      status.textContent = `${stateText} · 每 ${config.intervalDays || 7} 天 · 已建立 ${config.occurrenceCount || 0}/${config.maxOccurrences || 12} 次${next}`;
+    }
+  }
+}
+
+async function evergreenAction(action) {
+  const post = state.savedPost;
+  if (!post?.id) return setPreviewMessage('請先儲存內容，再操作 Evergreen。', 'error');
+  const interval = Number($('#evergreenIntervalDays')?.value || 7);
+  const maxOccurrences = Number($('#evergreenMaxOccurrences')?.value || 12);
+  const startValue = $('#evergreenStartAt')?.value || '';
+  if (action === 'enable' && (!Number.isInteger(interval) || !Number.isInteger(maxOccurrences))) {
+    return setPreviewMessage('請輸入有效的 Evergreen 間隔與次數上限。', 'error');
+  }
+  if (action === 'enable' && !window.confirm('啟用 Evergreen 後會建立下一篇本機排程，確定繼續嗎？')) return;
+  if (action === 'disable' && !window.confirm('停用 Evergreen？已建立的本機排程不會自動取消。')) return;
+  const endpoint = '/api/posts/' + encodeURIComponent(post.id) + '/evergreen';
+  const options = { method: action === 'disable' ? 'DELETE' : action === 'pause' ? 'PATCH' : 'POST' };
+  if (options.method !== 'DELETE') {
+    options.headers = { 'Content-Type': 'application/json' };
+    options.body = JSON.stringify(action === 'enable'
+      ? {
+        clientId: state.currentClientId,
+        intervalDays: interval,
+        maxOccurrences,
+        ...(startValue ? { startAt: new Date(startValue).toISOString() } : {}),
+      }
+      : { clientId: state.currentClientId, paused: !post.evergreen?.paused });
+  }
+  try {
+    await api(endpoint, options);
+    if (typeof refreshListsCallback === 'function') await refreshListsCallback();
+    const refreshed = state.posts.find((entry) => entry.id === post.id);
+    if (refreshed) {
+      state.savedPost = refreshed;
+      state.generated = refreshed;
+      state.editorDirty = false;
+      renderEvergreenControls();
+    }
+    setPreviewMessage(action === 'enable' ? 'Evergreen 已啟用並建立本機排程。' : action === 'pause' ? 'Evergreen 狀態已更新。' : 'Evergreen 已停用；既有本機排程仍保留。', 'success');
+  } catch (error) {
+    setPreviewMessage(error.message || 'Evergreen 操作失敗。', 'error');
+  }
+}
+
 async function runApprovalAction(action) {
   const post = state.savedPost;
   if (!post?.id) return setPreviewMessage('請先儲存草稿，再操作審核。', 'error');
@@ -513,6 +586,7 @@ function syncEditorActions() {
   }
   syncArchivedEditorState();
   syncApprovalActions();
+  renderEvergreenControls();
 }
 
 export function markEditorDirty(isDirty = true) {
@@ -580,6 +654,7 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   renderPreviewPlatformTabs();
   updateLivePreview();
   if (state.savedPost?.id) refreshVersionHistory();
+  renderEvergreenControls();
 }
 
 export function currentDraft() {
@@ -749,6 +824,9 @@ export function initEditorListeners(refreshListsFn) {
       setPreviewMessage(error.message, 'error');
     }
   });
+  $('#evergreenEnableButton')?.addEventListener('click', () => evergreenAction('enable'));
+  $('#evergreenPauseButton')?.addEventListener('click', () => evergreenAction('pause'));
+  $('#evergreenDisableButton')?.addEventListener('click', () => evergreenAction('disable'));
   const publishButton = $('#publishNowButton');
   publishButton?.addEventListener('click', async () => {
     const post = state.savedPost;
