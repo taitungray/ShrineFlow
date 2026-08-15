@@ -63,6 +63,8 @@ Meta Business Suite 的最大優勢是原生平台狀態。ShrineFlow 對 Facebo
 - 支援編輯、複製、改期、取消、移回草稿等常用動作。
 - 成效資料應標示來源與最後同步時間。
 
+第二輪對照（核心閉環完成後、v0.5.42）：見 `2026-08-15-competitor-feature-gap-analysis.md`。本節保留當時方向，不覆蓋後續 Queue／首則留言／危機暫停等缺口分級。
+
 ### 1.4 競品結論
 
 ShrineFlow 不應成為縮小版 Hootsuite，而應成為：
