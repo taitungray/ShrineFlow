@@ -8,7 +8,7 @@
 
 1. 建立 Firebase／Google Cloud project，啟用 Firestore Native mode。
 2. 建立 Cloudflare R2 bucket shrineflow-media、API token 與公開自訂網域。
-3. 建立 Secret Manager secrets：scheduler token、operator password、session secret、master key、R2 access key、R2 secret key、Gemini key。
+3. 建立 Secret Manager secrets：scheduler token、master key、R2 access key、R2 secret key、Gemini key；若使用 legacy 單一密碼模式，再建立 operator password 與 session secret。
 4. 將 .firebaserc.example 複製為 .firebaserc，填入 project ID。
 5. 依 deploy/cloud-run.env.example 補齊非 secret 環境變數與 R2 public URL。
 
@@ -20,13 +20,12 @@ Dockerfile 會以 Node 22 Alpine 建立 Cloud Run image。Cloud Run 服務名稱
     firebase login
     gcloud config set project YOUR_PROJECT_ID
     gcloud services enable run.googleapis.com firestore.googleapis.com cloudscheduler.googleapis.com cloudbuild.googleapis.com
-    gcloud run deploy shrineflow-api --source . --region asia-east1 --allow-unauthenticated --port 8080 --timeout 540 --memory 512Mi --max-instances 2
-    firebase use YOUR_PROJECT_ID
-    firebase deploy --only hosting
+    .\deploy\deploy-cloud.ps1 -ProjectId YOUR_PROJECT_ID -R2AccountId YOUR_CLOUDFLARE_ACCOUNT_ID -R2PublicBaseUrl https://media.example.com -FirebaseApiKey YOUR_FIREBASE_WEB_API_KEY -FirebaseAuthDomain YOUR_PROJECT_ID.firebaseapp.com -FirebaseAppId YOUR_FIREBASE_WEB_APP_ID -OwnerEmails owner@example.com -FirebaseProject YOUR_PROJECT_ID
 
 Cloud Run 必須設定：
 
     NODE_ENV=production
+    SHRINEFLOW_AUTH_MODE=firebase
     SHRINEFLOW_STORAGE_BACKEND=firestore
     SHRINEFLOW_MEDIA_BACKEND=r2
     SHRINEFLOW_SCHEDULER_MODE=cloud
@@ -38,11 +37,17 @@ Cloud Run 必須設定：
     R2_PUBLIC_BASE_URL=https://media.example.com
     PUBLIC_MEDIA_BASE_URL=https://media.example.com
 
+Firebase 多人登入還必須設定 `FIREBASE_API_KEY`、`FIREBASE_AUTH_DOMAIN`、`FIREBASE_PROJECT_ID`、`FIREBASE_APP_ID`，以及至少一個 `SHRINEFLOW_OWNER_EMAILS` 或 `SHRINEFLOW_OWNER_UIDS`。Cloud Run 的執行服務帳號必須能使用 Firebase Admin Authentication；正式環境不要再綁定 legacy 的操作員密碼 Secret。
+
+Firebase Console 也要啟用 Google sign-in 與 Email/Password provider，並將 Firebase Hosting 網域與正式網域加入 Authentication 的 Authorized domains；否則 Google 登入彈窗或 Email 登入都會被 Firebase 拒絕。Email 帳號需先在 Firebase Authentication 建立，ShrineFlow 只負責登入，不開放自行註冊。
+
+若暫時使用單一操作員模式，將 `SHRINEFLOW_AUTH_MODE` 改為 `legacy`，並綁定 `SHRINEFLOW_OPERATOR_PASSWORD` 與 `SHRINEFLOW_SESSION_SECRET` 兩個 Secret。此模式只有一個共享身份，不能提供不同 Google 帳號的個別稽核身分。
+
 Secret 透過 Cloud Run Secret Manager binding 注入，不要放進 Git。
 
 ## Cloud Scheduler jobs
 
-建立三個 HTTP POST job，全部帶 header X-ShrineFlow-Scheduler-Token，值必須與 Cloud Run 的 SHRINEFLOW_SCHEDULER_TOKEN 相同：
+建立三個 HTTP POST job，全部帶 header X-ShrineFlow-Scheduler-Token，值必須與 Cloud Run 的 SHRINEFLOW_SCHEDULER_TOKEN 相同。`cloud-scheduler.ps1` 可重複執行，已存在的 job 會更新：
 
 | Job | Cron | Endpoint |
 |---|---|---|
@@ -66,6 +71,7 @@ publish-due-targets 只負責 Instagram／Threads 的 ShrineFlow 排程；Facebo
 ## 驗證
 
 - GET https://YOUR_HOST/api/system/readiness
+- GET https://YOUR_HOST/api/healthz（Cloud Run 公開健康檢查，不需登入）
 - GET https://YOUR_HOST/api/config
 - 帶 scheduler token 呼叫三個 internal scheduler endpoint
 - 上傳照片／影片後，確認 media path 是 /media/...，R2 object key 位於 original/{clientId}/{yyyy}/{mm}/{mediaId}/

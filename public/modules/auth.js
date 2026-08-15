@@ -30,6 +30,19 @@ function setAuthMessage(message = '') {
   if (element) element.textContent = message;
 }
 
+function firebaseLoginMessage(error) {
+  const messages = {
+    'auth/invalid-credential': 'Email 或密碼不正確。',
+    'auth/invalid-login-credentials': 'Email 或密碼不正確。',
+    'auth/user-not-found': '找不到此 Email 帳號。',
+    'auth/wrong-password': 'Email 或密碼不正確。',
+    'auth/user-disabled': '此 Email 帳號已被停用。',
+    'auth/too-many-requests': '登入嘗試過於頻繁，請稍後再試。',
+    'auth/operation-not-allowed': 'Firebase 尚未啟用 Email／密碼登入。',
+  };
+  return messages[error?.code] || error?.message || '登入失敗，請稍後再試。';
+}
+
 export function renderUserIdentity() {
   const actor = state.actor;
   const container = $('#userIdentity');
@@ -71,12 +84,18 @@ async function exchangeFirebaseSession(user, auth, signOut) {
 async function setupFirebaseLogin(firebaseConfig) {
   const button = $('#authGoogleButton');
   const form = $('#authForm');
+  const emailForm = $('#authEmailForm');
+  const emailInput = $('#authEmail');
+  const emailPassword = $('#authEmailPassword');
+  const providerDivider = $('#authProviderDivider');
   const description = $('#authDescription');
   form?.classList.add('is-hidden');
+  emailForm?.classList.remove('is-hidden');
+  providerDivider?.classList.remove('is-hidden');
   button?.classList.remove('is-hidden');
   if (description) description.textContent = inviteToken()
-    ? '你已收到 ShrineFlow 邀請，請使用受邀的 Google Email 登入。'
-    : '請使用已授權的 Google 帳號登入 ShrineFlow。';
+    ? '你已收到 ShrineFlow 邀請，請使用相同 Email 的 Google 或 Email 帳號登入。'
+    : '請使用已授權的 Google 帳號，或已建立並受邀的 Email 帳號登入。';
   try {
     const firebase = await firebaseModules();
     const firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -86,7 +105,25 @@ async function setupFirebaseLogin(firebaseConfig) {
       await exchangeFirebaseSession(redirected.user, auth, firebase.signOut);
       return;
     }
+    emailForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = emailForm.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
+      setAuthMessage('Email 登入中…');
+      try {
+        const result = await firebase.signInWithEmailAndPassword(
+          auth,
+          String(emailInput?.value || '').trim(),
+          emailPassword?.value || '',
+        );
+        await exchangeFirebaseSession(result.user, auth, firebase.signOut);
+      } catch (error) {
+        setAuthMessage(firebaseLoginMessage(error));
+        if (submit) submit.disabled = false;
+      }
+    });
     button?.addEventListener('click', async () => {
+      if (button.disabled) return;
       button.disabled = true;
       setAuthMessage('正在開啟 Google 登入…');
       try {
@@ -94,12 +131,12 @@ async function setupFirebaseLogin(firebaseConfig) {
         const result = await firebase.signInWithPopup(auth, provider);
         await exchangeFirebaseSession(result.user, auth, firebase.signOut);
       } catch (error) {
-        setAuthMessage(error.message || 'Google 登入失敗。');
+        setAuthMessage(firebaseLoginMessage(error));
         button.disabled = false;
       }
-    }, { once: true });
+    });
   } catch (error) {
-    setAuthMessage(`Firebase 登入元件載入失敗：${error.message}`);
+    setAuthMessage(`Firebase 登入元件載入失敗：${firebaseLoginMessage(error)}`);
   }
 }
 

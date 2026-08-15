@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.64" />
+    <link rel="stylesheet" href="/style.css?v=0.5.66" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -18,6 +18,18 @@
         <p class="section-tag">SHRINEFLOW</p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">此環境已啟用登入保護。</p>
+        <form class="is-hidden" id="authEmailForm">
+          <div class="field">
+            <label for="authEmail" class="field-label">Email</label>
+            <input id="authEmail" name="email" type="email" autocomplete="username" inputmode="email" required />
+          </div>
+          <div class="field">
+            <label for="authEmailPassword" class="field-label">Email 密碼</label>
+            <input id="authEmailPassword" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="primary-button" type="submit">使用 Email 登入</button>
+        </form>
+        <p class="auth-divider is-hidden" id="authProviderDivider" aria-hidden="true">或</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
         <form id="authForm">
           <div class="field">
@@ -895,7 +907,7 @@
           <div class="team-section" data-team-section-panel="members">
             <fieldset class="form-group-card" id="teamInviteCard">
               <legend class="group-title">邀請新成員</legend>
-              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 帳號登入。</p>
+              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 或 Email 帳號登入。</p>
               <div class="field-row">
                 <div class="field">
                   <label for="teamInviteEmail" class="field-label">Email <span class="field-required">*</span></label>
@@ -1092,6 +1104,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.64" type="module"></script>
+    <script src="/app.js?v=0.5.66" type="module"></script>
   </body>
 </html>

@@ -254,6 +254,10 @@ const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 
+app.get('/api/healthz', (_request, response) => {
+  response.json({ status: 'ok' });
+});
+
 app.use('/api', createAuthRouter({ authService, reauthService }));
 app.use('/api', createSchedulerTriggerRouter({
   processDueSchedules: (now) => scheduler.processDueSchedules(now),

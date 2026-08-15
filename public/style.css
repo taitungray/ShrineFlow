@@ -472,6 +472,7 @@ h4 {
 }
 .auth-card h1 { margin: 6px 0 10px; color: var(--text-primary); font-family: "Noto Serif TC", serif; font-size: 1.8rem; }
 .auth-card .primary-button { width: 100%; min-height: 44px; }
+.auth-card form + .auth-divider { margin: 16px 0; color: var(--text-tertiary); text-align: center; }
 
 .platform-copy-actions {
   flex-wrap: wrap;

@@ -53,3 +53,44 @@ test('deployment readiness warns when the latest backup is stale', async () => {
   assert.equal(readiness.status, 'warning');
   assert.equal(readiness.checks.find((item) => item.id === 'backup_freshness').status, 'warn');
 });
+
+test('deployment readiness accepts Firebase production authentication', async () => {
+  const readiness = await inspectDeploymentReadiness({
+    env: {
+      NODE_ENV: 'production',
+      SHRINEFLOW_AUTH_MODE: 'firebase',
+      FIREBASE_API_KEY: 'web-api-key',
+      FIREBASE_AUTH_DOMAIN: 'shrineflow.firebaseapp.com',
+      FIREBASE_PROJECT_ID: 'shrineflow',
+      FIREBASE_APP_ID: 'web-app-id',
+      SHRINEFLOW_OWNER_EMAILS: 'owner@example.com',
+      SHRINEFLOW_MASTER_KEY: 'a-secure-master-key',
+      PUBLIC_MEDIA_BASE_URL: 'https://media.example.test',
+      META_APP_SECRET: 'app-secret',
+      META_WEBHOOK_VERIFY_TOKEN: 'verify-token',
+    },
+    directoriesOverride: { data: 'data', uploads: 'uploads', backups: 'backups' },
+    writableCheckImpl: async () => true,
+    listBackupsImpl: async () => [{ id: 'backup-1', createdAt: new Date().toISOString() }],
+  });
+  assert.equal(readiness.status, 'ready');
+  assert.equal(readiness.checks.find((item) => item.id === 'operator_auth').status, 'pass');
+  assert.equal(readiness.checks.find((item) => item.id === 'firebase_auth_config').status, 'pass');
+  assert.equal(readiness.checks.find((item) => item.id === 'firebase_owner_bootstrap').status, 'pass');
+});
+
+test('deployment readiness blocks disabled production authentication', async () => {
+  const readiness = await inspectDeploymentReadiness({
+    env: {
+      NODE_ENV: 'production',
+      SHRINEFLOW_AUTH_MODE: 'disabled',
+      SHRINEFLOW_MASTER_KEY: 'a-secure-master-key',
+      PUBLIC_MEDIA_BASE_URL: 'https://media.example.test',
+    },
+    directoriesOverride: { data: 'data', uploads: 'uploads', backups: 'backups' },
+    writableCheckImpl: async () => true,
+    listBackupsImpl: async () => [{ id: 'backup-1', createdAt: new Date().toISOString() }],
+  });
+  assert.equal(readiness.status, 'blocked');
+  assert.equal(readiness.checks.find((item) => item.id === 'operator_auth').status, 'fail');
+});
