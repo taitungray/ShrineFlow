@@ -914,6 +914,29 @@ select:focus, textarea:focus, input:focus {
   line-height: 1.45;
 }
 
+.setup-steps {
+  margin: 0 0 12px;
+  padding-left: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.setup-steps code {
+  font-size: 0.76rem;
+  color: var(--text-primary);
+}
+
+.setup-note {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
 /* Badges */
 .badge {
   padding: 4px 10px;

@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.75" />
+    <link rel="stylesheet" href="/style.css?v=0.5.76" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -421,9 +421,27 @@
             </div>
           </fieldset>
 
+          <fieldset class="form-group-card setup-guide-card" data-required-permission="account.manage">
+            <legend class="group-title">🧭 如何取得平台憑證</legend>
+            <p class="helper">ShrineFlow 不會跳出 Facebook／Instagram／Threads 登入。三個平台都要先建<strong>同一個</strong> Meta 應用程式，再把各平台的 ID 與 Token 貼到下方卡片。憑證只存在目前品牌，不會跟其他品牌混用。</p>
+            <ol class="setup-steps">
+              <li>到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> 建立應用程式，類型選 <strong>Business</strong>。</li>
+              <li>你的 Facebook 帳號必須是粉專管理員，並加進這個 App 的角色（管理員或開發者）。</li>
+              <li>同一個 App 可同時加入 Facebook、Instagram、Threads 產品。自己的粉專／IG／Threads 先維持<strong>開發模式</strong>即可，不必立刻送 App Review。</li>
+              <li>用 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a> 產生 Token。短效 Token 會過期，測通後請換成長期 Token，並可填到期日。</li>
+              <li>貼上後按該平台的「儲存」再「測試連線」。儲存／測試會再請你 Google 確認一次。</li>
+            </ol>
+            <p class="setup-note">不要把 App Secret 填在下面。Webhook／收件匣才需要。公開媒體網址請用 HTTPS（雲端為 <code>https://media.shrineflow.uk</code>）；本機 localhost 無法給 Meta 抓圖。</p>
+          </fieldset>
+
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📘 目前品牌的 Facebook</legend>
-            <p class="helper">連線憑證只存在此品牌底下，不會跟其他品牌混用。</p>
+            <p class="helper">填粉專 ID＋Page Access Token。不是個人帳號 Token。</p>
+            <ol class="setup-steps">
+              <li>Graph API Explorer 右上選剛建的 App。</li>
+              <li>權限勾 <code>pages_show_list</code>、<code>pages_read_engagement</code>、<code>pages_manage_posts</code>。</li>
+              <li>先產生 User Token，再改選要發布的粉專，複製 <strong>Page Access Token</strong> 與粉專 ID。</li>
+            </ol>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
@@ -461,7 +479,13 @@
 
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📸 目前品牌的 Instagram</legend>
-            <p class="helper">填 Instagram User ID＋Token。有圖／影發布前請確認上方「公開媒體基底網址」可被 Meta 讀取。配額或權限錯誤時請檢查 App 權限與當日發布上限。</p>
+            <p class="helper">填 Instagram <strong>數字 User ID</strong>＋Token，不是 @帳號名稱。有圖／影時，上方「公開媒體基底網址」必須可被 Meta 下載。</p>
+            <ol class="setup-steps">
+              <li>Instagram 必須是<strong>專業帳號</strong>（商業或創作者），並綁定這個品牌的 Facebook 粉專。</li>
+              <li>同一個 Meta App 加入 Instagram 產品。Explorer 權限勾 <code>instagram_basic</code>、<code>instagram_content_publish</code>，以及粉專相關權限。</li>
+              <li>用粉專查 <code>instagram_business_account</code>，得到的 ID 貼到「Instagram User ID」。</li>
+              <li>Token 通常用「已含 IG 權限的 Page Access Token」。配額或權限錯誤時，檢查 App 權限與當日發布上限。</li>
+            </ol>
             <div class="field">
               <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
               <input id="settingInstagramUserId" type="text" placeholder="17841400000000000" />
@@ -490,7 +514,12 @@
 
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">🧵 目前品牌的 Threads</legend>
-            <p class="helper">Threads User ID＋Token。純文字可不設公開媒體網址；有圖／影則必須。文字請勿過長；影片處理較慢，失敗可稍後再試。</p>
+            <p class="helper">填 Threads <strong>數字 User ID</strong>＋Threads Token，不是 Facebook 粉專 Token，也不是 @帳號。</p>
+            <ol class="setup-steps">
+              <li>同一個 Meta App 加入 <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads API</a>，用 Threads 帳號授權取得 Access Token。</li>
+              <li>User ID 可在 Threads Graph（<code>graph.threads.net</code>）用 <code>/me</code> 查，貼數字 ID。</li>
+              <li>純文字可不設公開媒體網址；有圖／影則必須，且網址要能被 Meta 下載。文字請勿過長；影片處理較慢，失敗可稍後再試。</li>
+            </ol>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
               <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
@@ -844,9 +873,20 @@
         </section>
         <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
           <div class="panel-heading compact">
-            <div><p class="section-tag">PLATFORMS</p><h2>平台連線</h2><p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。</p></div>
+            <div><p class="section-tag">PLATFORMS</p><h2>平台連線</h2><p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。Token 請到設定填寫。</p></div>
             <a class="btn-secondary" href="#/settings" data-view-target="settings" data-route-target="settings">⚙️ 前往設定</a>
           </div>
+          <fieldset class="form-group-card setup-guide-card" data-required-permission="account.manage">
+            <legend class="group-title">🧭 還沒連線？</legend>
+            <p class="helper">Facebook、Instagram、Threads 都要先在 Meta 建應用程式，再把 ID／Token 貼進設定。這裡只顯示狀態，不能填金鑰。</p>
+            <ol class="setup-steps">
+              <li>建立 Meta 應用程式（Business），把你的帳號加成 App 管理員／開發者。</li>
+              <li>Facebook：粉專 ID＋Page Access Token（<code>pages_manage_posts</code>）。</li>
+              <li>Instagram：專業帳號綁粉專，貼數字 User ID＋含 <code>instagram_content_publish</code> 的 Token。</li>
+              <li>Threads：Threads API 的 User ID＋Threads Token，不是粉專 Token。</li>
+            </ol>
+            <p class="setup-note">完整步驟在「設定」的 Facebook／Instagram／Threads 卡片。公開媒體網址（IG／Threads 有圖影時）用 HTTPS，例如 <code>https://media.shrineflow.uk</code>。</p>
+          </fieldset>
           <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
           <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
           <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard" data-required-permission="schedule.manage">
@@ -1113,6 +1153,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.75" type="module"></script>
+    <script src="/app.js?v=0.5.76" type="module"></script>
   </body>
 </html>
