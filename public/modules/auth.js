@@ -115,18 +115,12 @@ async function setupFirebaseLogin(firebaseConfig) {
   firebaseWebConfig = firebaseConfig;
   const button = $('#authGoogleButton');
   const form = $('#authForm');
-  const emailForm = $('#authEmailForm');
-  const emailInput = $('#authEmail');
-  const emailPassword = $('#authEmailPassword');
-  const providerDivider = $('#authProviderDivider');
   const description = $('#authDescription');
   form?.classList.add('is-hidden');
-  emailForm?.classList.remove('is-hidden');
-  providerDivider?.classList.remove('is-hidden');
   button?.classList.remove('is-hidden');
   if (description) description.textContent = inviteToken()
-    ? '你已收到 ShrineFlow 邀請，請使用相同 Email 的 Google 或 Email 帳號登入。'
-    : '請使用已授權的 Google 帳號，或已建立並受邀的 Email 帳號登入。';
+    ? '你已收到 ShrineFlow 邀請，請使用相同 Email 的 Google 帳號登入。'
+    : '請使用已授權的 Google 帳號登入。';
   try {
     const firebase = await loadFirebase();
     const auth = firebase.getAuth(firebaseApp);
@@ -135,23 +129,6 @@ async function setupFirebaseLogin(firebaseConfig) {
       await exchangeFirebaseSession(redirected.user, auth, firebase.signOut);
       return;
     }
-    emailForm?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const submit = emailForm.querySelector('button[type="submit"]');
-      if (submit) submit.disabled = true;
-      setAuthMessage('Email 登入中…');
-      try {
-        const result = await firebase.signInWithEmailAndPassword(
-          auth,
-          String(emailInput?.value || '').trim(),
-          emailPassword?.value || '',
-        );
-        await exchangeFirebaseSession(result.user, auth, firebase.signOut);
-      } catch (error) {
-        setAuthMessage(firebaseLoginMessage(error));
-        if (submit) submit.disabled = false;
-      }
-    });
     button?.addEventListener('click', async () => {
       if (button.disabled) return;
       button.disabled = true;
@@ -184,12 +161,14 @@ function promptReauth() {
   const cancelButton = $('#reauthCancelButton');
   const isFirebase = authMode === 'firebase';
   googleButton?.classList.toggle('is-hidden', !isFirebase);
+  $('#reauthPasswordField')?.classList.toggle('is-hidden', isFirebase);
+  $('#reauthSubmitButton')?.classList.toggle('is-hidden', isFirebase);
   if (passwordInput) passwordInput.value = '';
   setReauthMessage('');
   const description = $('#reauthDescription');
   if (description) {
     description.textContent = isFirebase
-      ? '變更成員、平台憑證或系統設定前，請用同一個 Google 或 Email 帳號再登入一次。'
+      ? '變更成員、平台憑證或系統設定前，請用同一個 Google 帳號再登入一次。'
       : '變更成員、平台憑證或系統設定前，請再輸入操作員密碼。';
   }
   if (typeof dialog.showModal === 'function') dialog.showModal();
@@ -211,6 +190,10 @@ function promptReauth() {
     };
     const onSubmit = async (event) => {
       event.preventDefault();
+      if (isFirebase) {
+        setReauthMessage('請用 Google 再次確認。');
+        return;
+      }
       const password = String(passwordInput?.value || '');
       if (!password) {
         setReauthMessage('請輸入密碼。');
@@ -218,17 +201,6 @@ function promptReauth() {
       }
       setReauthMessage('確認中…');
       try {
-        if (isFirebase) {
-          const email = state.actor?.email;
-          if (!email) throw new Error('找不到登入 Email。');
-          const firebase = await loadFirebase();
-          const auth = firebase.getAuth(firebaseApp);
-          const result = await firebase.signInWithEmailAndPassword(auth, email, password);
-          const idToken = await result.user.getIdToken(true);
-          await firebase.signOut(auth).catch(() => {});
-          finish(null, await exchangeReauthToken(idToken));
-          return;
-        }
         const data = await api('/api/auth/reauth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

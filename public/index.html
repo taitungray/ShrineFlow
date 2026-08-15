@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.73" />
+    <link rel="stylesheet" href="/style.css?v=0.5.74" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -22,18 +22,6 @@
         <p class="section-tag">SHRINEFLOW</p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
-        <form class="is-hidden" id="authEmailForm">
-          <div class="field">
-            <label for="authEmail" class="field-label">Email</label>
-            <input id="authEmail" name="email" type="email" autocomplete="username" inputmode="email" required />
-          </div>
-          <div class="field">
-            <label for="authEmailPassword" class="field-label">Email 密碼</label>
-            <input id="authEmailPassword" name="password" type="password" autocomplete="current-password" required />
-          </div>
-          <button class="primary-button" type="submit">使用 Email 登入</button>
-        </form>
-        <p class="auth-divider is-hidden" id="authProviderDivider" aria-hidden="true">或</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
         <form class="is-hidden" id="authForm">
           <div class="field">
@@ -911,7 +899,7 @@
           <div class="team-section" data-team-section-panel="members">
             <fieldset class="form-group-card" id="teamInviteCard">
               <legend class="group-title">邀請新成員</legend>
-              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 或 Email 帳號登入。</p>
+              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 帳號登入。</p>
               <div class="field-row">
                 <div class="field">
                   <label for="teamInviteEmail" class="field-label">Email <span class="field-required">*</span></label>
@@ -1125,6 +1113,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.73" type="module"></script>
+    <script src="/app.js?v=0.5.74" type="module"></script>
   </body>
 </html>
