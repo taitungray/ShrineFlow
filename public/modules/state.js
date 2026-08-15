@@ -17,6 +17,7 @@ export const state = {
   insights: null,
   insightsScope: 'account',
   repurposeCandidates: null,
+  bulkImportPreview: null,
   bestTimes: null,
   inbox: null,
   inboxFilter: 'all',

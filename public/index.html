@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.58" />
+    <link rel="stylesheet" href="/style.css?v=0.5.59" />
   </head>
   <body>
     <div class="ambient ambient-one"></div>
@@ -588,6 +588,22 @@
               </div>
             </form>
           </fieldset>
+          <fieldset class="form-group-card bulk-import-card" data-required-permission="content.create">
+            <legend class="group-title">📄 CSV 批次匯入（dry-run）</legend>
+            <p class="helper">每列先驗證主題、文案、平台、格式、既有素材路徑與排程時間；這一版只預覽，不建立貼文、不排程、不發布。素材請用 `|` 分隔，例如 `/uploads/a.mp4|/uploads/b.jpg`。</p>
+            <form id="bulkImportForm">
+              <div class="field">
+                <label for="bulkImportCsv" class="field-label">CSV 內容</label>
+                <textarea id="bulkImportCsv" rows="7" placeholder="contentTopic,facebook,platform,contentType,mediaPaths,scheduledLocal,timeZone\n中元提醒,先整理供桌,facebook,post,/uploads/altar.mp4,,Asia/Taipei"></textarea>
+              </div>
+              <div class="action-box">
+                <button class="btn-secondary" id="bulkImportPreviewButton" type="submit">驗證 CSV</button>
+                <button class="btn-text" id="bulkImportClearButton" type="button">清除</button>
+              </div>
+            </form>
+            <p class="bulk-import-summary" id="bulkImportSummary" aria-live="polite">尚未執行 dry-run。</p>
+            <div class="bulk-import-rows" id="bulkImportRows" aria-live="polite"></div>
+          </fieldset>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📝</span>
@@ -1049,6 +1065,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.58" type="module"></script>
+    <script src="/app.js?v=0.5.59" type="module"></script>
   </body>
 </html>

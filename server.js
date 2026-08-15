@@ -45,6 +45,7 @@ import { createSecurityMonitor } from './lib/security-events.js';
 import { createSchedulerTriggerRouter } from './lib/routes/internal-scheduler.js';
 import { cleanupOrphanMedia, exportFirestoreBackup } from './lib/cloud-backup.js';
 import { createMediaRouter } from './lib/routes/media.js';
+import { createBulkImportRouter } from './lib/routes/bulk-import.js';
 import { createTeamRouter } from './lib/routes/team.js';
 import { createInvitationMailer } from './lib/invitation-mailer.js';
 import { createReviewRouter } from './lib/routes/review.js';
@@ -301,6 +302,7 @@ app.use('/api', createSystemRouter({
 }));
 app.use('/api', createWebhookRouter());
 app.use('/api', createMediaRouter({ repositories }));
+app.use('/api', createBulkImportRouter({ repositories }));
 app.use('/api', (request, response, next) => createInsightsRouter({
   resolveFacebookInsights,
   resolveInstagramInsights,

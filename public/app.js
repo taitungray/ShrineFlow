@@ -21,6 +21,7 @@ import {
   initEditorListeners,
 } from './modules/editor.js';
 import { renderPosts, initContentFilters } from './modules/drafts.js';
+import { initBulkImportListeners } from './modules/bulk-import.js';
 import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js';
 import { renderOverview } from './modules/overview.js';
 import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
@@ -228,6 +229,7 @@ async function initApp() {
   initInsightsListeners();
   initInboxListeners();
   initContentFilters(refreshLists);
+  initBulkImportListeners();
   initReviewListeners(refreshLists);
   initCalendarControls(refreshLists);
   initMediaLibrary();

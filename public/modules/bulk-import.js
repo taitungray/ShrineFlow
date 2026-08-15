@@ -1,0 +1,70 @@
+import { $, escapeHtml, showToast } from './dom.js';
+import { api } from './api.js';
+import { clientQuery, state } from './state.js';
+
+function rowIssueText(row) {
+  const errors = Array.isArray(row.errors) ? row.errors : [];
+  if (!errors.length) return '可匯入預覽';
+  return errors.slice(0, 3).map((error) => `${error.code || 'ERROR'}：${error.message || '資料不正確'}`).join(' · ');
+}
+
+export function renderBulkImportPreview() {
+  const summary = $('#bulkImportSummary');
+  const list = $('#bulkImportRows');
+  if (!summary || !list) return;
+  const preview = state.bulkImportPreview;
+  if (!preview) {
+    summary.textContent = '尚未執行 dry-run。';
+    list.innerHTML = '';
+    return;
+  }
+  const parseErrors = Array.isArray(preview.parseErrors) ? preview.parseErrors : [];
+  summary.textContent = `${parseErrors.length ? `CSV 結構錯誤 ${parseErrors.length} 個 · ` : ''}共 ${preview.rowCount || 0} 列 · 可匯入 ${preview.validRowCount || 0} 列 · 需修正 ${preview.invalidRowCount || 0} 列；此結果不會建立貼文。`;
+  const parseIssueMarkup = parseErrors.map((error) => '<article class="bulk-import-row" data-valid="false"><p>' + escapeHtml(`${error.code || 'CSV_ERROR'}：${error.message || 'CSV 結構不正確'}`) + '</p></article>').join('');
+  list.innerHTML = parseIssueMarkup + (preview.rows || []).map((row) => '<article class="bulk-import-row" data-valid="' + String(Boolean(row.valid)) + '">'
+    + '<div><strong>第 ' + escapeHtml(String(row.rowNumber)) + ' 列 · ' + escapeHtml(row.fields?.contentTopic || '未填主題') + '</strong><small>' + escapeHtml(row.fields?.platformId || '—') + '／' + escapeHtml(row.fields?.contentType || '—') + (row.fields?.mediaPaths?.length ? ' · 素材 ' + escapeHtml(String(row.fields.mediaPaths.length)) + ' 個' : '') + '</small></div>'
+    + '<p>' + escapeHtml(rowIssueText(row)) + '</p>'
+    + '</article>').join('');
+}
+
+export function initBulkImportListeners() {
+  const form = $('#bulkImportForm');
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = $('#bulkImportPreviewButton');
+    const csv = $('#bulkImportCsv')?.value || '';
+    if (!csv.trim()) {
+      showToast('請先貼上 CSV 內容。', 'error');
+      return;
+    }
+    if (button) {
+      button.disabled = true;
+      button.textContent = '驗證中…';
+    }
+    try {
+      state.bulkImportPreview = await api(clientQuery('/api/bulk-import/preview'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: state.currentClientId, csv }),
+      });
+      renderBulkImportPreview();
+      showToast(state.bulkImportPreview.valid ? 'CSV dry-run 通過。' : 'CSV 已完成預覽，請修正標示列。', state.bulkImportPreview.valid ? 'success' : 'info');
+    } catch (error) {
+      state.bulkImportPreview = null;
+      renderBulkImportPreview();
+      showToast(error.message || 'CSV 預覽失敗。', 'error');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = '驗證 CSV';
+      }
+    }
+  });
+  $('#bulkImportClearButton')?.addEventListener('click', () => {
+    const input = $('#bulkImportCsv');
+    if (input) input.value = '';
+    state.bulkImportPreview = null;
+    renderBulkImportPreview();
+  });
+  renderBulkImportPreview();
+}
