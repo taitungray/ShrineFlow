@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.76" />
+    <link rel="stylesheet" href="/style.css?v=0.5.78" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -423,12 +423,29 @@
 
           <fieldset class="form-group-card setup-guide-card" data-required-permission="account.manage">
             <legend class="group-title">🧭 如何取得平台憑證</legend>
+            <div class="field-label-group setup-guide-actions">
+              <span class="field-label">Meta 應用程式</span>
+              <span class="field-link-row">
+                <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立應用程式 →</a>
+                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer →</a>
+              </span>
+            </div>
             <p class="helper">ShrineFlow 不會跳出 Facebook／Instagram／Threads 登入。三個平台都要先建<strong>同一個</strong> Meta 應用程式，再把各平台的 ID 與 Token 貼到下方卡片。憑證只存在目前品牌，不會跟其他品牌混用。</p>
             <ol class="setup-steps">
               <li>到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> 建立應用程式，類型選 <strong>Business</strong>。</li>
               <li>你的 Facebook 帳號必須是粉專管理員，並加進這個 App 的角色（管理員或開發者）。</li>
-              <li>同一個 App 可同時加入 Facebook、Instagram、Threads 產品。自己的粉專／IG／Threads 先維持<strong>開發模式</strong>即可，不必立刻送 App Review。</li>
-              <li>用 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a> 產生 Token。短效 Token 會過期，測通後請換成長期 Token，並可填到期日。</li>
+              <li>
+                建立時「使用案例」<strong>要勾這三項</strong>（精選清單常常沒有粉專／IG，左側改點「內容管理」或「全部」）：
+                <ul class="setup-usecases">
+                  <li><strong>管理粉絲專頁的所有內容</strong> → Facebook 發文／排程</li>
+                  <li><strong>管理 Instagram 的訊息和內容</strong> → IG 發文</li>
+                  <li><strong>存取 Threads API</strong> → Threads 發文</li>
+                </ul>
+                「使用 Facebook 登入」若還能勾就一起勾（Graph Explorer 拿 Token 常用）。粉專＋IG 勾了之後這項常會<strong>自動帶入、清單不再出現</strong>，沒看到就往下走，不必停住。
+              </li>
+              <li><strong>不要勾</strong>：廣告／行銷 API、應用程式廣告、WhatsApp、即時遊戲、oEmbed 內嵌、Live、募款、Messenger（之後要做收件匣再加）。</li>
+              <li>商家選粉專所屬的 Business；沒有就新建或先跳過。自己的粉專／IG／Threads 先維持<strong>開發模式</strong>即可，不必立刻送 App Review。</li>
+              <li>用 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a> 右上選剛建的 App，產生 Token。短效 Token 會過期，測通後請換成長期 Token，並可填到期日。</li>
               <li>貼上後按該平台的「儲存」再「測試連線」。儲存／測試會再請你 Google 確認一次。</li>
             </ol>
             <p class="setup-note">不要把 App Secret 填在下面。Webhook／收件匣才需要。公開媒體網址請用 HTTPS（雲端為 <code>https://media.shrineflow.uk</code>）；本機 localhost 無法給 Meta 抓圖。</p>
@@ -438,6 +455,7 @@
             <legend class="group-title">📘 目前品牌的 Facebook</legend>
             <p class="helper">填粉專 ID＋Page Access Token。不是個人帳號 Token。</p>
             <ol class="setup-steps">
+              <li>建立 App 時勾使用案例<strong>管理粉絲專頁的所有內容</strong>（在「內容管理」或「全部」，不一定在精選）。</li>
               <li>Graph API Explorer 右上選剛建的 App。</li>
               <li>權限勾 <code>pages_show_list</code>、<code>pages_read_engagement</code>、<code>pages_manage_posts</code>。</li>
               <li>先產生 User Token，再改選要發布的粉專，複製 <strong>Page Access Token</strong> 與粉專 ID。</li>
@@ -450,7 +468,10 @@
             <div class="field">
               <div class="field-label-group">
                 <label for="settingFacebookPageAccessToken" class="field-label">Page Access Token</label>
-                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
+                <span class="field-link-row">
+                  <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立 App →</a>
+                  <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
+                </span>
               </div>
               <div class="input-action">
                 <input id="settingFacebookPageAccessToken" type="password" placeholder="EAA..." />
@@ -481,8 +502,8 @@
             <legend class="group-title">📸 目前品牌的 Instagram</legend>
             <p class="helper">填 Instagram <strong>數字 User ID</strong>＋Token，不是 @帳號名稱。有圖／影時，上方「公開媒體基底網址」必須可被 Meta 下載。</p>
             <ol class="setup-steps">
-              <li>Instagram 必須是<strong>專業帳號</strong>（商業或創作者），並綁定這個品牌的 Facebook 粉專。</li>
-              <li>同一個 Meta App 加入 Instagram 產品。Explorer 權限勾 <code>instagram_basic</code>、<code>instagram_content_publish</code>，以及粉專相關權限。</li>
+              <li>建立 App 時勾使用案例<strong>管理 Instagram 的訊息和內容</strong>。Instagram 必須是<strong>專業帳號</strong>（商業或創作者），並綁定這個品牌的 Facebook 粉專。</li>
+              <li>Explorer 權限勾 <code>instagram_basic</code>、<code>instagram_content_publish</code>，以及粉專相關權限。</li>
               <li>用粉專查 <code>instagram_business_account</code>，得到的 ID 貼到「Instagram User ID」。</li>
               <li>Token 通常用「已含 IG 權限的 Page Access Token」。配額或權限錯誤時，檢查 App 權限與當日發布上限。</li>
             </ol>
@@ -493,7 +514,10 @@
             <div class="field">
               <div class="field-label-group">
                 <label for="settingInstagramAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
-                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
+                <span class="field-link-row">
+                  <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立 App →</a>
+                  <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
+                </span>
               </div>
               <div class="input-action">
                 <input id="settingInstagramAccessToken" type="password" placeholder="EAA..." />
@@ -516,7 +540,7 @@
             <legend class="group-title">🧵 目前品牌的 Threads</legend>
             <p class="helper">填 Threads <strong>數字 User ID</strong>＋Threads Token，不是 Facebook 粉專 Token，也不是 @帳號。</p>
             <ol class="setup-steps">
-              <li>同一個 Meta App 加入 <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads API</a>，用 Threads 帳號授權取得 Access Token。</li>
+              <li>建立 App 時勾使用案例<strong>存取 Threads API</strong>。同一個 App 再加入 Threads 產品，用 Threads 帳號授權取得 Access Token。</li>
               <li>User ID 可在 Threads Graph（<code>graph.threads.net</code>）用 <code>/me</code> 查，貼數字 ID。</li>
               <li>純文字可不設公開媒體網址；有圖／影則必須，且網址要能被 Meta 下載。文字請勿過長；影片處理較慢，失敗可稍後再試。</li>
             </ol>
@@ -525,7 +549,13 @@
               <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
             </div>
             <div class="field">
-              <label for="settingThreadsAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+              <div class="field-label-group">
+                <label for="settingThreadsAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+                <span class="field-link-row">
+                  <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立 App →</a>
+                  <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads 文件 →</a>
+                </span>
+              </div>
               <div class="input-action">
                 <input id="settingThreadsAccessToken" type="password" placeholder="THQVJ..." />
                 <button type="button" id="toggleThreadsToken" class="btn-icon" aria-label="顯示或隱藏 Threads Access Token">顯示</button>
@@ -878,9 +908,19 @@
           </div>
           <fieldset class="form-group-card setup-guide-card" data-required-permission="account.manage">
             <legend class="group-title">🧭 還沒連線？</legend>
+            <div class="field-label-group setup-guide-actions">
+              <span class="field-label">Meta 應用程式</span>
+              <span class="field-link-row">
+                <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立應用程式 →</a>
+                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer →</a>
+              </span>
+            </div>
             <p class="helper">Facebook、Instagram、Threads 都要先在 Meta 建應用程式，再把 ID／Token 貼進設定。這裡只顯示狀態，不能填金鑰。</p>
             <ol class="setup-steps">
               <li>建立 Meta 應用程式（Business），把你的帳號加成 App 管理員／開發者。</li>
+              <li>使用案例要勾：<strong>管理粉絲專頁的所有內容</strong>、<strong>管理 Instagram 的訊息和內容</strong>、<strong>存取 Threads API</strong>。粉專／IG 常在「內容管理」或「全部」，不在精選。</li>
+              <li>「使用 Facebook 登入」能勾就勾；沒出現通常是已自動帶入，直接下一步。</li>
+              <li>不要勾廣告、WhatsApp、遊戲、oEmbed、Messenger。</li>
               <li>Facebook：粉專 ID＋Page Access Token（<code>pages_manage_posts</code>）。</li>
               <li>Instagram：專業帳號綁粉專，貼數字 User ID＋含 <code>instagram_content_publish</code> 的 Token。</li>
               <li>Threads：Threads API 的 User ID＋Threads Token，不是粉專 Token。</li>
@@ -1153,6 +1193,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.76" type="module"></script>
+    <script src="/app.js?v=0.5.78" type="module"></script>
   </body>
 </html>

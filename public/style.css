@@ -547,6 +547,17 @@ h4 {
   text-decoration: underline;
 }
 
+.field-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: flex-end;
+}
+
+.setup-guide-actions {
+  margin-bottom: 10px;
+}
+
 select, textarea, input[type="text"], input[type="password"], input[type="time"], input[type="datetime-local"] {
   width: 100%;
   max-width: 100%;
@@ -928,6 +939,14 @@ select:focus, textarea:focus, input:focus {
 .setup-steps code {
   font-size: 0.76rem;
   color: var(--text-primary);
+}
+
+.setup-usecases {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .setup-note {
