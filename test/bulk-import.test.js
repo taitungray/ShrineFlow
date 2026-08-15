@@ -44,6 +44,43 @@ test('bulk CSV validation is dry-run and reports row-level errors without persis
   assert.ok(videoResult.rows[0].warnings.some((warning) => warning.code === 'video_metadata_unverified'));
 });
 
+test('bulk CSV binds ready media assets and rejects missing media references', async () => {
+  const uploadsDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'shrineflow-bulk-media-'));
+  try {
+    await fs.writeFile(path.join(uploadsDirectory, 'batch.mp4'), 'video-placeholder');
+    const valid = await validateBulkCsv([
+      'contentTopic,facebook,platform,contentType,mediaIds',
+      '影片批次,影片文案,instagram,reel,asset-video-1',
+    ].join('\n'), {
+      clientId: 'client-1',
+      uploadsDirectory,
+      requireMediaExists: true,
+      mediaAssets: [{
+        id: 'asset-video-1',
+        clientId: 'client-1',
+        mediaPath: '/uploads/batch.mp4',
+        status: 'ready',
+      }],
+    });
+    assert.equal(valid.valid, true);
+    assert.deepEqual(valid.rows[0].fields.mediaIds, ['asset-video-1']);
+    assert.deepEqual(valid.rows[0].fields.mediaPaths, ['/uploads/batch.mp4']);
+
+    const missing = await validateBulkCsv([
+      'contentTopic,facebook,platform,contentType,mediaPaths',
+      '缺少影片,影片文案,instagram,reel,/uploads/missing.mp4',
+    ].join('\n'), {
+      clientId: 'client-1',
+      uploadsDirectory,
+      requireMediaExists: true,
+    });
+    assert.equal(missing.valid, false);
+    assert.ok(missing.rows[0].errors.some((error) => error.code === 'MEDIA_REFERENCE_NOT_FOUND'));
+  } finally {
+    await fs.rm(uploadsDirectory, { recursive: true, force: true });
+  }
+});
+
 test('bulk import preview route returns validation results and never creates posts', async () => {
   const app = express();
   app.use(express.json());

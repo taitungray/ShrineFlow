@@ -224,7 +224,8 @@ API／權限 Spike
 - [x] CSV dry-run v1：逐列驗證主題、文案、平台、格式、素材路徑與排程時間，不在預覽階段寫入資料。
 - [x] CSV 逐列寫入 draft v1：全數通過後才一次建立，多列失敗不寫入；匯入排程欄位只保存為待處理資訊，不自動排程。
 - [x] CSV 匯入排程本機套用 v1：確認後整批套用為 local schedule，任一列失敗或版本衝突就不部分更新；不宣稱已建立 Meta Planner 遠端排程。
-- [ ] CSV 遠端／Meta 排程 connector、整批影片媒體綁定與失敗補償。
+- [x] CSV 整批影片媒體綁定 v1：`mediaIds` 只接受目前品牌的 ready asset，`/uploads/...` 必須存在；素材不存在時該列不能匯入。
+- [ ] CSV 遠端／Meta 排程 connector、影片 metadata 強驗證與遠端失敗補償。
 - [ ] Evergreen；需遞迴 scheduler、上限、暫停、去重與失敗補償。
 - 每一項另寫獨立 plan，不再以一個「D 產能包」一次承包。
 
