@@ -8,6 +8,8 @@ data/clients.json
 data/clients.json.rotation-backup
 .env.rotation-backup
 data/inbox-metadata.json
+data/media-assets.json
+data/saved-replies.json
 data/publish-attempts/*.json
 data/insights/*.json
 data/backups/*
