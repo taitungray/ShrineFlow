@@ -44,7 +44,7 @@ import { renderRemoteSchedule } from './modules/remote-schedule.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -56,6 +56,7 @@ async function refreshLists() {
     api(clientQuery('/api/crisis-pause')).catch(() => null),
     api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
     api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
+    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -69,6 +70,7 @@ async function refreshLists() {
   state.crisisPause = crisisPause;
   state.bestTimes = bestTimes;
   state.remoteSchedule = remoteSchedule;
+  state.repurposeCandidates = repurposeCandidates;
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
   renderPosts();
   renderSchedule();
@@ -126,7 +128,7 @@ async function loadData() {
   applyPermissionUi();
 
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule] = await Promise.all([
+  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
     api(clientQuery('/api/posts')),
     api(clientQuery('/api/schedule')),
     api(clientQuery('/api/templates')),
@@ -138,6 +140,7 @@ async function loadData() {
     api(clientQuery('/api/crisis-pause')).catch(() => null),
     api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
     api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
+    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
   ]);
 
   const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
@@ -158,6 +161,7 @@ async function loadData() {
   state.crisisPause = crisisPause;
   state.bestTimes = bestTimes;
   state.remoteSchedule = remoteSchedule;
+  state.repurposeCandidates = repurposeCandidates;
   state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
   state.platforms = config.publishingPlatforms || [];
   applyClientAccounts();

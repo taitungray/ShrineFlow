@@ -61,6 +61,23 @@ test('content stage keeps Ideas outside the draft validation path until promoted
     assert.equal(promoted.version, 2);
     assert.equal(promoted.validation.valid, true);
 
+    const publishedRecords = await readJson(jsonFiles.posts, []);
+    publishedRecords[0].status = 'published';
+    publishedRecords[0].targets[0] = {
+      ...publishedRecords[0].targets[0],
+      status: 'published',
+      externalId: 'facebook-post-1',
+      publishedAt: '2026-08-14T00:00:00.000Z',
+    };
+    await writeJson(jsonFiles.posts, publishedRecords);
+    const repurposeResponse = await fetch(`${baseUrl}/posts/${idea.id}/repurpose`, { method: 'POST' });
+    assert.equal(repurposeResponse.status, 201);
+    const repurposed = await repurposeResponse.json();
+    assert.equal(repurposed.lifecycleAction, 'repurposed');
+    assert.equal(repurposed.sourcePostId, idea.id);
+    assert.equal(repurposed.contentStage, 'draft');
+    assert.equal(repurposed.status, 'draft');
+
     const versions = await fetch(`${baseUrl}/posts/${idea.id}/versions`).then((response) => response.json());
     assert.equal(versions.versions[0].content.contentStage, 'draft');
     assert.equal(versions.versions[1].content.contentStage, 'idea');

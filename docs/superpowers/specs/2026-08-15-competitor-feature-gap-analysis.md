@@ -220,7 +220,7 @@ API／權限 Spike
 #### Package 6：檔期產能
 
 - [x] Ideas v1：以 `contentStage=idea` 保存，不進排程、不允許直接發布，轉成 `draft` 後才進入既有內容流程。
-- [ ] 已發布再製（帶成效）；只依真實 Insights 排名，不猜成效。
+- [x] 已發布再製 v1：只依已保存的貼文 Insights 排名；沒有真實成效資料就不產生候選，建立的是獨立 `draft` 副本。
 - [ ] CSV／整批影片；先 dry-run、逐列驗證、逐列修正。
 - [ ] Evergreen；需遞迴 scheduler、上限、暫停、去重與失敗補償。
 - 每一項另寫獨立 plan，不再以一個「D 產能包」一次承包。

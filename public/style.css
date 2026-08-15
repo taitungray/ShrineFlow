@@ -4205,6 +4205,71 @@ button.module-summary-card:focus-visible {
   background: var(--bg-soft);
 }
 
+.repurpose-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  background: var(--bg-soft);
+}
+
+.repurpose-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.repurpose-heading h3 {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+}
+
+.repurpose-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.repurpose-candidate-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+}
+
+.repurpose-candidate-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.repurpose-candidate-heading h4 {
+  margin-top: 4px;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+}
+
+.repurpose-candidate-heading > strong {
+  color: var(--brand);
+  font-size: 1.15rem;
+}
+
+.repurpose-candidate-meta {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.repurpose-candidate-card .btn-secondary {
+  min-height: 44px;
+  justify-self: start;
+}
+
 .best-times-heading {
   display: flex;
   align-items: flex-start;
@@ -4248,7 +4313,8 @@ button.module-summary-card:focus-visible {
 }
 
 @media (max-width: 767px) {
-  .best-times-slots {
+  .best-times-slots,
+  .repurpose-candidate-grid {
     grid-template-columns: 1fr;
   }
 }

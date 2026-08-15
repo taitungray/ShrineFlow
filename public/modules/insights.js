@@ -1,6 +1,6 @@
-import { $, escapeHtml, formatDate } from './dom.js';
+import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
-import { clientQuery, state, PLATFORM_NAMES } from './state.js';
+import { clientQuery, hasPermission, state, PLATFORM_NAMES } from './state.js';
 
 function targetsOf(post) {
   return Array.isArray(post.targets) && post.targets.length
@@ -44,8 +44,60 @@ function sourceStatusText(source) {
 
 async function loadInsightsScope(scope) {
   state.insightsScope = scope;
-  state.insights = await api(clientQuery('/api/insights?scope=' + encodeURIComponent(scope)));
+  const [insights, repurposeCandidates] = await Promise.all([
+    api(clientQuery('/api/insights?scope=' + encodeURIComponent(scope))),
+    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+  ]);
+  state.insights = insights;
+  state.repurposeCandidates = repurposeCandidates;
   renderInsights();
+}
+
+async function createRepurposeDraft(button) {
+  const postId = button?.dataset.repurposePost;
+  if (!postId || button.disabled) return;
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = '建立中…';
+  try {
+    const created = await api('/api/posts/' + encodeURIComponent(postId) + '/repurpose', { method: 'POST' });
+    state.posts = [created, ...(state.posts || [])];
+    button.textContent = '已建立再製草稿';
+    button.dataset.created = 'true';
+    showToast('已建立再製草稿，原貼文保持不變。', 'success');
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = originalLabel;
+    showToast(error.message || '建立再製草稿失敗。', 'error');
+  }
+}
+
+function renderRepurpose() {
+  const container = $('#repurposeCard');
+  if (!container) return;
+  const result = state.repurposeCandidates || { status: 'insufficient_data', candidates: [] };
+  const candidates = Array.isArray(result.candidates) ? result.candidates : [];
+  const canCreate = hasPermission('content.create');
+  const notice = result.status === 'ready'
+    ? '以下只根據已保存的貼文 Insights 排名；沒有真實貼文成效的內容不會出現在建議中。'
+    : '目前沒有同時具備已發布 target 與已保存貼文 Insights 的內容，因此不產生猜測式建議。';
+  const rows = candidates.length
+    ? '<div class="repurpose-candidate-grid">' + candidates.map((candidate) => (
+      '<article class="repurpose-candidate-card">'
+      + '<div class="repurpose-candidate-heading"><div><span class="section-tag">#' + escapeHtml(String(candidate.rank || '—')) + ' · ' + escapeHtml(platformLabel(candidate.platformId)) + '</span><h4>' + escapeHtml(candidate.postTitle || candidate.postId || '未命名內容') + '</h4></div>'
+      + '<strong>' + escapeHtml(String(candidate.metric?.value ?? '—')) + '</strong></div>'
+      + '<p class="repurpose-candidate-meta">依 ' + escapeHtml(candidate.metric?.name || '已保存指標') + ' 排名 · 發布於 ' + escapeHtml(candidate.publishedAt ? formatDate(candidate.publishedAt) : '未知') + ' · 成效資料 ' + escapeHtml(candidate.snapshotFetchedAt ? formatDate(candidate.snapshotFetchedAt) : '未知') + '</p>'
+      + (canCreate
+        ? '<button class="btn-secondary" type="button" data-repurpose-post="' + escapeHtml(candidate.postId) + '">建立再製草稿</button>'
+        : '<span class="helper">需要內容建立權限才能建立再製草稿。</span>')
+      + '</article>'
+    )).join('') + '</div>'
+    : '<p class="helper">' + notice + '</p>';
+  container.innerHTML = '<div class="repurpose-heading"><div><span class="section-tag">REPURPOSE CANDIDATES</span><h3>已發布再製</h3></div><span class="badge" data-status="' + escapeHtml(result.status || 'insufficient_data') + '">' + escapeHtml(result.status === 'ready' ? '有真實資料' : '資料不足') + '</span></div>'
+    + '<p class="helper">' + notice + '</p>' + rows;
+  container.querySelectorAll('[data-repurpose-post]').forEach((button) => {
+    button.addEventListener('click', () => createRepurposeDraft(button));
+  });
 }
 
 export function initInsightsListeners() {
@@ -75,6 +127,7 @@ export function initInsightsListeners() {
 }
 
 export function renderInsights() {
+  renderRepurpose();
   const summary = $('#insightsOperationalSummary');
   const platformGrid = $('#insightsPlatformGrid');
   const targetGrid = $('#insightsTargetGrid');
