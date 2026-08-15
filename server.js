@@ -30,6 +30,7 @@ import { createInboxRouter } from './lib/routes/inbox.js';
 import { createSavedRepliesRouter } from './lib/routes/saved-replies.js';
 import { createSystemRouter } from './lib/routes/system.js';
 import { createSettingsRouter } from './lib/routes/settings.js';
+import { hydrateRuntimeSettings } from './lib/settings.js';
 import { createClientsRouter } from './lib/routes/clients.js';
 import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
@@ -77,6 +78,7 @@ const cloudRuntime = repositories.backend === 'firestore'
 
 if (!cloudRuntime) await initStorage();
 await runSchemaMigrations({ repositories });
+await hydrateRuntimeSettings({ repositories });
 await ensureDefaultClientFromEnv();
 await migrateScheduleIntoTargets({ repositories });
 if (!cloudRuntime) await cleanupOrphanUploads({ mode: 'automatic' });
@@ -268,6 +270,7 @@ app.use('/api', createAuthMiddleware(authService));
 app.use('/api', createApiAuthorizationMiddleware({ repositories, reauthService, securityMonitor }));
 
 app.use('/api', createSettingsRouter({
+  repositories,
   onReloadSettings: async () => {
     await initServices();
     aiService.reloadConfig();

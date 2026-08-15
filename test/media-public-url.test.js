@@ -23,7 +23,14 @@ test('strips trailing slash on base', () => {
 test('rejects invalid non-uploads path', () => {
   assert.throws(
     () => resolvePublicMediaUrl('/static/a.jpg', 'https://tunnel.example'),
-    /PUBLIC_MEDIA_BASE_URL|公開/,
+    /媒體路徑無效/,
+  );
+});
+
+test('joins public base url with R2 media path', () => {
+  assert.equal(
+    resolvePublicMediaUrl('/media/original/client/2026/08/id/photo.jpg', 'https://cdn.example.test'),
+    'https://cdn.example.test/media/original/client/2026/08/id/photo.jpg',
   );
 });
 

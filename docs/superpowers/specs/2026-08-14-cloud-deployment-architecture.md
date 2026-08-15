@@ -1,8 +1,8 @@
 # ShrineFlow 雲端部署、資料庫與媒體儲存架構規格
 
 > 日期：2026-08-14  
-> 文件狀態：規劃完成，尚未實作  
-> 適用基線：ShrineFlow v0.5.x，實作前須重新確認當時版號與現況  
+> 文件狀態：規劃完成，**v0.5.67 已落地可部署**（Cloud Run 單一入口、Firestore、R2、Cloud Scheduler）。操作步驟見 `2026-08-14-cloud-deployment-runbook.md`。  
+> 適用基線：ShrineFlow v0.5.x  
 > 目標：個人電腦關機後，後台、資料與發布排程仍能在雲端正常運作
 
 ## 0. 本文件範圍

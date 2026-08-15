@@ -1,31 +1,11 @@
 {
-    "hosting":  {
-                    "public":  "public",
-                    "ignore":  [
-                                   "firebase.json",
-                                   "**/.*",
-                                   "**/node_modules/**"
-                               ],
-                    "cleanUrls":  true,
-                    "rewrites":  [
-                                     {
-                                         "source":  "/api/**",
-                                         "run":  {
-                                                     "serviceId":  "shrineflow-api",
-                                                     "region":  "asia-east1"
-                                                 }
-                                     },
-                                     {
-                                         "source":  "/internal/**",
-                                         "run":  {
-                                                     "serviceId":  "shrineflow-api",
-                                                     "region":  "asia-east1"
-                                                 }
-                                     },
-                                     {
-                                         "source":  "**",
-                                         "destination":  "/index.html"
-                                     }
-                                 ]
-                }
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true
+  }
 }
