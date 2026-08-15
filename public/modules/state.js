@@ -71,7 +71,7 @@ export function currentMembership() {
 
 export function hasPermission(permission) {
   if (state.actor?.legacy) return true;
-  if (permission === 'system.manage') return state.actor?.systemRole === 'owner';
+  if (state.actor?.systemRole === 'owner') return true;
   return Boolean(currentMembership()?.permissions?.includes(permission));
 }
 

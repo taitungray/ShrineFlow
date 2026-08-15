@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   PERMISSIONS,
+  accessibleClientIds,
   actorHasAnyPermission,
   actorHasPermission,
   createActor,
@@ -71,6 +72,25 @@ test('system.manage is limited to the system owner, not a brand owner membership
   assert.equal(actorHasPermission(brandOwner, 'system.manage', 'client-a'), false);
   assert.equal(actorHasAnyPermission(systemOwner, 'system.manage'), true);
   assert.equal(actorHasAnyPermission(createLegacyOwnerActor(), 'system.manage'), true);
+});
+
+test('system owner can manage platform accounts without a brand membership', () => {
+  const systemOwner = createActor({
+    user: { uid: 'sys-owner', status: 'active' },
+    systemRole: 'owner',
+    memberships: [],
+  });
+  const editor = createActor({
+    user: { uid: 'editor-1', status: 'active' },
+    memberships: [{
+      userId: 'editor-1', clientId: 'client-a', role: 'editor', status: 'active',
+    }],
+  });
+
+  assert.equal(actorHasPermission(systemOwner, 'account.manage', 'client-a'), true);
+  assert.equal(accessibleClientIds(systemOwner, 'content.view'), null);
+  assert.equal(actorHasPermission(editor, 'account.manage', 'client-a'), false);
+  assert.deepEqual(accessibleClientIds(editor, 'content.view'), ['client-a']);
 });
 
 test('role permissions enforce separation between editors, reviewers, publishers and admins', () => {

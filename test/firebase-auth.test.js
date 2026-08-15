@@ -103,6 +103,31 @@ test('Firebase owner allowlist bootstraps owner memberships and authenticates th
   assert.deepEqual(firebaseAuth.revoked, ['owner-1']);
 });
 
+test('existing Firebase owner gains memberships for clients created after first login', async () => {
+  const repositories = {
+    clients: memoryRepository([]),
+    users: memoryRepository(),
+    memberships: memoryRepository(),
+    invitations: memoryRepository(),
+    auditEvents: memoryRepository(),
+  };
+  const service = createFirebaseSessionAuthService({
+    firebaseAuth: fakeFirebaseAuth(),
+    repositories,
+    env: { SHRINEFLOW_OWNER_EMAILS: 'owner@example.com', FIREBASE_PROJECT_ID: 'demo' },
+    now: () => Date.parse('2026-08-14T00:00:00.000Z'),
+  });
+
+  const first = await service.createSession({ idToken: 'owner-token' });
+  assert.equal(first.actor.systemRole, 'owner');
+  assert.deepEqual(first.actor.memberships, []);
+
+  await repositories.clients.create({ id: 'client-new', name: 'New Brand' });
+  const authenticated = await service.authenticate(first.token);
+  assert.deepEqual(authenticated.actor.memberships.map((item) => item.clientId), ['client-new']);
+  assert.equal((await repositories.memberships.getById('client-new__owner-1'))?.role, 'owner');
+});
+
 test('Firebase sign-in rejects unknown users and accepts a matching one-time invitation', async () => {
   const repositories = repositoriesWithClients();
   const service = createFirebaseSessionAuthService({

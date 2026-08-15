@@ -60,6 +60,7 @@ test('API authorization derives scope from stored resources and hides cross-clie
   app.post('/api/publish/target', (request, response) => response.json({ ok: true }));
   app.get('/api/config', (request, response) => response.json({ clients: request.accessibleClientIds }));
   app.post('/api/settings', (_request, response) => response.json({ ok: true }));
+  app.put('/api/clients/:clientId/accounts', (_request, response) => response.json({ ok: true }));
   const server = app.listen(0);
   const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
 
@@ -109,6 +110,12 @@ test('API authorization derives scope from stored resources and hides cross-clie
       method: 'POST', headers: { 'X-Test-Actor': 'owner' },
     });
     assert.equal(settingsAllowed.status, 200);
+    const ownerAccounts = await fetch(`${baseUrl}/clients/client-a/accounts`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Test-Actor': 'owner' },
+      body: JSON.stringify({ platformId: 'facebook' }),
+    });
+    assert.equal(ownerAccounts.status, 200);
 
     const unknownDenied = await fetch(`${baseUrl}/not-a-registered-route`, {
       method: 'POST', headers: { 'X-Test-Actor': 'editorA' },
