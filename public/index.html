@@ -7,17 +7,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/style.css?v=0.5.71" />
+    <style>
+      body.auth-required > :not(#authGate) { display: none !important; }
+      .is-hidden { display: none !important; }
+    </style>
+    <link rel="stylesheet" href="/style.css?v=0.5.72" />
   </head>
-  <body>
+  <body class="auth-required">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
-    <section class="auth-gate is-hidden" id="authGate" aria-labelledby="authTitle">
+    <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
         <p class="section-tag">SHRINEFLOW</p>
         <h1 id="authTitle">登入工作台</h1>
-        <p class="panel-lede" id="authDescription">此環境已啟用登入保護。</p>
+        <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <form class="is-hidden" id="authEmailForm">
           <div class="field">
             <label for="authEmail" class="field-label">Email</label>
@@ -31,7 +35,7 @@
         </form>
         <p class="auth-divider is-hidden" id="authProviderDivider" aria-hidden="true">或</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
-        <form id="authForm">
+        <form class="is-hidden" id="authForm">
           <div class="field">
             <label for="authPassword" class="field-label">操作員密碼</label>
             <input id="authPassword" name="password" type="password" autocomplete="current-password" required />
@@ -1121,6 +1125,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.71" type="module"></script>
+    <script src="/app.js?v=0.5.72" type="module"></script>
   </body>
 </html>

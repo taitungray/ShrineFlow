@@ -15,6 +15,8 @@ function setGateVisible(visible) {
   if (!gate) return;
   gate.classList.toggle('is-hidden', !visible);
   document.body.classList.toggle('auth-required', visible);
+  if (visible) gate.setAttribute('aria-busy', 'false');
+  else gate.removeAttribute('aria-busy');
 }
 
 function setLogoutVisible(visible) {
@@ -265,30 +267,16 @@ export function ensureReauth() {
   return reauthInFlight;
 }
 
-export async function initializeAuth() {
-  const status = await api('/api/auth/status');
-  authMode = status.mode || (status.enabled ? 'legacy' : 'disabled');
-  if (!status.enabled || status.authenticated) {
-    const me = status.actor ? { actor: status.actor } : await api('/api/me');
-    state.actor = me.actor;
-    setLogoutVisible(Boolean(status.enabled));
-    renderUserIdentity();
-    if (status.enabled) setReauthHandler(ensureReauth);
-    return true;
-  }
-
-  setGateVisible(true);
-  if (status.mode === 'firebase') {
-    const config = await api('/api/auth/config');
-    await setupFirebaseLogin(config.firebase || {});
-    return false;
-  }
+function showLegacyPasswordForm(message) {
   const form = $('#authForm');
-  const input = $('#authPassword');
   const description = $('#authDescription');
-  if (description) description.textContent = '請輸入操作員密碼；工作階段逾期或服務重啟後需重新登入。';
-  if (!form) return false;
+  if (description) description.textContent = message;
+  form?.classList.remove('is-hidden');
+  return form;
+}
 
+function bindLegacyPasswordLogin(form) {
+  const input = $('#authPassword');
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const submit = form.querySelector('button[type="submit"]');
@@ -307,6 +295,38 @@ export async function initializeAuth() {
       if (submit) submit.disabled = false;
     }
   }, { once: true });
+}
+
+export async function initializeAuth() {
+  let status;
+  try {
+    status = await api('/api/auth/status');
+  } catch (error) {
+    setGateVisible(true);
+    const form = showLegacyPasswordForm(error.message || '無法確認登入狀態，請稍後再試。');
+    if (form) bindLegacyPasswordLogin(form);
+    return false;
+  }
+  authMode = status.mode || (status.enabled ? 'legacy' : 'disabled');
+  if (!status.enabled || status.authenticated) {
+    const me = status.actor ? { actor: status.actor } : await api('/api/me');
+    state.actor = me.actor;
+    setLogoutVisible(Boolean(status.enabled));
+    renderUserIdentity();
+    if (status.enabled) setReauthHandler(ensureReauth);
+    setGateVisible(false);
+    return true;
+  }
+
+  setGateVisible(true);
+  if (status.mode === 'firebase') {
+    const config = await api('/api/auth/config');
+    await setupFirebaseLogin(config.firebase || {});
+    return false;
+  }
+  const form = showLegacyPasswordForm('請輸入操作員密碼；工作階段逾期或服務重啟後需重新登入。');
+  if (!form) return false;
+  bindLegacyPasswordLogin(form);
   return false;
 }
 
