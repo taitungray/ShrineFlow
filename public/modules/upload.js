@@ -2,6 +2,7 @@ import { $, isVideoPath, setFormMessage } from './dom.js';
 import { state, mediaPathsOf } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
 import { mergeSelectedMedia, seedSelectedMedia } from './media-picker.js';
+import { markEditorDirty } from './editor.js';
 
 function revokePreviewUrl(source) {
   if (String(source || '').startsWith('blob:')) URL.revokeObjectURL(source);
@@ -42,12 +43,37 @@ export function refreshSelectedMediaPreview(renderSavedMediaFn) {
   if (uploadZone) uploadZone.classList.toggle('has-media', state.selectedMediaItems.length > 0);
 }
 
+function syncGeneratedMediaFromSelection() {
+  if (!state.generated) return;
+  const mediaPaths = state.selectedMediaItems.map((item) => item.serverPath).filter(Boolean);
+  state.generated.mediaPaths = mediaPaths;
+  state.generated.imagePath = mediaPaths[0] || '';
+}
+
 export function moveSelectedMedia(fromIndex, toIndex, renderSavedMediaFn) {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= state.selectedMediaItems.length || toIndex >= state.selectedMediaItems.length) return;
   const [item] = state.selectedMediaItems.splice(fromIndex, 1);
   state.selectedMediaItems.splice(toIndex, 0, item);
+  syncGeneratedMediaFromSelection();
   refreshSelectedMediaPreview(renderSavedMediaFn);
   setFormMessage('已調整順序；第 1 張會作為主要圖片。', 'success');
+}
+
+export function removeSelectedMedia(index, renderSavedMediaFn) {
+  if (!Number.isInteger(index) || index < 0 || index >= state.selectedMediaItems.length) return;
+  const [removed] = state.selectedMediaItems.splice(index, 1);
+  revokePreviewUrl(removed?.source);
+  state.uploadPreviewUrls = state.uploadPreviewUrls.filter((url) => url !== removed?.source);
+  syncGeneratedMediaFromSelection();
+  refreshSelectedMediaPreview(renderSavedMediaFn);
+  markEditorDirty(true);
+  const remaining = state.selectedMediaItems.length;
+  setFormMessage(
+    remaining
+      ? '已移除第 ' + (index + 1) + ' 張，還剩 ' + remaining + ' 個。第 1 張會作為主要圖片。'
+      : '已移除該張素材。',
+    'success',
+  );
 }
 
 export function renderUploadPreview() {
@@ -80,7 +106,14 @@ export function renderUploadPreview() {
     controls.className = 'media-order-controls';
     controls.innerHTML = '<button type="button" data-media-move="up" aria-label="上移"' + (index === 0 ? ' disabled' : '') + '>↑</button>'
       + '<button type="button" data-media-move="down" aria-label="下移"' + (index === state.selectedMediaItems.length - 1 ? ' disabled' : '') + '>↓</button>';
-    figure.append(media, badge, controls);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'media-remove-button';
+    removeButton.dataset.mediaRemove = 'true';
+    removeButton.setAttribute('aria-label', '移除第 ' + (index + 1) + ' 張');
+    removeButton.title = '移除這張';
+    removeButton.textContent = '×';
+    figure.append(media, badge, removeButton, controls);
     gallery.append(figure);
   });
 }
@@ -94,12 +127,24 @@ function mediaItemFromPoint(clientX, clientY) {
   return el?.closest?.('.sortable-media-item') || null;
 }
 
+function isMediaActionTarget(event) {
+  return Boolean(event.target.closest('[data-media-move], [data-media-remove]'));
+}
+
 export function bindUploadReordering(renderSavedMediaFn) {
   const gallery = $('#uploadPreviewGallery');
   if (!gallery) return;
   const pointerDrag = { id: null, from: null, startX: 0, startY: 0, active: false };
 
   gallery.addEventListener('click', (event) => {
+    const removeButton = event.target.closest('[data-media-remove]');
+    if (removeButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      const figure = removeButton.closest('.sortable-media-item');
+      removeSelectedMedia(Number(figure?.dataset.index), renderSavedMediaFn);
+      return;
+    }
     const button = event.target.closest('[data-media-move]');
     if (!button) return;
     event.preventDefault();
@@ -112,7 +157,7 @@ export function bindUploadReordering(renderSavedMediaFn) {
 
   gallery.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
-    if (event.target.closest('[data-media-move]')) return;
+    if (isMediaActionTarget(event)) return;
     const figure = event.target.closest('.sortable-media-item');
     if (!figure) return;
     pointerDrag.id = event.pointerId;
@@ -158,7 +203,7 @@ export function bindUploadReordering(renderSavedMediaFn) {
   gallery.addEventListener('pointercancel', endPointerDrag);
 
   gallery.addEventListener('dragstart', (event) => {
-    if (event.target.closest('[data-media-move]')) {
+    if (isMediaActionTarget(event)) {
       event.preventDefault();
       return;
     }

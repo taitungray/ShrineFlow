@@ -179,11 +179,25 @@ function initMobileNavigation() {
   });
 }
 
-export function initTabs() {
+let startCreateHandler = null;
+
+export function initTabs({ onStartCreate } = {}) {
+  if (typeof onStartCreate === 'function') startCreateHandler = onStartCreate;
   $$('[data-view-target]').forEach((item) => {
     item.addEventListener('click', () => {
-      setActiveView(item.dataset.viewTarget, { routePath: item.dataset.routeTarget || '' });
+      const targetView = item.dataset.viewTarget;
+      if (normalizeView(targetView) === 'create') {
+        startCreateHandler?.();
+        setComposerMode('edit');
+      }
+      setActiveView(targetView, { routePath: item.dataset.routeTarget || '' });
     });
+  });
+  document.addEventListener('click', (event) => {
+    const link = event.target?.closest?.('a[href="#/content/new"]');
+    if (!link || link.dataset?.viewTarget) return;
+    startCreateHandler?.();
+    setComposerMode('edit');
   });
   $$('.composer-mode-button').forEach((button) => {
     button.addEventListener('click', () => setComposerMode(button.dataset.composerMode));

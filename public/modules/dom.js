@@ -112,6 +112,15 @@ export function isVideoPath(value = '') {
   return /\.(mp4|m4v|mov|mpeg|mpg|webm|ogv|avi)(?:[?#]|$)/i.test(value);
 }
 
+const DATE_TIME_24H = new Intl.DateTimeFormat('zh-TW', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
 export function formatDate(value) {
-  return new Intl.DateTimeFormat('zh-TW', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  return DATE_TIME_24H.format(new Date(value));
 }

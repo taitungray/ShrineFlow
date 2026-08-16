@@ -21,6 +21,7 @@ import {
   renderSavedMedia,
   renderGenerated,
   initEditorListeners,
+  startNewComposer,
 } from './modules/editor.js';
 import { renderPosts, initContentFilters } from './modules/drafts.js';
 import { initBulkImportListeners } from './modules/bulk-import.js';
@@ -46,6 +47,7 @@ import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modul
 import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
 import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
 import { initHelp } from './modules/help.js';
+import { initDateTime24h } from './modules/datetime-24h.js';
 import { renderBestTimes } from './modules/best-times.js';
 import { renderRemoteSchedule } from './modules/remote-schedule.js';
 
@@ -215,7 +217,8 @@ async function initApp() {
   if (!(await initializeAuth())) return;
   initClientErrorReporter();
   initAuthListeners();
-  initTabs();
+  initTabs({ onStartCreate: startNewComposer });
+  initDateTime24h();
   initHelp();
   initInsightsListeners();
   initInboxListeners();

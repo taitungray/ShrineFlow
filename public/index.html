@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.11" />
+    <link rel="stylesheet" href="/style.css?v=0.6.16" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -219,6 +219,11 @@
             </div>
           </fieldset>
 
+          <div class="composer-generate-action">
+            <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
+            <p class="form-hint" id="formMessage"></p>
+          </div>
+
           <fieldset class="form-group-card composer-target-card">
             <legend class="group-title">🚀 3. 多平台發布與覆寫</legend>
             <div class="field">
@@ -276,7 +281,7 @@
             <button class='btn-secondary permission-hidden' id='requestChangesButton' data-required-permission='content.approve' type='button'>要求修改</button>
             <button class='primary-button permission-hidden' id='approveButton' data-required-permission='content.approve' type='button'>核准版本</button>
           </div>
-            <button class="btn-secondary" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
+            <button class="btn-save" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
             <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
             <button class="primary-button" id="publishNowButton" type="button" aria-label="立即發布" disabled>↗ 立即發布</button>
           </div>
@@ -325,9 +330,6 @@
             </div>
             <div class="version-history-list" id="versionHistoryList" aria-live="polite"></div>
           </section>
-
-          <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
-          <p class="form-hint" id="formMessage"></p>
         </form>
 
         <!-- ========== 預覽區 ========== -->
@@ -342,11 +344,7 @@
 
           <div class="review-preview">
               <p id="previewPlatformStatus" class="platform-status" aria-live="polite"></p>
-              <div class="preview-image-wrap empty" id="previewImageWrap">
-                <div class="preview-empty">
-                  <span>🖼️</span>
-                  <p>媒體預覽</p>
-                </div>
+              <div class="preview-image-wrap empty" id="previewImageWrap" hidden>
                 <div id="previewMediaGallery" class="media-gallery preview-media-gallery" aria-label="作品預覽"></div>
               </div>
               <article class="copy-card">
@@ -1335,6 +1333,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.11" type="module"></script>
+    <script src="/app.js?v=0.6.16" type="module"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
+import { $, escapeHtml, isVideoPath, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
 import {
@@ -7,6 +7,7 @@ import {
   readCreateContentSettings,
   readTargetContentSettings,
 } from './platform-ui.js';
+import { clearUploadPreview } from './upload.js';
 import { api, createIdempotencyKey } from './api.js';
 import {
   buildTargetsPayload,
@@ -433,7 +434,11 @@ export function renderSavedMedia(items = []) {
       : '<figure class="media-item"><img src="' + safeSource + '" alt="' + label + '" loading="lazy" /></figure>';
   }).join('');
   const wrap = $('#previewImageWrap');
-  if (wrap) wrap.classList.toggle('empty', normalized.length === 0);
+  if (wrap) {
+    const isEmpty = normalized.length === 0;
+    wrap.classList.toggle('empty', isEmpty);
+    wrap.hidden = isEmpty;
+  }
 }
 
 function syncArchivedEditorState() {
@@ -596,6 +601,71 @@ export function markEditorDirty(isDirty = true) {
   else clearAutosaveTimer();
   syncEditorActions();
 }
+
+export function startNewComposer() {
+  const previousId = state.savedPost?.id || 'new';
+  clearAutosaveTimer();
+  if (state.autosaveRetryTimer) window.clearTimeout(state.autosaveRetryTimer);
+  state.autosaveRetryTimer = null;
+  state.autosaveIntent += 1;
+  clearRecoverySnapshot(previousId);
+  if (previousId !== 'new') clearRecoverySnapshot('new');
+
+  state.savedPost = null;
+  state.generated = null;
+  state.editorDirty = false;
+  state.selectedTargetAccountIds = [];
+  state.activeTargetId = '';
+  state.selectedPlatform = 'facebook';
+
+  clearUploadPreview(renderSavedMedia);
+  $('#generateForm')?.reset?.();
+
+  const contentTopic = $('#contentTopic');
+  if (contentTopic) contentTopic.value = '';
+  const extraNotes = $('#extraNotes');
+  if (extraNotes) extraNotes.value = '';
+  const facebookText = $('#facebookText');
+  if (facebookText) facebookText.value = '';
+  const reelText = $('#reelText');
+  if (reelText) reelText.value = '';
+  const hashtagsText = $('#hashtagsText');
+  if (hashtagsText) hashtagsText.value = DEFAULT_HASHTAGS.join(' ');
+  const defaultHashtags = $('#defaultHashtags');
+  if (defaultHashtags) defaultHashtags.value = DEFAULT_HASHTAGS.join(' ');
+  const postTypeIntro = document.querySelector('input[name="postType"][value="intro"]');
+  if (postTypeIntro) postTypeIntro.checked = true;
+  const targetScheduledAt = $('#targetScheduledAt');
+  if (targetScheduledAt) targetScheduledAt.value = '';
+  const targetFirstComment = $('#targetFirstComment');
+  if (targetFirstComment) targetFirstComment.value = '';
+  const imageInput = $('#imageInput');
+  if (imageInput) imageInput.value = '';
+
+  const createType = $('#createContentType');
+  const postTypeRadio = createType?.querySelector?.('input[type="radio"][value="post"]');
+  if (postTypeRadio) postTypeRadio.checked = true;
+  renderCreatePublishSpec();
+  renderCreateContentSettings('facebook', 'post');
+  renderTargetAccountControls();
+
+  const badge = $('#draftState');
+  if (badge) {
+    badge.textContent = '尚未產生';
+    badge.classList.remove('ready');
+  }
+  const versionHistory = $('#versionHistory');
+  if (versionHistory) versionHistory.hidden = true;
+  setAutosaveStatus('', 'idle');
+  setFormMessage('');
+  setPreviewMessage('');
+  updateLivePreview();
+  renderPreviewPlatformTabs();
+  syncEditorActions();
+  const saveBtn = $('#saveButton');
+  if (saveBtn) saveBtn.disabled = true;
+}
+
 export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   clearAutosaveTimer();
   if (state.autosaveRetryTimer) window.clearTimeout(state.autosaveRetryTimer);
@@ -663,7 +733,9 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
 
 export function currentDraft() {
   const selectedServerPaths = state.selectedMediaItems.map((item) => item.serverPath).filter(Boolean);
-  const mediaPaths = selectedServerPaths.length ? selectedServerPaths : mediaPathsOf(state.generated || {});
+  const mediaPaths = state.selectedMediaItems.length
+    ? selectedServerPaths
+    : mediaPathsOf(state.generated || {});
   const accounts = currentClient()?.accounts || state.accounts || [];
   const activeAccount = accounts.find((account) => account.id === state.activeTargetId)
     || accounts.find((account) => state.selectedTargetAccountIds.includes(account.id))
