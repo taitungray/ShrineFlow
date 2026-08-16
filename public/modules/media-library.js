@@ -91,12 +91,19 @@ export function renderMediaLibrary() {
       ? '<video src="' + escapeHtml(src) + '" muted playsinline preload="metadata" aria-label="' + escapeHtml(name) + '"></video>'
       : '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(name) + '" loading="lazy" />';
     const firstPost = item.posts[0];
-    return '<article class="media-library-card">'
-      + '<div class="media-library-preview" data-type="' + (video ? 'video' : 'image') + '">' + preview + '</div>'
+    const isUsed = item.posts.length > 0;
+    const usageBadge = isUsed
+      ? '<span class="media-usage-badge is-used" title="已使用於 ' + item.posts.length + ' 篇內容">✓ ' + item.posts.length + ' 篇引用</span>'
+      : '<span class="media-usage-badge is-unused">未使用</span>';
+    return '<article class="media-library-card' + (isUsed ? '' : ' is-unused') + '">'
+      + '<div class="media-library-preview" data-type="' + (video ? 'video' : 'image') + '">'
+      + preview
+      + usageBadge
+      + '</div>'
       + '<div class="media-library-body"><strong title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</strong>'
-      + '<small>使用於 ' + item.posts.length + ' 篇內容' + (item.latestAt ? ' · ' + escapeHtml(formatDate(item.latestAt)) : '') + '</small>'
+      + '<small>' + (isUsed ? '使用於 ' + item.posts.length + ' 篇內容' : '尚未被任何內容使用') + (item.latestAt ? ' · ' + escapeHtml(formatDate(item.latestAt)) : '') + '</small>'
       + '<span class="content-platforms">' + (platforms || '<span class="helper">尚未指定平台</span>') + '</span></div>'
-      + '<div class="media-library-actions"><button class="btn-text" type="button" data-media-post-id="' + escapeHtml(firstPost.id) + '">查看內容</button></div>'
+      + '<div class="media-library-actions">' + (firstPost ? '<button class="btn-text" type="button" data-media-post-id="' + escapeHtml(firstPost.id) + '">查看相關貼文 →</button>' : '<span class="helper">可於新增內容引用</span>') + '</div>'
       + '</article>';
   }).join('');
 }

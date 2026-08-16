@@ -7,6 +7,7 @@ import { setActiveView } from './tabs.js';
 import { contentStageLabel, postStatusLabel, targetStatusSummary } from './status.js';
 
 let refreshListsCallback = null;
+const selectedPostIds = new Set();
 
 const filters = {
   query: '',
@@ -85,6 +86,27 @@ function renderEmpty(container, isFiltered) {
   });
 }
 
+function updateBatchBar(visiblePosts = []) {
+  const batchBar = $('#contentBatchBar');
+  const countEl = $('#contentSelectedCount');
+  const selectAll = $('#contentSelectAll');
+  if (!batchBar) return;
+
+  const count = selectedPostIds.size;
+  if (countEl) countEl.textContent = String(count);
+
+  if (count > 0) {
+    batchBar.classList.remove('is-hidden');
+  } else {
+    batchBar.classList.add('is-hidden');
+  }
+
+  if (selectAll && visiblePosts.length > 0) {
+    const allSelected = visiblePosts.every((p) => selectedPostIds.has(p.id));
+    selectAll.checked = allSelected;
+  }
+}
+
 export async function runPostAction(action, postId) {
   const actionNames = {
     archive: '封存',
@@ -118,17 +140,62 @@ export async function runPostAction(action, postId) {
     showToast(error.message || `${actionName}失敗`, 'error');
   }
 }
+
+async function runBatchPostAction(action) {
+  if (!selectedPostIds.size) return;
+  const actionNames = {
+    archive: '封存',
+    restore: '還原',
+    'promote-idea': '轉成草稿',
+  };
+  const actionName = actionNames[action] || '批次操作';
+  const count = selectedPostIds.size;
+  if (!window.confirm(`確定要批次${actionName}已選取的 ${count} 篇貼文嗎？`)) return;
+
+  const ids = Array.from(selectedPostIds);
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const id of ids) {
+    try {
+      const options = { method: 'POST' };
+      if (action === 'promote-idea') {
+        options.method = 'PATCH';
+        options.headers = { 'Content-Type': 'application/json' };
+        options.body = JSON.stringify({ contentStage: 'draft', versionSource: 'manual' });
+      }
+      const endpoint = action === 'promote-idea'
+        ? '/api/posts/' + encodeURIComponent(id)
+        : '/api/posts/' + encodeURIComponent(id) + '/' + action;
+      await api(endpoint, options);
+      successCount += 1;
+    } catch {
+      errorCount += 1;
+    }
+  }
+
+  selectedPostIds.clear();
+  showToast(`批次${actionName}完成：成功 ${successCount} 篇` + (errorCount ? `，失敗 ${errorCount} 篇` : ''), successCount ? 'success' : 'error');
+  if (refreshListsCallback) await refreshListsCallback();
+  else renderPosts();
+}
+
 export function renderPosts() {
   const container = $('#postsList');
   if (!container) return;
   const visiblePosts = state.posts.filter(matchesFilters);
   if (!visiblePosts.length) {
+    selectedPostIds.clear();
+    updateBatchBar([]);
     renderEmpty(container, Boolean(state.posts.length));
     return;
   }
 
+  updateBatchBar(visiblePosts);
+
   container.className = 'record-list content-list';
   container.innerHTML = visiblePosts.slice(0, 40).map((post) => {
+    const isSelected = selectedPostIds.has(post.id);
     const firstMedia = previewMediaSrc(mediaPathsOf(post)[0]);
     const thumbnail = !firstMedia ? '<span aria-hidden="true">✦</span>'
       : isVideoPath(firstMedia)
@@ -163,7 +230,11 @@ export function renderPosts() {
         + '<button class="content-card-action" type="button" data-post-action="hide" data-post-id="' + escapeHtml(post.id) + '">隱藏</button>';
     const badgeStatus = post.hiddenAt ? 'hidden' : (contentStage === 'idea' ? 'idea' : status);
     const badgeLabel = post.hiddenAt ? '已隱藏' : (contentStage === 'idea' ? stageLabel : statusLabel(status));
-    return '<article class="record-card content-card" data-status="' + escapeHtml(post.hiddenAt ? 'hidden' : status) + '">' +
+    
+    return '<article class="record-card content-card' + (isSelected ? ' is-selected' : '') + '" data-status="' + escapeHtml(post.hiddenAt ? 'hidden' : status) + '">' +
+      '<label class="content-select-label" title="選取貼文">' +
+      '<input type="checkbox" class="content-select-checkbox" data-select-post-id="' + escapeHtml(post.id) + '"' + (isSelected ? ' checked' : '') + ' aria-label="選取貼文" />' +
+      '</label>' +
       '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(post.id) + '" aria-label="開啟貼文 ' + escapeHtml(postTitle(post)) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
       '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>' +
@@ -177,7 +248,18 @@ export function renderPosts() {
     event.stopPropagation();
     runPostAction(button.dataset.postAction, button.dataset.postId);
   }));
+
+  container.querySelectorAll('[data-select-post-id]').forEach((checkbox) => {
+    checkbox.addEventListener('change', (event) => {
+      event.stopPropagation();
+      const id = checkbox.dataset.selectPostId;
+      if (checkbox.checked) selectedPostIds.add(id);
+      else selectedPostIds.delete(id);
+      renderPosts();
+    });
+  });
 }
+
 export function initContentFilters(refreshListsFn = null) {
   refreshListsCallback = refreshListsFn;
   const search = $('#contentSearch');
@@ -197,6 +279,26 @@ export function initContentFilters(refreshListsFn = null) {
     filters.stage = input.value;
     renderPosts();
   }));
+
+  // Batch actions
+  $('#contentSelectAll')?.addEventListener('change', (event) => {
+    const visiblePosts = state.posts.filter(matchesFilters);
+    if (event.target.checked) {
+      visiblePosts.forEach((p) => selectedPostIds.add(p.id));
+    } else {
+      selectedPostIds.clear();
+    }
+    renderPosts();
+  });
+
+  $('#btnBatchArchive')?.addEventListener('click', () => runBatchPostAction('archive'));
+  $('#btnBatchRestore')?.addEventListener('click', () => runBatchPostAction('restore'));
+  $('#btnBatchPromoteIdea')?.addEventListener('click', () => runBatchPostAction('promote-idea'));
+  $('#btnBatchClear')?.addEventListener('click', () => {
+    selectedPostIds.clear();
+    renderPosts();
+  });
+
   $('#ideaCaptureForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const topic = $('#ideaTopic')?.value?.trim() || '';
@@ -239,5 +341,6 @@ export async function loadPost(postId) {
     : post.status === 'archived'
       ? '貼文已封存，請回到內容列表還原後再編輯。'
       : '已載入貼文。');
-  const panel = $('#reviewPanel');  if (panel) window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
+  const panel = $('#reviewPanel');
+  if (panel) window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
 }

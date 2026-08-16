@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.21" />
+    <link rel="stylesheet" href="/style.css?v=0.6.24" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -72,21 +72,21 @@
       <nav class="app-nav" aria-label="工作區導覽">
         <p class="nav-group-label">工作區</p>
         <a class="app-nav-item active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span aria-hidden="true">⌂</span>總覽</a>
-        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span>內容</a>
-        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span>日曆</a>
+        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span>內容<span class="nav-badge" id="navDraftsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span>日曆<span class="nav-badge" id="navScheduleBadge" hidden></span></a>
         <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span aria-hidden="true">▧</span>素材庫</a>
         <p class="nav-group-label nav-group-label-spaced">管理</p>
         <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
         <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
-        <a class="app-nav-item nav-secondary" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
+        <a class="app-nav-item nav-secondary" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
         <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">◌</span>成效</a>
-        <a class="app-nav-item nav-secondary" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
-      <a class='app-nav-item nav-secondary permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列</a>
+        <a class="app-nav-item nav-secondary" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
+        <a class='app-nav-item nav-secondary permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
       </nav>
       <div class="sidebar-footer">
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
         <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
-        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span aria-hidden="true">⚠</span>錯誤記錄</a>
+        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span aria-hidden="true">⚠</span>錯誤記錄<span class="nav-badge" id="navErrorsBadge" hidden></span></a>
         <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
         <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span aria-hidden="true">?</span>幫助</a>
       </div>
@@ -100,25 +100,32 @@
         <!-- ========== 總覽 ========== -->
         <section class="panel overview-panel" id="overviewPanel" data-view-panel="overview">
           <div class="panel-heading overview-heading">
-            <p class="panel-lede">集中查看內容進度、排程與平台發布狀態。</p>
+            <p class="panel-lede">集中掌握多平台內容進度、待辦審核與發布異常狀態。</p>
             <button class="primary-button" type="button" data-view-target="create" data-route-target="content/new" aria-label="新增內容">＋ 新增內容</button>
           </div>
           <div class="overview-summary" aria-label="內容摘要">
             <article class="summary-card"><span class="summary-label">全部內容</span><strong id="overviewPostCount">—</strong><small>目前品牌</small></article>
-            <article class="summary-card"><span class="summary-label">待排程</span><strong id="overviewScheduledCount">—</strong><small>即將發布</small></article>
-            <article class="summary-card"><span class="summary-label">需要處理</span><strong id="overviewAttentionCount">—</strong><small>失敗或未完成</small></article>
+            <article class="summary-card"><span class="summary-label">待發排程</span><strong id="overviewScheduledCount">—</strong><small>即將發布</small></article>
+            <article class="summary-card"><span class="summary-label">待審核</span><strong id="overviewReviewCount">—</strong><small>佇列待審</small></article>
+            <article class="summary-card" id="overviewAttentionSummaryCard"><span class="summary-label">需要處理</span><strong id="overviewAttentionCount">—</strong><small id="overviewAttentionCardSub">失敗或未完成</small></article>
           </div>
           <div class="overview-grid">
-            <fieldset class="form-group-card quick-actions-card">
-              <legend class="group-title">快速開始</legend>
-              <div class="quick-actions">
-                <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><strong>建立內容</strong><small>從母稿開始編輯</small></button>
-                <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><strong>查看內容</strong><small>管理草稿與已發布</small></button>
-                <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><strong>查看日曆</strong><small>掌握發布節奏</small></button>
-              </div>
-            </fieldset>
+            <div class="overview-col-left">
+              <fieldset class="form-group-card overview-attention-card" id="overviewAttentionCard">
+                <legend class="group-title">待辦與警示</legend>
+                <div id="overviewAttentionList" class="overview-attention-list"><p class="helper">檢查待辦事項中…</p></div>
+              </fieldset>
+              <fieldset class="form-group-card quick-actions-card">
+                <legend class="group-title">快速開始</legend>
+                <div class="quick-actions">
+                  <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><strong>建立內容</strong><small>從母稿開始編輯</small></button>
+                  <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><strong>內容管理</strong><small>草稿與已發布清單</small></button>
+                  <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><strong>發布日曆</strong><small>掌握社群發布節奏</small></button>
+                </div>
+              </fieldset>
+            </div>
             <fieldset class="form-group-card overview-recent-card">
-              <legend class="group-title">最近更新</legend>
+              <legend class="group-title">最近內容動態</legend>
               <div id="overviewRecentList" class="overview-recent-list"><p class="helper">載入最近內容中…</p></div>
             </fieldset>
           </div>
@@ -716,6 +723,18 @@
             </div>
             <button class="btn-secondary" type="submit">保存</button>
           </form>
+          <div class="content-batch-bar is-hidden" id="contentBatchBar" aria-label="批次操作列">
+            <label class="checkbox-row content-select-all-wrap">
+              <input type="checkbox" id="contentSelectAll" aria-label="全選目前顯示的內容" />
+              <span>全選 (<strong id="contentSelectedCount">0</strong>)</span>
+            </label>
+            <div class="content-batch-actions">
+              <button class="btn-secondary" id="btnBatchArchive" type="button">批次封存</button>
+              <button class="btn-secondary" id="btnBatchRestore" type="button">批次還原</button>
+              <button class="btn-secondary" id="btnBatchPromoteIdea" type="button">轉為草稿</button>
+              <button class="btn-text" id="btnBatchClear" type="button">取消選取</button>
+            </div>
+          </div>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📝</span>
@@ -1334,6 +1353,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.21" type="module"></script>
+    <script src="/app.js?v=0.6.24" type="module"></script>
   </body>
 </html>

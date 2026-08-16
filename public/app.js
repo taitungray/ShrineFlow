@@ -385,6 +385,26 @@ async function initApp() {
     });
   }
 
+  // Power-user keyboard shortcuts
+  window.addEventListener('keydown', (event) => {
+    // Ctrl+S / Cmd+S: Save Draft
+    if ((event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')) {
+      const composer = $('#composerPanel');
+      if (composer && !composer.classList.contains('is-hidden')) {
+        event.preventDefault();
+        const saveBtn = $('#saveButton');
+        if (saveBtn && !saveBtn.disabled) {
+          saveBtn.click();
+        }
+      }
+    }
+    // Alt+N: New Content
+    if (event.altKey && (event.key === 'n' || event.key === 'N')) {
+      event.preventDefault();
+      location.hash = '#/content/new';
+    }
+  });
+
   loadData().catch((error) => showToast(error.message, 'error'));
   loadSettings().catch((error) => showToast(error.message, 'error'));
 }

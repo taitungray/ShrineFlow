@@ -278,7 +278,10 @@ export function buildTargetsPayload(draft) {
 export function initTargetListeners({ onActiveTargetChange } = {}) {
   const checks = $('#targetAccountChecks');
   if (checks) {
-    checks.addEventListener('change', () => {
+    checks.addEventListener('change', (event) => {
+      if (event.target && event.target.checked && event.target.value) {
+        state.activeTargetId = event.target.value;
+      }
       syncSelectedTargetAccountIds();
       renderTargetAccountControls();
       if (typeof onActiveTargetChange === 'function') onActiveTargetChange();
