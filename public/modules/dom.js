@@ -25,6 +25,18 @@ export function setFieldValue(el, value) {
   if (radio && !radio.disabled) radio.checked = true;
 }
 
+export function bindDialogDismiss(dialog) {
+  if (!dialog) return;
+  dialog.querySelectorAll('.close-button').forEach((button) => {
+    button.type = 'button';
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      dialog.close();
+    });
+  });
+}
+
 export function showToast(message, type = 'info') {
   const toast = $('#toast');
   if (!toast) return;

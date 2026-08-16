@@ -1,4 +1,4 @@
-import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
+import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss } from './dom.js';
 import { state, PLATFORM_NAMES, currentClient } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api } from './api.js';
@@ -270,6 +270,7 @@ export function initCalendarControls(refreshListsFn) {
 export function initScheduleDialog(refreshListsFn) {
   const dialog = $('#scheduleDialog');
   if (dialog) {
+    bindDialogDismiss(dialog);
     dialog.addEventListener('close', () => {
       reschedulingItem = null;
     });
@@ -387,6 +388,7 @@ export function initScheduleDialog(refreshListsFn) {
   const form = $('#scheduleForm');
   if (form) {
     form.addEventListener('submit', async (event) => {
+      if (event.submitter?.value === 'cancel' || event.submitter?.classList.contains('close-button')) return;
       event.preventDefault();
       try {
         const mode = fieldValue($('#scheduleMode')) || 'manual';
@@ -432,6 +434,7 @@ export function initScheduleDialog(refreshListsFn) {
         showToast(message, 'success');
       } catch (error) {
         setPreviewMessage(error.message, 'error');
+        showToast(error.message, 'error');
       }
     });
   }

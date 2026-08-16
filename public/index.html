@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.91" />
+    <link rel="stylesheet" href="/style.css?v=0.5.92" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -1075,7 +1075,7 @@
 
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
-        <button class="close-button" value="cancel" aria-label="關閉">×</button>
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
         <p class="section-tag">PUBLISH</p>
         <h3>排程發布</h3>
         <div class="field">
@@ -1127,7 +1127,7 @@
     </dialog>
     <dialog id="templateDialog" class="module-dialog">
       <form method="dialog" id="templateForm">
-        <button class="close-button" value="cancel" aria-label="關閉">×</button>
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
         <p class="section-tag">TEMPLATE</p>
         <h3>建立可重用模板</h3>
         <p class="dialog-lede">套用模板只會帶入欄位，不會直接覆蓋已保存內容。</p>
@@ -1184,7 +1184,7 @@
     </dialog>
     <dialog id="campaignDialog" class="module-dialog campaign-dialog">
       <form method="dialog" id="campaignForm">
-        <button class="close-button" value="cancel" aria-label="關閉">×</button>
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
         <p class="section-tag">CAMPAIGN</p>
         <h3>建立內容活動</h3>
         <p class="dialog-lede">活動只整理內容與發布進度，不會改變內容本身。</p>
@@ -1223,6 +1223,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.91" type="module"></script>
+    <script src="/app.js?v=0.5.92" type="module"></script>
   </body>
 </html>

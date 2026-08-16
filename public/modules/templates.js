@@ -1,4 +1,4 @@
-import { $, escapeHtml, formatDate, showToast } from './dom.js';
+import { $, escapeHtml, formatDate, showToast, bindDialogDismiss } from './dom.js';
 import { api } from './api.js';
 import { state, PLATFORM_NAMES, currentClient } from './state.js';
 import { setActiveView } from './tabs.js';
@@ -140,7 +140,9 @@ export function initTemplateManager(onChanged) {
 
   const dialog = $('#templateDialog');
   const form = $('#templateForm');
+  bindDialogDismiss(dialog);
   form?.addEventListener('submit', async (event) => {
+    if (event.submitter?.value === 'cancel' || event.submitter?.classList.contains('close-button')) return;
     event.preventDefault();
     const templateId = form.dataset.templateId;
     const payload = readTemplateForm();

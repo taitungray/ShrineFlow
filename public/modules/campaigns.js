@@ -1,4 +1,4 @@
-import { $, escapeHtml, formatDate, showToast } from './dom.js';
+import { $, escapeHtml, formatDate, showToast, bindDialogDismiss } from './dom.js';
 import { api } from './api.js';
 import { state } from './state.js';
 import { loadPost } from './drafts.js';
@@ -131,7 +131,9 @@ export function initCampaignManager(onChanged) {
 
   const dialog = $('#campaignDialog');
   const form = $('#campaignForm');
+  bindDialogDismiss(dialog);
   form?.addEventListener('submit', async (event) => {
+    if (event.submitter?.value === 'cancel' || event.submitter?.classList.contains('close-button')) return;
     event.preventDefault();
     const campaignId = form.dataset.campaignId;
     const payload = readCampaignForm();
