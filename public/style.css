@@ -3591,6 +3591,11 @@ dialog:not([open]) {
   cursor: pointer;
 }
 .content-card-action:hover { background: var(--brand-soft); }
+a.content-card-action {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 .content-card[data-status="archived"],
 .content-card[data-status="hidden"] { opacity: 0.78; }
 .content-status[data-status="archived"],
@@ -4543,69 +4548,11 @@ button.module-summary-card:focus-visible {
 }
 
 .publishing-log-list {
-  display: grid;
   gap: 10px;
 }
 
-.publishing-log-card {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg-card);
-}
-
-.publishing-log-icon {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--brand);
-  background: var(--brand-soft);
-  font-weight: 900;
-}
-
-.publishing-log-icon[data-status="published"] {
-  color: var(--success);
-  background: var(--success-soft);
-}
-
-.publishing-log-icon[data-status="partial_success"] {
-  color: #9a5b00;
-  background: #fff4d6;
-}
-
-.publishing-log-icon[data-status="failed"] {
-  color: var(--danger);
-  background: var(--danger-soft);
-}
-
-.publishing-log-main {
-  min-width: 0;
-}
-
-.publishing-log-heading {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.publishing-log-heading strong {
-  overflow: hidden;
-  color: var(--text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.publishing-log-main > p {
-  margin-top: 5px;
-  color: var(--text-tertiary);
-  font-size: 0.72rem;
+.publishing-log-card .record-body {
+  align-self: flex-start;
 }
 
 .publishing-log-error {
@@ -4616,14 +4563,7 @@ button.module-summary-card:focus-visible {
   background: var(--danger-soft);
   font-size: 0.72rem;
   line-height: 1.5;
-}
-
-.publishing-log-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 4px 10px;
+  white-space: normal;
 }
 
 .platform-connection-grid {
@@ -4898,22 +4838,6 @@ button.module-summary-card:focus-visible {
 
   .media-library-actions {
     padding-inline: 10px;
-  }
-
-  .publishing-log-card {
-    grid-template-columns: 32px minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .publishing-log-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .publishing-log-actions {
-    grid-column: 2;
-    justify-content: flex-start;
-    padding-top: 4px;
   }
 
   .platform-connection-card {

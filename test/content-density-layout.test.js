@@ -29,6 +29,16 @@ test('calendar hides crisis pause and duplicate agenda in month view', async () 
   assert.match(css, /data-calendar-view="month"\] \.calendar-agenda/, 'month view hides the duplicate agenda list');
 });
 
+test('publishing logs reuse content-card density', async () => {
+  const js = await fs.readFile(path.join(root, 'public', 'modules', 'publishing-logs.js'), 'utf8');
+
+  assert.match(js, /record-card content-card/, 'publishing logs use the same card shell as content');
+  assert.match(js, /record-thumb/, 'thumbnail is visible without opening the post');
+  assert.match(js, /excerpt/, 'copy excerpt distinguishes same-title rows');
+  assert.match(js, /platform-chip/, 'platform chip matches content list');
+  assert.match(js, /copyOverride/, 'per-target override copy is preferred over mother copy');
+});
+
 test('group titles are room names instead of emoji pills', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
