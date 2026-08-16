@@ -1,10 +1,12 @@
-import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss } from './dom.js';
-import { state, PLATFORM_NAMES, currentClient } from './state.js';
+import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss, isVideoPath } from './dom.js';
+import { state, PLATFORM_NAMES, currentClient, mediaPathsOf } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api, createIdempotencyKey } from './api.js';
 import { getActiveTarget } from './targets-ui.js';
-import { targetStatusLabel } from './status.js';
+import { targetStatusLabel, targetStatusSummary } from './status.js';
 import { humanizePlatformError } from './platform-errors.js';
+import { previewMediaSrc } from './media-preview.js';
+import { loadPost, runPostAction } from './drafts.js';
 
 let reschedulingItem = null;
 let draggedTargetId = '';
@@ -40,9 +42,65 @@ function calendarLabel(start, end = start) {
   return formatter.formatRange ? formatter.formatRange(start, end) : `${formatter.format(start)} – ${formatter.format(end)}`;
 }
 
+function visibleCalendarDays() {
+  const days = [];
+  if (calendarView === 'week') {
+    const start = startOfWeek(calendarCursor);
+    for (let index = 0; index < 7; index += 1) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      days.push(date);
+    }
+    return days;
+  }
+  const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - ((first.getDay() || 7) - 1));
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    days.push(date);
+  }
+  return days;
+}
+
+function scheduleListItems() {
+  if (calendarView === 'list') return state.schedule.slice(0, 40);
+  const keys = new Set(visibleCalendarDays().map(dateKey));
+  return state.schedule.filter((item) => keys.has(dateKey(new Date(item.scheduledAt)))).slice(0, 40);
+}
+
+function schedulePostTitle(post) {
+  return post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
+}
+
+function schedulePostText(post) {
+  return String(post?.facebook || post?.text || post?.reel || '').trim();
+}
+
+function platformLabel(platformId) {
+  if (platformId === 'facebook') return 'Facebook';
+  if (platformId === 'instagram') return 'Instagram';
+  if (platformId === 'threads') return 'Threads';
+  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
+}
+
+function renderCalendarTokenNotice() {
+  const notice = $('#calendarConnectionNotice');
+  if (!notice) return;
+  const error = String(state.facebookStatus?.error || '');
+  const expired = /Token 已過期|expired access token|session has expired/i.test(error);
+  notice.classList.toggle('is-hidden', !expired);
+  if (!expired) {
+    notice.innerHTML = '';
+    return;
+  }
+  notice.innerHTML = 'Facebook Token 已過期，取消／改時間會失敗。可先隱藏本機紀錄，或<a href="#/settings/facebook">更新粉專 Token</a>。';
+}
+
 function calendarItemMarkup(item) {
   const post = state.posts.find((record) => record.id === item.postId);
-  const title = post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
+  const title = schedulePostTitle(post);
   const channel = PLATFORM_NAMES[item.channel] || item.channel || '平台';
   const draggable = item.status === 'scheduled' ? ' draggable="true"' : '';
   return '<button class="calendar-item" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
@@ -63,25 +121,8 @@ function renderCalendarGrid() {
     return;
   }
 
-  const days = [];
-  let start;
-  if (calendarView === 'week') {
-    start = startOfWeek(calendarCursor);
-    for (let index = 0; index < 7; index += 1) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + index);
-      days.push(date);
-    }
-  } else {
-    const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
-    start = new Date(first);
-    start.setDate(first.getDate() - ((first.getDay() || 7) - 1));
-    for (let index = 0; index < 42; index += 1) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + index);
-      days.push(date);
-    }
-  }
+  const days = visibleCalendarDays();
+  const start = days[0];
 
   const end = days[days.length - 1];
   if (label) label.textContent = calendarView === 'week' ? calendarLabel(start, end) : new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long' }).format(calendarCursor);
@@ -123,24 +164,28 @@ function scheduleActions(item) {
   const buttons = [];
   if (item.status === 'scheduled') {
     buttons.push(
-      '<button class="btn-text schedule-action" type="button" data-schedule-action="reschedule" data-target-id="'
+      '<button class="content-card-action" type="button" data-schedule-action="reschedule" data-target-id="'
       + escapeHtml(item.targetId) + '">改時間</button>',
-      '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
+      '<button class="content-card-action schedule-action-danger" type="button" data-schedule-action="cancel" data-target-id="'
       + escapeHtml(item.targetId) + '">取消</button>',
+      item.postId
+        ? '<button class="content-card-action" type="button" data-post-action="hide" data-post-id="'
+          + escapeHtml(item.postId) + '">隱藏</button>'
+        : '',
     );
   }
   const retryBlocked = ['REMOTE_PUBLISH_RECONCILIATION_REQUIRED', 'REMOTE_SCHEDULE_RECONCILIATION_REQUIRED']
     .includes(item.lastError?.code);
   if (!retryBlocked && (item.status === 'failed' || item.status === 'retrying')) {
     buttons.push(
-      '<button class="btn-text schedule-action" type="button" data-schedule-action="retry" data-target-id="'
+      '<button class="content-card-action" type="button" data-schedule-action="retry" data-target-id="'
       + escapeHtml(item.targetId) + '" data-post-id="'
       + escapeHtml(item.postId) + '">重發</button>',
     );
   }
   const firstComment = item.channel === 'instagram' && item.firstComment?.text
     ? item.firstComment.status === 'failed'
-      ? '<button class="btn-text schedule-action schedule-action-danger" type="button" data-schedule-action="first-comment-retry" data-target-id="'
+      ? '<button class="content-card-action schedule-action-danger" type="button" data-schedule-action="first-comment-retry" data-target-id="'
         + escapeHtml(item.targetId) + '" data-post-id="' + escapeHtml(item.postId || '') + '">重試首則留言</button>'
       : item.firstComment.status === 'pending'
         ? '<span class="schedule-child-status">首則留言處理中</span>'
@@ -149,7 +194,7 @@ function scheduleActions(item) {
           : ''
     : '';
   if (!buttons.length && !firstComment) return '';
-  return '<div class="schedule-actions">' + buttons.join('') + firstComment + '</div>';
+  return '<span class="content-card-actions">' + buttons.filter(Boolean).join('') + firstComment + '</span>';
 }
 
 function scheduleQueueLabel(channel) {
@@ -168,48 +213,77 @@ export function renderSchedule() {
   const container = $('#scheduleList');
   if (!container) return;
   renderCalendarGrid();
-  if (!state.schedule.length) {
+  renderCalendarTokenNotice();
+  const items = scheduleListItems();
+  if (!items.length) {
     container.className = 'list-empty';
-    container.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>還沒有排程，產生並儲存草稿後即可排程發布。</p></div>';
+    container.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>'
+      + (state.schedule.length ? '這個日期範圍沒有排程。' : '還沒有排程，產生並儲存草稿後即可排程發布。')
+      + '</p></div>';
     return;
   }
-  container.className = 'record-list';
-  container.innerHTML = state.schedule.slice(0, 8).map((item) => {
-    const post = state.posts.find((record) => record.id === item.postId);
-    const name = escapeHtml(post ? (post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容') : '未命名內容');
-    const status = targetStatusLabel(item.status);
-    const error = item.lastError?.message ? ' title="' + escapeHtml(item.lastError.message) + '"' : '';
-    const attempts = item.attempts > 1 ? ' · 第 ' + item.attempts + ' 次' : '';
-    const channel = PLATFORM_NAMES[item.channel] || item.channel || '未指定平台';
-    const account = state.accounts.find((entry) => entry.id === item.accountId);
-    const accountName = account?.name || PLATFORM_NAMES[item.channel] || item.channel || '未指定平台';
-    const platform = state.platforms.find((entry) => entry.id === item.channel);
-    const contentType = platform?.contentTypes?.find((entry) => entry.id === item.contentType);
-    const format = contentType?.name || item.contentType || '貼文';
-    const mode = item.scheduleMode === 'queue' ? ' ・ 佇列' : '';
-    return '<div class="schedule-card" id="schedule-item-' + escapeHtml(item.targetId) + '"' + error + '><span class="calendar-icon">' + new Date(item.scheduledAt).getDate() + '</span><span><strong>' + name + '</strong><small>' + escapeHtml(channel) + ' ・ ' + escapeHtml(accountName) + ' ・ ' + escapeHtml(format) + mode + ' ・ ' + formatDate(item.scheduledAt) + attempts + '</small></span><em data-status="' + escapeHtml(item.status) + '">' + escapeHtml(status) + '</em>' + scheduleActions(item) + '</div>';
+  container.className = 'record-list content-list';
+  container.innerHTML = items.map((item) => {
+    const post = state.posts.find((record) => record.id === item.postId) || {};
+    const firstMedia = previewMediaSrc(mediaPathsOf(post)[0] || item.mediaPaths?.[0]);
+    const thumbnail = !firstMedia ? '<span aria-hidden="true">✦</span>'
+      : isVideoPath(firstMedia)
+        ? '<video src="' + escapeHtml(firstMedia) + '" muted playsinline preload="metadata"></video>'
+        : '<img src="' + escapeHtml(firstMedia) + '" alt="" />';
+    const text = schedulePostText(post);
+    const excerpt = escapeHtml(text.slice(0, 92)) + (text.length > 92 ? '…' : '');
+    const status = String(item.status || 'draft');
+    const updated = post.updatedAt || post.createdAt || item.createdAt;
+    const meta = [
+      updated ? formatDate(updated) : '',
+      item.scheduledAt ? '排程：' + formatDate(item.scheduledAt) : '',
+    ].filter(Boolean).join(' · ');
+    const platformChips = '<span class="platform-chip" data-platform="' + escapeHtml(item.channel || '') + '">'
+      + escapeHtml(platformLabel(item.channel)) + '</span>';
+    const targetSummary = targetStatusSummary([{
+      platformId: item.channel,
+      status: item.status,
+    }], PLATFORM_NAMES);
+    const title = schedulePostTitle(post);
+    return '<article class="record-card content-card" id="schedule-item-' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(status) + '">'
+      + '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(item.postId || '') + '" aria-label="開啟貼文 ' + escapeHtml(title) + '">'
+      + '<span class="record-thumb">' + thumbnail + '</span>'
+      + '<span class="record-body"><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>'
+      + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips
+      + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>'
+      + '</button>'
+      + '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">'
+      + escapeHtml(targetStatusLabel(status)) + '</em>' + scheduleActions(item) + '</span>'
+      + '</article>';
   }).join('');
+  container.querySelectorAll('[data-open-post]').forEach((button) => button.addEventListener('click', () => {
+    if (button.dataset.openPost) loadPost(button.dataset.openPost);
+  }));
+  container.querySelectorAll('[data-post-action]').forEach((button) => button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    runPostAction(button.dataset.postAction, button.dataset.postId);
+  }));
 }
 
 export function initCalendarControls(refreshListsFn) {
   $('#calendarPrevious')?.addEventListener('click', () => {
     if (calendarView === 'week') calendarCursor.setDate(calendarCursor.getDate() - 7);
     else calendarCursor.setMonth(calendarCursor.getMonth() - 1);
-    renderCalendarGrid();
+    renderSchedule();
   });
   $('#calendarNext')?.addEventListener('click', () => {
     if (calendarView === 'week') calendarCursor.setDate(calendarCursor.getDate() + 7);
     else calendarCursor.setMonth(calendarCursor.getMonth() + 1);
-    renderCalendarGrid();
+    renderSchedule();
   });
   $('#calendarToday')?.addEventListener('click', () => {
     calendarCursor = new Date();
     calendarCursor.setHours(0, 0, 0, 0);
-    renderCalendarGrid();
+    renderSchedule();
   });
   document.querySelectorAll('input[name="calendarView"]').forEach((input) => input.addEventListener('change', () => {
     calendarView = input.value;
-    renderCalendarGrid();
+    renderSchedule();
   }));
   $('#calendarGrid')?.addEventListener('click', (event) => {
     const item = event.target.closest('[data-calendar-target-id]');

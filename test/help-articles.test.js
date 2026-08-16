@@ -29,6 +29,7 @@ const REQUIRED_IDS = [
   'facebook-story-no-schedule',
   'facebook-schedule-window',
   'facebook-remote-schedule',
+  'content-hide',
   'facebook-duplicate-posts',
   'instagram-connect',
   'instagram-not-linked',

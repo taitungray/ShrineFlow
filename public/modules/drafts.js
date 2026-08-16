@@ -31,14 +31,21 @@ function postText(post) {
 function matchesFilters(post) {
   const targets = targetsOf(post);
   const postStatus = String(post.status || 'draft');
-  const statusMatches = filters.status === 'archived'
-    ? postStatus === 'archived'
-    : filters.status === 'all'
-      ? postStatus !== 'archived'
-      : postStatus === filters.status;
+  const hidden = Boolean(post.hiddenAt);
+  if (filters.status === 'hidden') {
+    if (!hidden) return false;
+  } else {
+    if (hidden) return false;
+    const statusMatches = filters.status === 'archived'
+      ? postStatus === 'archived'
+      : filters.status === 'all'
+        ? postStatus !== 'archived'
+        : postStatus === filters.status;
+    if (!statusMatches) return false;
+  }
   const platformMatches = filters.platform === 'all' || targets.some((target) => target.platformId === filters.platform);
   const stageMatches = filters.stage === 'all' || String(post.contentStage || 'draft') === filters.stage;
-  if (!statusMatches || !platformMatches || !stageMatches) return false;
+  if (!platformMatches || !stageMatches) return false;
   if (!filters.query) return true;
   const haystack = [postTitle(post), postText(post), post.extraNotes, post.postType].join(' ').toLowerCase();
   return haystack.includes(filters.query.toLowerCase());
@@ -78,8 +85,15 @@ function renderEmpty(container, isFiltered) {
   });
 }
 
-async function runPostAction(action, postId) {
-  const actionNames = { archive: '封存', restore: '還原', duplicate: '複製', 'promote-idea': '轉成草稿' };
+export async function runPostAction(action, postId) {
+  const actionNames = {
+    archive: '封存',
+    restore: '還原',
+    duplicate: '複製',
+    'promote-idea': '轉成草稿',
+    hide: '隱藏',
+    unhide: '取消隱藏',
+  };
   const actionName = actionNames[action] || '操作';
   if (!window.confirm(`確定要${actionName}這篇貼文嗎？`)) return;
   try {
@@ -137,18 +151,24 @@ export function renderPosts() {
       updated ? formatDate(updated) : '',
       scheduleTarget?.scheduledAt ? '排程：' + formatDate(scheduleTarget.scheduledAt) : '',
       post.archivedAt ? '封存：' + formatDate(post.archivedAt) : '',
+      post.hiddenAt ? '隱藏：' + formatDate(post.hiddenAt) : '',
     ].filter(Boolean).join(' · ');
     const lifecycleActions = contentStage === 'idea'
       ? '<button class="content-card-action" type="button" data-post-action="promote-idea" data-post-id="' + escapeHtml(post.id) + '">轉成草稿</button>'
       : status === 'archived'
       ? '<button class="content-card-action" type="button" data-post-action="restore" data-post-id="' + escapeHtml(post.id) + '">還原</button>'
-      : '<button class="content-card-action" type="button" data-post-action="archive" data-post-id="' + escapeHtml(post.id) + '">封存</button>';
-    return '<article class="record-card content-card" data-status="' + escapeHtml(status) + '">' +
+      : post.hiddenAt
+      ? '<button class="content-card-action" type="button" data-post-action="unhide" data-post-id="' + escapeHtml(post.id) + '">取消隱藏</button>'
+      : '<button class="content-card-action" type="button" data-post-action="archive" data-post-id="' + escapeHtml(post.id) + '">封存</button>'
+        + '<button class="content-card-action" type="button" data-post-action="hide" data-post-id="' + escapeHtml(post.id) + '">隱藏</button>';
+    const badgeStatus = post.hiddenAt ? 'hidden' : (contentStage === 'idea' ? 'idea' : status);
+    const badgeLabel = post.hiddenAt ? '已隱藏' : (contentStage === 'idea' ? stageLabel : statusLabel(status));
+    return '<article class="record-card content-card" data-status="' + escapeHtml(post.hiddenAt ? 'hidden' : status) + '">' +
       '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(post.id) + '" aria-label="開啟貼文 ' + escapeHtml(postTitle(post)) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
       '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>' +
       '</button>' +
-      '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(contentStage === 'idea' ? 'idea' : status) + '">' + escapeHtml(contentStage === 'idea' ? stageLabel : statusLabel(status)) + '</em><span class="content-card-actions">' + lifecycleActions + '<button class="content-card-action" type="button" data-post-action="duplicate" data-post-id="' + escapeHtml(post.id) + '">複製</button></span></span>' +
+      '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(badgeStatus) + '">' + escapeHtml(badgeLabel) + '</em><span class="content-card-actions">' + lifecycleActions + '<button class="content-card-action" type="button" data-post-action="duplicate" data-post-id="' + escapeHtml(post.id) + '">複製</button></span></span>' +
       '</article>';
   }).join('');
 

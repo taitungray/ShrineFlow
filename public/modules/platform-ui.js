@@ -248,7 +248,7 @@ export function updateTargetFormatDependentUi(contentTypeId = fieldValue($('#tar
 
   const copyLabel = $('#accountCopyLabel');
   if (copyLabel) {
-    copyLabel.textContent = type === 'story' ? '此平台文案（限時）' : '此平台文案';
+    copyLabel.textContent = type === 'story' ? '文案（限時）' : '文案';
   }
 
   updateTargetScheduleAvailability(type, platformId);

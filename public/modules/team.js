@@ -27,6 +27,8 @@ const ACTION_LABELS = Object.freeze({
   'post.updated': '更新內容',
   'post.archived': '封存內容',
   'post.restored': '恢復內容',
+  'post.hidden': '隱藏內容',
+  'post.unhidden': '取消隱藏內容',
   'post.approved': '核准內容',
   'post.review_submitted': '送出審核',
   'post.changes_requested': '退回修改',

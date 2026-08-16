@@ -319,7 +319,7 @@ async function initApp() {
         state.savedPost = null;
         renderGenerated(generated, { syncSelectedMedia: true });
         setActiveView('review');
-        setFormMessage('文案已產生，請在右側檢查後儲存。', 'success');
+        setFormMessage('文案已產生，請檢查預覽後儲存。', 'success');
       } catch (error) {
         setFormMessage(error.message, 'error');
         showToast(error.message, 'error');

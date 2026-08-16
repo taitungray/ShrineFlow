@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.18" />
+    <link rel="stylesheet" href="/style.css?v=0.6.21" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -76,12 +76,12 @@
         <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span>日曆</a>
         <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span aria-hidden="true">▧</span>素材庫</a>
         <p class="nav-group-label nav-group-label-spaced">管理</p>
-        <a class="app-nav-item" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
-        <a class="app-nav-item" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
-        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
-        <a class="app-nav-item" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">◌</span>成效</a>
-        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
-      <a class='app-nav-item permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列</a>
+        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
+        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
+        <a class="app-nav-item nav-secondary" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄</a>
+        <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">◌</span>成效</a>
+        <a class="app-nav-item nav-secondary" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣</a>
+      <a class='app-nav-item nav-secondary permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列</a>
       </nav>
       <div class="sidebar-footer">
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
@@ -127,36 +127,27 @@
         <!-- ========== Composer ========== -->
         <section class="panel composer-panel is-hidden" id="composerPanel" data-view-panel="composer" data-composer-mode="edit">
           <div class="composer-shell-header">
-            <p class="panel-lede">先建立母稿，再檢查每個平台的文案、素材與排程。</p>
-            <div class="composer-mode-switch" role="tablist" aria-label="Composer 顯示模式">
-              <button class="composer-mode-button active" type="button" data-composer-mode="edit" role="tab" aria-selected="true">編輯</button>
-              <button class="composer-mode-button" type="button" data-composer-mode="preview" role="tab" aria-selected="false">預覽</button>
+            <div class="composer-header-tools">
+              <div class="autosave-indicator" aria-live="polite">
+                <span class="autosave-dot" aria-hidden="true"></span>
+                <p class="autosave-status" id="autosaveStatus" hidden></p>
+                <button class="btn-text" id="autosaveRetryButton" type="button" hidden>重試儲存</button>
+              </div>
+              <div class="composer-mode-switch" role="tablist" aria-label="Composer 顯示模式">
+                <button class="composer-mode-button active" type="button" data-composer-mode="edit" role="tab" aria-selected="true">編輯</button>
+                <button class="composer-mode-button" type="button" data-composer-mode="preview" role="tab" aria-selected="false">預覽</button>
+              </div>
             </div>
           </div>
 
-        <!-- ========== 編輯區 ========== -->
-        <form class="composer-editor-pane" id="generateForm">
-          <div class="panel-heading">
+        <form class="composer-workspace" id="generateForm">
+        <div class="composer-editor-pane">
+          <div class="panel-heading visually-hidden">
             <h2>內容編輯</h2>
           </div>
 
-          <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾平台） -->
           <fieldset class="form-group-card">
-            <legend class="group-title">🚀 1. 發布格式</legend>
-            <p class="helper">先選貼文／短影音／限時。格式規則會同步到平台預覽。</p>
-            <div class="field">
-              <span id="createContentTypeLabel" class="field-label">格式</span>
-              <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
-            </div>
-            <div class="field">
-              <span id="createContentSettingsLabel" class="field-label">格式說明</span>
-              <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
-            </div>
-          </fieldset>
-
-          <!-- STEP 2：素材與文案內容設定 -->
-          <fieldset class="form-group-card">
-            <legend class="group-title">📸 2. 素材與文案設定</legend>
+            <legend class="group-title">素材</legend>
             <div class="upload-zone" id="uploadZone">
               <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple aria-label="上傳素材" />
               <label for="imageInput" class="upload-prompt">
@@ -168,7 +159,19 @@
             </div>
             <div class="media-source-actions">
               <button class="btn-secondary" id="pickLibraryMediaButton" type="button">從素材庫選</button>
-              <p class="helper">單檔 JPG／PNG／MP4，≤ 20MB。可混選庫內檔與新上傳，最多 10 個；第 1 張為主圖。</p>
+              <p class="helper">最多 10 個，第 1 張為主圖。</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-group-card">
+            <legend class="group-title">母稿</legend>
+            <div class="field">
+              <span id="createContentTypeLabel" class="field-label">格式</span>
+              <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
+            </div>
+            <div class="field">
+              <span id="createContentSettingsLabel" class="field-label">格式說明</span>
+              <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
             </div>
 
             <div class="field-row">
@@ -183,100 +186,62 @@
                 <div class="radio-pill-group" role="radiogroup" aria-labelledby="postTypeLabel">
                   <label class="radio-pill">
                     <input id="postTypeIntro" type="radio" name="postType" value="intro" checked />
-                    <span>🧩 品牌／作品介紹</span>
+                    <span>品牌／作品介紹</span>
                   </label>
                   <label class="radio-pill">
                     <input id="postTypeAnnouncement" type="radio" name="postType" value="announcement" />
-                    <span>📣 活動／公告</span>
+                    <span>活動／公告</span>
                   </label>
                 </div>
               </div>
             </div>
 
-            <div class="field">
-                <label for="extraNotes" class="field-label-group">
-                <span class="field-label">補充說明 <span class="field-optional">(選填)</span></span>
-              </label>
-              <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
-            </div>
+            <details class="disclosure compact composer-ai-notes">
+              <summary>給 AI 的補充 <span class="field-optional">(選填)</span> <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="field">
+                  <label for="extraNotes" class="field-label-group">
+                    <span class="field-label">補充說明</span>
+                  </label>
+                  <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
+                </div>
+              </div>
+            </details>
 
+            <div class="field" id="platformCopyField">
+              <label for="facebookText" class="field-label" id="accountCopyLabel">文案</label>
+              <textarea id="facebookText" rows="7" placeholder="直接寫，或按下方 AI 產生"></textarea>
+            </div>
+            <div class="field is-hidden" id="reelTextField">
+              <label for="reelText" class="field-label">短影音文案</label>
+              <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
+            </div>
+            <div class="action-box platform-copy-actions">
+              <span class="helper helper-live" id="platformCopyMode" data-mode="inherited">沿用母稿</span>
+              <button class="btn-secondary" id="btnRewritePlatform" type="button" aria-label="AI 改寫此平台文案">AI 改寫此平台</button>
+              <button class="btn-text" id="btnRestoreMotherCopy" type="button" aria-label="還原母稿" disabled>還原母稿</button>
+            </div>
             <div class="field">
-              <label for="defaultHashtags" class="field-label-group">
-                <span class="field-label">Hashtag</span>
-              </label>
+              <label for="hashtagsText" class="field-label">Hashtag</label>
+              <input id="hashtagsText" type="text" value="#品牌內容 #社群經營 #內容行銷" />
+            </div>
+            <div class="field visually-hidden">
+              <label for="defaultHashtags" class="field-label">AI Hashtag</label>
               <input id="defaultHashtags" name="defaultHashtags" type="text" value="#品牌內容 #社群經營 #內容行銷" />
             </div>
-          </fieldset>
 
           <div class="composer-generate-action">
             <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
             <p class="form-hint" id="formMessage"></p>
           </div>
-
-          <fieldset class="form-group-card composer-target-card">
-            <legend class="group-title">🚀 3. 多平台發布與覆寫</legend>
-            <div class="field">
-              <span id="targetAccountsLabel" class="field-label">發布平台（可多選）</span>
-              <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
-              <p class="helper">勾選要發的平台。同一平台只應出現一顆；橘色＝這篇會發。</p>
-            </div>
-            <div class="field" id="activeTargetField">
-              <span id="activeTargetLabel" class="field-label">目前編輯的平台版本</span>
-              <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
-            </div>
-            <div class="field">
-              <span id="targetContentTypeLabel" class="field-label">發布格式</span>
-              <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
-              <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
-            </div>
-            <div class="platform-strategy-card" id="platformStrategyCard" aria-live="polite">
-              <span class="platform-strategy-icon" aria-hidden="true">◎</span>
-              <div><strong>平台內容策略</strong><p id="platformStrategyText">選取平台後顯示文案與素材建議。</p></div>
-            </div>
-            <div class="field" id="targetScheduleField">
-              <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
-              <input id="targetScheduledAt" type="datetime-local" />
-              <p class="helper" id="targetScheduleHint"></p>
-            </div>
-            <div class="field is-hidden" id="targetFirstCommentField">
-              <label for="targetFirstComment" class="field-label">Instagram 首則留言 <span class="field-optional">(選填)</span></label>
-              <textarea id="targetFirstComment" rows="3" maxlength="2000" placeholder="發布後自動留下第一則留言"></textarea>
-              <p class="helper" id="targetFirstCommentHint"></p>
-            </div>
           </fieldset>
 
-          <div class="field" id="platformCopyField">
-            <label for="facebookText" class="field-label" id="accountCopyLabel">此平台文案</label>
-            <textarea id="facebookText" rows="7" placeholder="AI 產生後會自動填入；可依平台覆寫"></textarea>
-          </div>
-          <div class="field is-hidden" id="reelTextField">
-            <label for="reelText" class="field-label">短影音文案</label>
-            <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
-            <p class="helper">影片請確認比例、長度與格式符合目標平台規格。</p>
-          </div>
-          <div class="action-box platform-copy-actions">
-            <span class="helper" id="platformCopyMode" data-mode="inherited">沿用母稿</span>
-            <button class="btn-secondary" id="btnRewritePlatform" type="button" aria-label="AI 改寫此平台文案">✦ AI 改寫此平台</button>
-            <button class="btn-text" id="btnRestoreMotherCopy" type="button" aria-label="還原母稿" disabled>還原母稿</button>
-          </div>
-          <div class="field">
-            <label for="hashtagsText" class="field-label">Hashtag</label>
-            <input id="hashtagsText" type="text" value="#品牌內容 #社群經營 #內容行銷" />
-          </div>
-          <div class="action-row composer-actions">
-          <div class='action-box approval-actions' id='approvalActions'>
-            <span class='approval-state-badge' id='approvalStateBadge' aria-live='polite'>尚未儲存</span>
-            <button class='btn-secondary permission-hidden' id='submitReviewButton' data-required-permission='content.submit_review' type='button'>送出審核</button>
-            <button class='btn-secondary permission-hidden' id='requestChangesButton' data-required-permission='content.approve' type='button'>要求修改</button>
-            <button class='primary-button permission-hidden' id='approveButton' data-required-permission='content.approve' type='button'>核准版本</button>
-          </div>
-            <button class="btn-save" id="saveButton" type="button" aria-label="儲存草稿" disabled>💾 儲存草稿</button>
-            <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>📅 排程發布</button>
-            <button class="primary-button" id="publishNowButton" type="button" aria-label="立即發布" disabled>↗ 立即發布</button>
-          </div>
+          <details class="disclosure compact composer-advanced">
+            <summary>進階排程與版本 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
           <fieldset class="form-group-card evergreen-card" id="evergreenCard" data-required-permission="schedule.manage">
-            <legend class="group-title">♻️ Evergreen 週期再排程</legend>
-            <p class="helper">只從已發布內容建立下一篇本機排程；有上限、可暫停，不會建立 Meta Planner 遠端排程，也不繞過品牌審核。</p>
+            <legend class="group-title">週期再排程</legend>
+            <p class="helper">只從已發布內容建立下一篇本機排程；有上限、可暫停。</p>
             <div class="field-row">
               <div class="field">
                 <label for="evergreenIntervalDays" class="field-label">間隔天數</label>
@@ -290,7 +255,7 @@
             <div class="field">
               <label for="evergreenStartAt" class="field-label">第一次再排程時間 <span class="field-optional">(選填)</span></label>
               <input id="evergreenStartAt" type="datetime-local" />
-              <p class="helper" id="evergreenStartHint">留白則從來源 target 的發布時間加上間隔天數計算。</p>
+              <p class="helper helper-live" id="evergreenStartHint">留白則從來源 target 的發布時間加上間隔天數計算。</p>
             </div>
             <div class="action-box">
               <button class="btn-secondary" id="evergreenEnableButton" type="button">啟用／更新</button>
@@ -299,12 +264,6 @@
             </div>
             <p class="form-hint" id="evergreenStatus" aria-live="polite">請先載入已發布內容。</p>
           </fieldset>
-          <p class="form-hint" id="previewMessage"></p>
-          <div class="autosave-indicator" aria-live="polite">
-            <span class="autosave-dot" aria-hidden="true"></span>
-            <p class="autosave-status" id="autosaveStatus" hidden></p>
-            <button class="btn-text" id="autosaveRetryButton" type="button" hidden>重試儲存</button>
-          </div>
 
           <section class="version-history" id="versionHistory" hidden aria-labelledby="versionHistoryTitle">
             <div class="version-history-heading">
@@ -316,14 +275,52 @@
             </div>
             <div class="version-history-list" id="versionHistoryList" aria-live="polite"></div>
           </section>
-        </form>
+            </div>
+          </details>
+        </div>
 
-        <!-- ========== 預覽區 ========== -->
         <section class="composer-preview-pane" id="reviewPanel">
           <div class="panel-heading">
-            <h2>平台預覽</h2>
+            <h2>預覽</h2>
             <span class="badge" id="draftState">尚未產生</span>
           </div>
+
+          <fieldset class="form-group-card composer-target-card">
+            <legend class="group-title">發去哪裡</legend>
+            <div class="field">
+              <span id="targetAccountsLabel" class="field-label">發布平台</span>
+              <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
+            </div>
+            <div class="field" id="activeTargetField">
+              <span id="activeTargetLabel" class="field-label">正在看的平台</span>
+              <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
+            </div>
+          </fieldset>
+
+          <details class="disclosure compact composer-target-advanced">
+            <summary>此平台進階 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <div class="field">
+                <span id="targetContentTypeLabel" class="field-label">此平台格式</span>
+                <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
+                <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
+              </div>
+              <div class="platform-strategy-card" id="platformStrategyCard" aria-live="polite">
+                <span class="platform-strategy-icon" aria-hidden="true">◎</span>
+                <div><strong>平台內容策略</strong><p id="platformStrategyText">選取平台後顯示文案與素材建議。</p></div>
+              </div>
+              <div class="field" id="targetScheduleField">
+                <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
+                <input id="targetScheduledAt" type="datetime-local" />
+                <p class="helper helper-live" id="targetScheduleHint"></p>
+              </div>
+              <div class="field is-hidden" id="targetFirstCommentField">
+                <label for="targetFirstComment" class="field-label">Instagram 首則留言 <span class="field-optional">(選填)</span></label>
+                <textarea id="targetFirstComment" rows="3" maxlength="2000" placeholder="發布後自動留下第一則留言"></textarea>
+                <p class="helper helper-live" id="targetFirstCommentHint"></p>
+              </div>
+            </div>
+          </details>
 
           <div class="review-preview">
               <p id="previewPlatformStatus" class="platform-status" aria-live="polite"></p>
@@ -339,6 +336,21 @@
           </div>
         </section>
 
+        <div class="composer-dock">
+          <div class="action-row composer-actions">
+            <div class="action-box approval-actions" id="approvalActions">
+              <span class="approval-state-badge" id="approvalStateBadge" aria-live="polite">尚未儲存</span>
+              <button class="btn-secondary permission-hidden" id="submitReviewButton" data-required-permission="content.submit_review" type="button">送出審核</button>
+              <button class="btn-secondary permission-hidden" id="requestChangesButton" data-required-permission="content.approve" type="button">要求修改</button>
+              <button class="primary-button permission-hidden" id="approveButton" data-required-permission="content.approve" type="button">核准版本</button>
+            </div>
+            <button class="btn-save" id="saveButton" type="button" aria-label="儲存草稿" disabled>儲存草稿</button>
+            <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>排程發布</button>
+            <button class="btn-text composer-publish-now" id="publishNowButton" type="button" aria-label="立即發布" disabled>立即發布</button>
+          </div>
+          <p class="form-hint" id="previewMessage"></p>
+        </div>
+        </form>
         </section>
 
         <!-- ========== 設定 ========== -->
@@ -358,7 +370,7 @@
           <div class="settings-pages">
           <section class="settings-page" id="settingsPageGemini" role="tabpanel" data-settings-page="gemini" aria-labelledby="settingsTabGemini" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="geminiSettingsCard" data-required-permission="system.manage">
-            <legend class="group-title">🤖 Gemini AI 設定</legend>
+            <legend class="group-title">Gemini AI 設定</legend>
             <div class="field">
               <div class="field-label-group">
                 <label for="settingGeminiApiKey" class="field-label">API Key <span class="field-required">*</span></label>
@@ -382,7 +394,7 @@
           </fieldset>
 
           <fieldset class="form-group-card" id="secretStorageCard" data-required-permission="system.manage">
-            <legend class="group-title">🔐 憑證保存狀態</legend>
+            <legend class="group-title">憑證保存狀態</legend>
             <p class="helper" id="secretStorageStatus">正在檢查憑證保存狀態…</p>
             <details class="disclosure compact">
               <summary>加密說明 <span class="chevron" aria-hidden="true">›</span></summary>
@@ -410,7 +422,7 @@
 
           <section class="settings-page is-hidden" id="settingsPageBrand" role="tabpanel" data-settings-page="brand" aria-labelledby="settingsTabBrand" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="brandManageCard" data-required-permission="system.manage">
-            <legend class="group-title">🏷️ 品牌管理</legend>
+            <legend class="group-title">品牌管理</legend>
             <div class="field-row">
               <div class="field">
                 <label for="newClientName" class="field-label">新增品牌名稱</label>
@@ -429,7 +441,7 @@
 
           <section class="settings-page is-hidden" id="settingsPageFacebook" role="tabpanel" data-settings-page="facebook" aria-labelledby="settingsTabFacebook" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientFacebookCard" data-required-permission="account.manage">
-            <legend class="group-title">📘 目前品牌的 Facebook</legend>
+            <legend class="group-title">目前品牌的 Facebook</legend>
             <p class="helper">貼粉專 ID 與 Page Access Token，儲存後測試。到期日可留白。</p>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
@@ -525,7 +537,7 @@
 
           <section class="settings-page is-hidden" id="settingsPageInstagram" role="tabpanel" data-settings-page="instagram" aria-labelledby="settingsTabInstagram" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientInstagramCard" data-required-permission="account.manage">
-            <legend class="group-title">📸 目前品牌的 Instagram</legend>
+            <legend class="group-title">目前品牌的 Instagram</legend>
             <p class="helper">數字 User ID＋Token（常與 Facebook Page Token 相同），不是 @帳號。</p>
             <div class="field">
               <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
@@ -566,7 +578,7 @@
 
           <section class="settings-page is-hidden" id="settingsPageThreads" role="tabpanel" data-settings-page="threads" aria-labelledby="settingsTabThreads" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientThreadsCard" data-required-permission="account.manage">
-            <legend class="group-title">🧵 目前品牌的 Threads</legend>
+            <legend class="group-title">目前品牌的 Threads</legend>
             <p class="helper">數字 User ID＋Threads Token。不要貼 Facebook 的 <code>EAA...</code>。</p>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
@@ -607,7 +619,7 @@
 
           <section class="settings-page is-hidden" id="settingsPageBackup" role="tabpanel" data-settings-page="backup" aria-labelledby="settingsTabBackup" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="backupSettingsCard" data-required-permission="system.manage">
-            <legend class="group-title">🛡️ 備份與儲存管理</legend>
+            <legend class="group-title">備份與儲存管理</legend>
             <details class="disclosure compact">
               <summary>備份範圍與上限 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
@@ -667,69 +679,69 @@
                 <label class="radio-pill"><input type="radio" name="contentStatus" value="partial_success" /><span>部分成功</span></label>
                 <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
                 <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
+                <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
               </div>
             </div>
-            <div class="field content-filter-field">
-              <span id="contentStageFilterLabel" class="field-label">內容階段</span>
-              <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
-                <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+            <details class="disclosure compact content-more-filters">
+              <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="field content-filter-field">
+                  <span id="contentStageFilterLabel" class="field-label">內容階段</span>
+                  <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
+                    <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
+                    <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
+                    <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+                  </div>
+                </div>
+                <div class="field content-filter-field content-platform-filter-field">
+                  <span id="contentPlatformFilterLabel" class="field-label">平台</span>
+                  <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
+                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
+                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="facebook" /><span>Facebook</span></label>
+                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="instagram" /><span>Instagram</span></label>
+                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="threads" /><span>Threads</span></label>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="field content-filter-field content-platform-filter-field">
-              <span id="contentPlatformFilterLabel" class="field-label">平台</span>
-              <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
-                <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
-                <label class="radio-pill"><input type="radio" name="contentPlatform" value="facebook" /><span>Facebook</span></label>
-                <label class="radio-pill"><input type="radio" name="contentPlatform" value="instagram" /><span>Instagram</span></label>
-                <label class="radio-pill"><input type="radio" name="contentPlatform" value="threads" /><span>Threads</span></label>
-              </div>
-            </div>
+            </details>
           </div>
-          <fieldset class="form-group-card idea-capture-card">
-            <legend class="group-title">💡 快速記下 Idea</legend>
-            <form id="ideaCaptureForm">
-              <div class="field-row">
-                <div class="field">
-                  <label for="ideaTopic" class="field-label">主題</label>
-                  <input id="ideaTopic" type="text" maxlength="200" placeholder="例：中元普渡前的供桌整理提醒" required />
-                </div>
-                <div class="field">
-                  <label for="ideaNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
-                  <input id="ideaNotes" type="text" maxlength="500" placeholder="補充受眾、時機或素材想法" />
-                </div>
-              </div>
-              <div class="action-box">
-                <button class="btn-secondary" type="submit">保存 Idea</button>
-                <span class="helper">Idea 不會出現在排程，也不能直接發布；轉成草稿後才進入內容流程。</span>
-              </div>
-            </form>
-          </fieldset>
-          <fieldset class="form-group-card bulk-import-card" data-required-permission="content.create">
-            <legend class="group-title">📄 CSV 批次匯入（dry-run）</legend>
-            <p class="helper">每列先驗證主題、文案、平台、格式、素材綁定與排程時間；影片還必須取得可驗證的類型、長度與尺寸。匯入先建立草稿，不會自動排程或發布。可用 `mediaPaths` 指向既有 `/uploads/...`，或用 `mediaIds` 綁定 ready 素材資產；多個值都用 `|` 分隔。</p>
-            <form id="bulkImportForm">
-              <div class="field">
-                <label for="bulkImportCsv" class="field-label">CSV 內容</label>
-              <textarea id="bulkImportCsv" rows="7" placeholder="contentTopic,facebook,platform,contentType,mediaPaths,mediaIds,scheduledLocal,timeZone\n中元提醒,先整理供桌,facebook,post,/uploads/altar.mp4,,2026-08-20T10:00,Asia/Taipei"></textarea>
-              </div>
-              <div class="action-box">
-                <button class="btn-secondary" id="bulkImportPreviewButton" type="submit">驗證 CSV</button>
-                <button class="btn-dark" id="bulkImportCommitButton" type="button" disabled>建立草稿（不排程）</button>
-                <button class="btn-dark permission-hidden" id="bulkImportScheduleButton" data-required-permission="schedule.manage" type="button" disabled>套用匯入排程（本機）</button>
-                <button class="btn-text" id="bulkImportClearButton" type="button">清除</button>
-              </div>
-            </form>
-            <p class="bulk-import-summary" id="bulkImportSummary" aria-live="polite">尚未執行 dry-run。</p>
-            <div class="bulk-import-rows" id="bulkImportRows" aria-live="polite"></div>
-          </fieldset>
+          <form id="ideaCaptureForm" class="idea-capture-bar">
+            <div class="field">
+              <label for="ideaTopic" class="field-label">快速記下 Idea</label>
+              <input id="ideaTopic" type="text" maxlength="200" placeholder="主題，例如週末活動" required />
+            </div>
+            <div class="field">
+              <label for="ideaNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+              <input id="ideaNotes" type="text" maxlength="500" placeholder="時機或素材" />
+            </div>
+            <button class="btn-secondary" type="submit">保存</button>
+          </form>
           <div id="postsList" class="list-empty">
             <div class="empty-state">
               <span class="empty-icon">📝</span>
               <p>還沒有草稿</p>
             </div>
           </div>
+          <details class="disclosure compact bulk-import-card" data-required-permission="content.create">
+            <summary>CSV 批次匯入 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <p class="helper">先驗證再建立草稿，不會自動排程或發布。多個素材用 `|` 分隔。</p>
+              <form id="bulkImportForm">
+                <div class="field">
+                  <label for="bulkImportCsv" class="field-label">CSV 內容</label>
+                  <textarea id="bulkImportCsv" rows="5" placeholder="contentTopic,facebook,platform,contentType,mediaPaths,mediaIds,scheduledLocal,timeZone"></textarea>
+                </div>
+                <div class="action-box">
+                  <button class="btn-secondary" id="bulkImportPreviewButton" type="submit">驗證 CSV</button>
+                  <button class="btn-dark" id="bulkImportCommitButton" type="button" disabled>建立草稿（不排程）</button>
+                  <button class="btn-dark permission-hidden" id="bulkImportScheduleButton" data-required-permission="schedule.manage" type="button" disabled>套用匯入排程（本機）</button>
+                  <button class="btn-text" id="bulkImportClearButton" type="button">清除</button>
+                </div>
+              </form>
+              <p class="bulk-import-summary" id="bulkImportSummary" aria-live="polite">尚未執行 dry-run。</p>
+              <div class="bulk-import-rows" id="bulkImportRows" aria-live="polite"></div>
+            </div>
+          </details>
         </section>
 
         <!-- 排程 -->
@@ -756,17 +768,21 @@
             </div>
           </div>
           <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
-          <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">桌面可拖曳卡片改期；手機請使用改時間</span></div>
-          <div id="scheduleList" class="list-empty">
-            <div class="empty-state">
-              <span class="empty-icon">📅</span>
-              <p>還沒有排程</p>
+          <div class="calendar-agenda">
+            <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">桌面可拖曳卡片改期；手機請使用改時間</span></div>
+            <p class="helper calendar-connection-notice is-hidden" id="calendarConnectionNotice"></p>
+            <div id="scheduleList" class="list-empty">
+              <div class="empty-state">
+                <span class="empty-icon">📅</span>
+                <p>還沒有排程</p>
+              </div>
             </div>
           </div>
           <section class="form-group-card remote-schedule-card" id="remoteScheduleCard" aria-live="polite"></section>
-          <fieldset class="form-group-card crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
-            <legend class="group-title">⛔ 危機暫停</legend>
-            <p class="helper">只處理 ShrineFlow 管理的排程；Facebook 遠端排程會逐筆嘗試取消。取消失敗會明確標示，恢復時再處理，不會假裝已安全停止。</p>
+          <details class="disclosure compact crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
+            <summary>危機暫停 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+            <p class="helper">只處理 ShrineFlow 管理的排程；Facebook 遠端排程會逐筆嘗試取消。</p>
             <form id="crisisPauseForm">
               <div class="field">
                 <span class="field-label">暫停範圍</span>
@@ -788,7 +804,8 @@
               <div class="field"><label for="crisisPauseReason" class="field-label">原因 <span class="field-optional">(選填)</span></label><input id="crisisPauseReason" type="text" maxlength="500" placeholder="例：活動內容需要全面檢查" /></div>
               <div class="action-box"><button class="btn-secondary crisis-pause-button" id="crisisPauseButton" type="submit">立即暫停發布</button><span class="test-result" id="crisisPauseStatus" aria-live="polite"></span></div>
             </form>
-          </fieldset>
+            </div>
+          </details>
         </section>
 
         <!-- ========== 素材庫 ========== -->
@@ -906,7 +923,7 @@
             <span class="helper" id="inboxFilterScope">篩選只作用於本次從平台讀到的資料。</span>
           </div>
           <fieldset class="form-group-card saved-replies-card" id="savedRepliesCard" data-required-permission="template.manage">
-            <legend class="group-title">💬 Saved replies</legend>
+            <legend class="group-title">Saved replies</legend>
             <p class="helper">儲存常用短句；套用後仍可編輯，按下送出前不會自動回覆平台使用者。</p>
             <form id="savedReplyForm">
               <input id="savedReplyId" type="hidden" />
@@ -940,9 +957,12 @@
           </details>
           <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
           <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
-          <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard" data-required-permission="schedule.manage">
-            <legend class="group-title">📅 發布佇列</legend>
-            <p class="helper">為每個平台連線設定固定時段；排程時選擇「加入佇列」，系統會自動找下一個未被占用的時段。時間會以 IANA 時區保存。</p>
+          <details class="disclosure compact queue-settings-wrap" data-required-permission="schedule.manage">
+            <summary>發布佇列 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+          <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard">
+            <legend class="group-title">發布佇列</legend>
+            <p class="helper">為每個平台連線設定固定時段；排程時選擇「加入佇列」會自動找下一個空檔。</p>
             <form id="queueForm">
               <div class="field-row">
                 <div class="field">
@@ -969,6 +989,8 @@
               </div>
             </form>
           </fieldset>
+            </div>
+          </details>
         </section>
 
         <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
@@ -1175,6 +1197,22 @@
         <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
       </form>
     </dialog>
+    <dialog id="publishConfirmDialog" class="schedule-dialog" aria-labelledby="publishConfirmTitle">
+      <form method="dialog" id="publishConfirmForm">
+        <div class="schedule-dialog-body">
+          <div class="dialog-heading">
+            <p class="section-tag">PUBLISH</p>
+            <h3 id="publishConfirmTitle">立即發布</h3>
+            <p class="dialog-lede" id="publishConfirmSummary">將立即公開，無法從 ShrineFlow 收回。</p>
+          </div>
+        </div>
+        <div class="dialog-actions schedule-dialog-actions">
+          <button class="btn-text" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="publishConfirmSubmit" value="confirm" type="submit">確認立即發布</button>
+        </div>
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
+      </form>
+    </dialog>
     <dialog class="module-dialog reauth-dialog" id="reauthDialog" aria-labelledby="reauthTitle">
       <form id="reauthForm">
         <div class="dialog-heading">
@@ -1203,7 +1241,7 @@
           <p class="dialog-lede">套用模板只會帶入欄位，不會直接覆蓋已保存內容。</p>
         </div>
         <fieldset class="form-group-card">
-          <legend class="group-title">🧩 模板內容</legend>
+          <legend class="group-title">模板內容</legend>
           <div class="field">
             <label for="templateName" class="field-label">模板名稱 <span class="field-required">*</span></label>
             <input id="templateName" type="text" placeholder="例：新品上市公告" required />
@@ -1230,7 +1268,7 @@
           </div>
         </fieldset>
         <fieldset class="form-group-card">
-          <legend class="group-title">🚀 預設發布策略</legend>
+          <legend class="group-title">預設發布策略</legend>
           <div class="field">
             <span id="templatePostTypeLabel" class="field-label">內容方向</span>
             <div class="radio-pill-group" role="radiogroup" aria-labelledby="templatePostTypeLabel">
@@ -1262,7 +1300,7 @@
           <p class="dialog-lede">活動只整理內容與發布進度，不會改變內容本身。</p>
         </div>
         <fieldset class="form-group-card">
-          <legend class="group-title">◈ 活動資訊</legend>
+          <legend class="group-title">活動資訊</legend>
           <div class="field">
             <label for="campaignName" class="field-label">活動名稱 <span class="field-required">*</span></label>
             <input id="campaignName" type="text" placeholder="例：秋季新品宣傳" required />
@@ -1286,7 +1324,7 @@
           <div class="field"><label for="campaignDescription" class="field-label">備註 <span class="field-optional">(選填)</span></label><textarea id="campaignDescription" rows="3" placeholder="補充活動背景或內部備註…"></textarea></div>
         </fieldset>
         <fieldset class="form-group-card">
-          <legend class="group-title">📝 加入內容</legend>
+          <legend class="group-title">加入內容</legend>
           <div id="campaignPostSelection" class="campaign-post-selection"></div>
         </fieldset>
         <div class="dialog-actions">
@@ -1296,6 +1334,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.18" type="module"></script>
+    <script src="/app.js?v=0.6.21" type="module"></script>
   </body>
 </html>

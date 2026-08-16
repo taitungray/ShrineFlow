@@ -1,4 +1,4 @@
-import { $, escapeHtml, isVideoPath, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
+import { $, escapeHtml, isVideoPath, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, formatDate, bindDialogDismiss } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
 import {
@@ -456,11 +456,16 @@ function syncArchivedEditorState() {
 function syncApprovalActions() {
   const post = state.savedPost;
   const approvalState = post?.approvalState || 'draft';
+  const box = document.getElementById('approvalActions');
   const badge = document.getElementById('approvalStateBadge');
   const submit = document.getElementById('submitReviewButton');
   const approve = document.getElementById('approveButton');
   const changes = document.getElementById('requestChangesButton');
   const required = Boolean(currentClient()?.approvalRequired);
+  if (box) {
+    const show = required || ['in_review', 'changes_requested'].includes(approvalState);
+    box.classList.toggle('is-hidden', !show);
+  }
   if (badge) {
     const labels = { draft: '草稿待送審', in_review: '審核中', approved: '已核准', changes_requested: '待修改後重送' };
     badge.textContent = !post ? '尚未儲存' : (required ? '審核：' + (labels[approvalState] || approvalState) : '審核未啟用 · ' + (labels[approvalState] || approvalState));
@@ -469,6 +474,26 @@ function syncApprovalActions() {
   if (submit) submit.classList.toggle('is-hidden', !post || ['in_review', 'approved'].includes(approvalState));
   if (approve) approve.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
   if (changes) changes.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
+}
+
+function confirmImmediatePublish({ platformName, accountName }) {
+  const accountBit = accountName ? `（${accountName}）` : '';
+  const text = `將立即發布到 ${platformName}${accountBit}。發布後無法從 ShrineFlow 收回。`;
+  const dialog = $('#publishConfirmDialog');
+  const summary = $('#publishConfirmSummary');
+  if (!dialog || typeof dialog.showModal !== 'function') {
+    return Promise.resolve(window.confirm(text));
+  }
+  if (summary) summary.textContent = text;
+  return new Promise((resolve) => {
+    const onClose = () => {
+      dialog.removeEventListener('close', onClose);
+      resolve(dialog.returnValue === 'confirm');
+    };
+    dialog.addEventListener('close', onClose);
+    dialog.returnValue = 'cancel';
+    dialog.showModal();
+  });
 }
 
 function renderEvergreenControls() {
@@ -865,6 +890,10 @@ export function initEditorListeners(refreshListsFn) {
   const composerForm = $('#generateForm');
   composerForm?.addEventListener('input', (event) => {
     const target = event.target;
+    if (target?.matches?.('#hashtagsText')) {
+      const defaults = $('#defaultHashtags');
+      if (defaults) defaults.value = target.value;
+    }
     if (target?.matches?.('#contentTopic, #extraNotes, #defaultHashtags, #facebookText, #reelText, #hashtagsText, #targetScheduledAt')
       || target?.closest?.('#targetContentSettings')) {
       markEditorDirty();
@@ -903,6 +932,7 @@ export function initEditorListeners(refreshListsFn) {
   $('#evergreenEnableButton')?.addEventListener('click', () => evergreenAction('enable'));
   $('#evergreenPauseButton')?.addEventListener('click', () => evergreenAction('pause'));
   $('#evergreenDisableButton')?.addEventListener('click', () => evergreenAction('disable'));
+  bindDialogDismiss($('#publishConfirmDialog'));
   const publishButton = $('#publishNowButton');
   publishButton?.addEventListener('click', async () => {
     if (publishButton.dataset.busy === 'true') return;
@@ -927,13 +957,12 @@ export function initEditorListeners(refreshListsFn) {
     if (target.status === 'published') {
       return setPreviewMessage(`${platformName} 已經發布，請建立副本後再重新發布。`, 'error');
     }
+    const account = (state.accounts || []).find((entry) => entry.id === target.accountId);
+    const accountName = account?.name || target.accountName || '';
+    const confirmed = await confirmImmediatePublish({ platformName, accountName });
+    if (!confirmed) return;
     publishButton.dataset.busy = 'true';
     syncEditorActions();
-    if (!window.confirm(`確定立即發布到 ${platformName}？`)) {
-      publishButton.dataset.busy = 'false';
-      syncEditorActions();
-      return;
-    }
 
     setPreviewMessage(`正在發布到 ${platformName}…`, 'info');
     try {

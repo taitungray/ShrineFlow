@@ -10,6 +10,7 @@ import {
   formatFacebookMessage,
   humanizeFacebookGraphError,
   isFacebookObjectAccessError,
+  isFacebookScheduledPostGone,
 } from '../lib/facebook.js';
 
 test('formatFacebookMessage appends only missing hashtags', () => {
@@ -475,6 +476,12 @@ test('maps expired Graph access tokens to operator-facing Chinese', async () => 
       && /Token 已過期/.test(error.message)
       && !/Session has expired/.test(error.message),
   );
+});
+
+test('treats Graph object-gone errors as remote schedule already cancelled', () => {
+  assert.equal(isFacebookScheduledPostGone(new FacebookPublishError('does not exist', { code: 100, subcode: 33 })), true);
+  assert.equal(isFacebookScheduledPostGone(new FacebookPublishError('Unsupported delete request', { code: 100 })), true);
+  assert.equal(isFacebookScheduledPostGone(new FacebookPublishError('Token 已過期', { code: 190 })), false);
 });
 
 test('maps missing-object Graph errors to operator-facing Chinese', () => {

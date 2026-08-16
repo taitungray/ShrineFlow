@@ -158,7 +158,7 @@ settingsHint  可選：指向設定頁既有 disclosure，避免兩份長文完�
 
 | id | 標題 | 必寫重點 |
 | --- | --- | --- |
-| `facebook-connect` | 怎麼接 Facebook 粉專 | Graph Explorer → `me/accounts` 拿粉專 **id**＋**Page token**；測連線要出現粉專名；完整步驟可連設定頁 disclosure |
+| `facebook-connect` | 怎麼接 Facebook 粉專 | 固定順序：產生 **User token** → `me?fields=id,name` 確認本人 → Debugger 延伸 User token → 延伸後 token 貼回 Explorer → `me/accounts?fields=id,name,access_token` → 取粉專 **id**＋**Page token** → Debugger 確認 `Type: Page`、`Expires: Never` → 儲存並測試；設定頁顯示精簡版，幫助中心保留完整排錯 |
 | `facebook-user-id` | Unsupported post／Object does not exist | 貼了 User ID 或 User token；必須 `me/accounts` 的粉專 id／Page token。關鍵字含英文原文 |
 | `facebook-token-expired` | Token 已過期（code 190） | Debugger、Never、不要短效 User token；改密碼／撤 App／失去管理員會失效 |
 | `facebook-permissions` | 權限不足 pages_manage_posts | App 使用案例加 `pages_show_list`、`pages_read_engagement`、`pages_manage_posts`；不要 `manage_pages` |
@@ -168,6 +168,32 @@ settingsHint  可選：指向設定頁既有 disclosure，避免兩份長文完�
 | `facebook-schedule-window` | 須 10 分鐘後／不能超過約 6 個月 | FB 原生排程時間窗；本機 IG 最短約 1 分鐘 |
 | `facebook-remote-schedule` | 遠端排程讀不到 | Token；遠端卡只讀；孤兒排程去 Meta Business Suite 刪 |
 | `facebook-duplicate-posts` | 同一則出現很多篇排程 | 確認排程按一次；已排改時間用編輯；舊孤兒去 Meta 刪 |
+
+#### Facebook Token 單一標準流程
+
+設定頁與幫助中心必須維持相同順序，不得先叫使用者用短效 User token 取 Page token，再把延伸流程藏到進階說明：
+
+官方頁面網址必須直接顯示為可點擊連結：
+
+- [Meta Apps](https://developers.facebook.com/apps/)：建立或選擇 ShrineFlow 使用的 Meta App。
+- [Graph API Explorer](https://developers.facebook.com/tools/explorer/)：產生 User token、執行 `me` 與 `me/accounts`。
+- [Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/)：延伸 User token、檢查 Page token 類型與期限。
+
+1. 開啟 Graph API Explorer，選擇 Meta App 並產生 User token。
+2. 執行 `me?fields=id,name`，結果必須是操作者本人，不是粉專。
+3. 開啟 Access Token Debugger，對該 User token 執行「延伸存取權杖」。
+4. 將延伸後 User token 貼回 Graph Explorer。
+5. 執行 `me/accounts?fields=id,name,access_token&limit=100`。
+6. 從目標粉專同一筆資料取得 `id` 與 `access_token`。
+7. Token Debugger 驗證粉專 token：`Type: Page`、`Expires: Never`、`Is Valid: True`。
+8. 將粉專 ID 與 Page token 儲存到 ShrineFlow，再測試連線。
+
+排錯文字必須區分：
+
+- `Tried accessing nonexisting field (accounts) on node type (Page)`：目前以 Page token 執行 `me/accounts`；應切回延伸後 User token。
+- `Session has expired`／code 190：token 仍為短效版本，或已被 Meta 撤銷；重新走上述流程。
+- `me/accounts` 回空陣列：登入帳號、粉專管理權限或 App 角色不符。
+- Token 出現在截圖或公開紀錄：視為已洩漏，重新產生並替換。
 
 ### 6.5 Instagram（guide + troubleshoot）
 

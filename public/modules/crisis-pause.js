@@ -50,6 +50,7 @@ export function renderCrisisPause() {
     input.disabled = paused;
   });
   if (accountSelect) accountSelect.disabled = paused;
+  if ('open' in card) card.open = paused;
   renderScopeFields();
 }
 

@@ -170,6 +170,43 @@ test('reschedule deletes old external id then schedules again', async () => {
   assert.equal(next.externalId, 'new-id');
 });
 
+test('cancel treats already-deleted Facebook objects as success', async () => {
+  const publisher = {
+    configured: true,
+    async deleteScheduled() {
+      const error = new Error("Unsupported post request. Object with ID 'old-id' does not exist");
+      error.code = 100;
+      error.subcode = 33;
+      throw error;
+    },
+  };
+  const next = await cancelFacebookTarget({
+    publisher,
+    target: { externalId: 'old-id', status: 'scheduled', scheduledAt: '2026-08-14T00:00:00.000Z' },
+  });
+  assert.equal(next.status, 'draft');
+  assert.equal(next.scheduledAt, null);
+  assert.equal(next.externalId, null);
+});
+
+test('cancel still fails when Facebook token is expired', async () => {
+  const publisher = {
+    configured: true,
+    async deleteScheduled() {
+      const error = new Error('Facebook Token 已過期。');
+      error.code = 190;
+      throw error;
+    },
+  };
+  await assert.rejects(
+    () => cancelFacebookTarget({
+      publisher,
+      target: { externalId: 'old-id', status: 'scheduled', scheduledAt: '2026-08-14T00:00:00.000Z' },
+    }),
+    /Token 已過期/,
+  );
+});
+
 test('cancel clears local schedule after deleteScheduled', async () => {
   const publisher = {
     async deleteScheduled(id) {
@@ -957,6 +994,49 @@ test('PATCH and DELETE /schedule/:targetId synchronize Facebook and local target
     const deleteResponse = await fetch(baseUrl, { method: 'DELETE' });
     assert.equal(deleteResponse.status, 200);
     assert.deepEqual(calls, [['delete', 'graph-old'], ['publish'], ['delete', 'graph-new']]);
+    const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
+    assert.equal(target.status, 'draft');
+    assert.equal(target.scheduledAt, null);
+    assert.equal(target.externalId, null);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('DELETE /schedule clears local row when Facebook object is already gone', async () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async deleteScheduled() {
+        const error = new Error("Object with ID 'graph-orphan' does not exist");
+        error.code = 100;
+        error.subcode = 33;
+        throw error;
+      },
+    }),
+  }));
+  const server = app.listen(0);
+  try {
+    await writeJson(jsonFiles.clients, [{ id: 'client-1', accounts: [{ id: 'facebook:1', platformId: 'facebook' }] }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-1',
+      clientId: 'client-1',
+      facebook: '幽靈排程',
+      targets: [{
+        id: 'target-gone',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'scheduled',
+        scheduledAt: '2026-08-17T23:00:00.000Z',
+        externalId: 'graph-orphan',
+      }],
+    }]);
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule/target-gone`, { method: 'DELETE' });
+    assert.equal(response.status, 200);
     const target = (await readJson(jsonFiles.posts, []))[0].targets[0];
     assert.equal(target.status, 'draft');
     assert.equal(target.scheduledAt, null);
