@@ -22,7 +22,8 @@ export function renderClientSwitcher() {
 
 export function loadClientFacebookFields() {
   const client = currentClient();
-  const facebook = (client?.accounts || []).find((account) => account.platformId === 'facebook');
+  const facebook = (client?.accounts || []).find((account) => account.platformId === 'facebook' && account.configured)
+    || (client?.accounts || []).find((account) => account.platformId === 'facebook');
   const pageId = $('#settingFacebookPageId');
   const token = $('#settingFacebookPageAccessToken');
   const facebookExpiry = $('#settingFacebookTokenExpiresAt');
@@ -34,7 +35,8 @@ export function loadClientFacebookFields() {
     ['instagram', 'settingInstagramUserId', 'settingInstagramAccessToken'],
     ['threads', 'settingThreadsUserId', 'settingThreadsAccessToken'],
   ].forEach(([platformId, userIdField, tokenField]) => {
-    const account = (client?.accounts || []).find((item) => item.platformId === platformId);
+    const account = (client?.accounts || []).find((item) => item.platformId === platformId && item.configured)
+      || (client?.accounts || []).find((item) => item.platformId === platformId);
     const userId = $('#' + userIdField);
     const accessToken = $('#' + tokenField);
     const expiry = $('#' + (platformId === 'instagram' ? 'settingInstagramTokenExpiresAt' : 'settingThreadsTokenExpiresAt'));
@@ -88,11 +90,14 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
       const client = currentClient();
       if (!client) return showToast('請先選擇品牌', 'error');
       try {
+        const existing = (client.accounts || []).find((account) => account.platformId === 'facebook' && account.configured)
+          || (client.accounts || []).find((account) => account.platformId === 'facebook');
         const pageId = $('#settingFacebookPageId')?.value?.trim() || '';
         const updated = await api('/api/clients/' + client.id + '/accounts', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            ...(existing?.id ? { id: existing.id } : {}),
             platformId: 'facebook',
             name: pageId ? `Facebook 粉專（${pageId}）` : 'Facebook 粉專',
             credentials: {

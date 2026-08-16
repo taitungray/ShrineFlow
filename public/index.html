@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.86" />
+    <link rel="stylesheet" href="/style.css?v=0.5.89" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -171,7 +171,7 @@
               </label>
               <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
             </div>
-            <p class="helper">單檔 JPG／PNG／MP4，≤ 20MB。</p>
+            <p class="helper">單檔 JPG／PNG／MP4，≤ 20MB。多張可拖曳調整順序，第 1 張為主圖。</p>
 
             <div class="field-row">
               <div class="field">
@@ -215,7 +215,7 @@
             <div class="field">
               <span id="targetAccountsLabel" class="field-label">發布平台（可多選）</span>
               <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
-              <p class="helper">先選平台，再在下方切換要檢查的版本。</p>
+              <p class="helper">勾選要發的平台。同一平台只應出現一顆；橘色＝這篇會發。</p>
             </div>
             <div class="field" id="activeTargetField">
               <span id="activeTargetLabel" class="field-label">目前編輯的平台版本</span>
@@ -1223,6 +1223,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.86" type="module"></script>
+    <script src="/app.js?v=0.5.89" type="module"></script>
   </body>
 </html>

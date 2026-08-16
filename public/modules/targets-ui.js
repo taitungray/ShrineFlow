@@ -8,6 +8,32 @@ import {
   resolveLockedContentType,
 } from './platform-ui.js';
 
+function accountPickerLabel(account) {
+  const platform = PLATFORM_NAMES[account.platformId] || account.platformId;
+  const pageId = account.credentials?.pageId || account.credentials?.userId || '';
+  let label = account.name && account.name !== platform ? account.name : platform;
+  if (label === platform && pageId) label = platform + '（' + pageId + '）';
+  if (!account.configured) label += '（未連線）';
+  return label;
+}
+
+function accountsForComposer(accounts = []) {
+  const enabled = accounts.filter((account) => account.enabled !== false);
+  const result = [];
+  const seenPlatform = new Set();
+  for (const account of enabled) {
+    const siblings = enabled.filter((item) => item.platformId === account.platformId);
+    const configured = siblings.filter((item) => item.configured);
+    const visible = configured.length ? [configured[0]] : [siblings[0]];
+    if (seenPlatform.has(account.platformId)) continue;
+    seenPlatform.add(account.platformId);
+    visible.forEach((item) => {
+      if (!result.some((existing) => existing.id === item.id)) result.push(item);
+    });
+  }
+  return result;
+}
+
 function motherContentType() {
   return fieldValue($('#createContentType')) || 'post';
 }
@@ -23,9 +49,10 @@ function accountById(accountId) {
   return accounts.find((account) => account.id === accountId) || null;
 }
 
-function motherCopyForTarget(post, target = {}) {
-  if (target.contentType === 'reel') return post.reel || post.facebook || '';
-  return post.facebook || '';
+function motherCopyForTarget(post, target) {
+  const copy = post && typeof post === 'object' ? post : {};
+  if (target?.contentType === 'reel') return copy.reel || copy.facebook || '';
+  return copy.facebook || '';
 }
 
 function renderCopyMode(target = null) {
@@ -73,7 +100,7 @@ export function renderTargetAccountControls() {
   const tabs = $('#activeTargetTabs');
   const activeField = $('#activeTargetField');
   const client = currentClient();
-  const accounts = client?.accounts || state.accounts || [];
+  const accounts = accountsForComposer(client?.accounts || state.accounts || []);
   if (!checks || !tabs) return;
 
   if (!state.selectedTargetAccountIds.length) {
@@ -88,11 +115,9 @@ export function renderTargetAccountControls() {
   checks.innerHTML = accounts.length
     ? accounts.map((account) => {
       const checked = state.selectedTargetAccountIds.includes(account.id);
-      const platform = PLATFORM_NAMES[account.platformId] || account.platformId;
       return '<label class="radio-pill">'
         + '<input type="checkbox" value="' + escapeHtml(account.id) + '"' + (checked ? ' checked' : '') + ' />'
-        + '<span>' + escapeHtml(platform)
-        + (account.configured ? '' : '（未連線）') + '</span>'
+        + '<span>' + escapeHtml(accountPickerLabel(account)) + '</span>'
         + '</label>';
     }).join('')
     : '<p class="helper">此品牌尚未設定平台連線，請到設定新增。</p>';
@@ -105,12 +130,11 @@ export function renderTargetAccountControls() {
   }
 
   tabs.innerHTML = activeAccounts.map((account) => {
-    const platform = PLATFORM_NAMES[account.platformId] || account.name || account.platformId;
     return '<label class="radio-pill">'
     + '<input type="radio" name="activeTargetAccount" value="' + escapeHtml(account.id) + '"'
     + (account.id === state.activeTargetId ? ' checked' : '')
     + ' />'
-    + '<span>' + escapeHtml(platform) + '</span>'
+    + '<span>' + escapeHtml(accountPickerLabel(account)) + '</span>'
     + '</label>';
   }).join('');
 
@@ -173,7 +197,7 @@ export function getActiveTarget() {
 
 export function getMotherCopyForActiveTarget(target = getActiveTarget()) {
   const post = state.savedPost || state.generated || {};
-  return motherCopyForTarget(post, target);
+  return motherCopyForTarget(post, target || {});
 }
 
 export function buildTargetsPayload(draft) {

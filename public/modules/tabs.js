@@ -78,6 +78,8 @@ function closeMobileNavigation() {
   document.body.classList.remove('nav-open');
 }
 
+let lastComposerView = '';
+
 export function setComposerMode(mode = 'edit') {
   const composer = $('#composerPanel');
   if (!composer) return;
@@ -99,7 +101,11 @@ export function setActiveView(view, { syncHash = true, routePath = '' } = {}) {
     panel.classList.toggle('is-hidden', panel.dataset.viewPanel !== normalizedView && !isComposer);
   });
 
-  if (['create', 'review'].includes(normalizedView)) setComposerMode(normalizedView === 'review' ? 'preview' : 'edit');
+  const enteringComposer = ['create', 'review'].includes(normalizedView);
+  if (enteringComposer && lastComposerView !== normalizedView) {
+    setComposerMode(normalizedView === 'review' ? 'preview' : 'edit');
+  }
+  lastComposerView = enteringComposer ? normalizedView : '';
 
   $$('[data-view-target]').forEach((item) => {
     const targetView = normalizeView(item.dataset.viewTarget);

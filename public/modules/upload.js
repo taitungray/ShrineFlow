@@ -36,11 +36,13 @@ export function renderUploadPreview() {
   state.selectedMediaItems.forEach((item, index) => {
     const figure = document.createElement('figure');
     figure.className = 'media-item sortable-media-item';
-    figure.draggable = true;
+    figure.draggable = false;
     figure.dataset.index = String(index);
     figure.title = '拖曳調整順序';
     const media = document.createElement(item.file.type.startsWith('video/') ? 'video' : 'img');
     media.src = item.source;
+    media.draggable = false;
+    media.setAttribute('draggable', 'false');
     media.setAttribute('aria-label', '已選媒體 ' + (index + 1));
     if (media.tagName === 'VIDEO') {
       media.muted = true;
@@ -61,9 +63,20 @@ export function renderUploadPreview() {
   });
 }
 
+function clearReorderHighlight(gallery) {
+  gallery.querySelectorAll('.dragging, .drag-over').forEach((item) => item.classList.remove('dragging', 'drag-over'));
+}
+
+function mediaItemFromPoint(clientX, clientY) {
+  const el = document.elementFromPoint(clientX, clientY);
+  return el?.closest?.('.sortable-media-item') || null;
+}
+
 export function bindUploadReordering(renderSavedMediaFn) {
   const gallery = $('#uploadPreviewGallery');
   if (!gallery) return;
+  const pointerDrag = { id: null, from: null, startX: 0, startY: 0, active: false };
+
   gallery.addEventListener('click', (event) => {
     const button = event.target.closest('[data-media-move]');
     if (!button) return;
@@ -74,33 +87,63 @@ export function bindUploadReordering(renderSavedMediaFn) {
     const offset = button.dataset.mediaMove === 'up' ? -1 : 1;
     moveSelectedMedia(index, index + offset, renderSavedMediaFn);
   });
-  gallery.addEventListener('dragstart', (event) => {
+
+  gallery.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    if (event.target.closest('[data-media-move]')) return;
     const figure = event.target.closest('.sortable-media-item');
     if (!figure) return;
-    state.mediaDragIndex = Number(figure.dataset.index);
-    figure.classList.add('dragging');
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(state.mediaDragIndex));
+    pointerDrag.id = event.pointerId;
+    pointerDrag.from = Number(figure.dataset.index);
+    pointerDrag.startX = event.clientX;
+    pointerDrag.startY = event.clientY;
+    pointerDrag.active = false;
   });
-  gallery.addEventListener('dragover', (event) => {
-    const figure = event.target.closest('.sortable-media-item');
-    if (!figure || state.mediaDragIndex === null) return;
+
+  gallery.addEventListener('pointermove', (event) => {
+    if (pointerDrag.id !== event.pointerId || pointerDrag.from === null) return;
+    const distance = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
+    if (!pointerDrag.active && distance < 8) return;
+    if (!pointerDrag.active) {
+      pointerDrag.active = true;
+      state.mediaDragIndex = pointerDrag.from;
+      const source = gallery.querySelector('[data-index="' + pointerDrag.from + '"]');
+      source?.classList.add('dragging');
+      source?.setPointerCapture(event.pointerId);
+    }
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
     gallery.querySelectorAll('.drag-over').forEach((item) => item.classList.remove('drag-over'));
-    figure.classList.add('drag-over');
+    const over = mediaItemFromPoint(event.clientX, event.clientY);
+    if (over && Number(over.dataset.index) !== pointerDrag.from) over.classList.add('drag-over');
   });
-  gallery.addEventListener('drop', (event) => {
+
+  const endPointerDrag = (event) => {
+    if (pointerDrag.id !== event.pointerId) return;
+    const from = pointerDrag.from;
+    const wasActive = pointerDrag.active;
+    const over = wasActive ? mediaItemFromPoint(event.clientX, event.clientY) : null;
+    clearReorderHighlight(gallery);
+    pointerDrag.id = null;
+    pointerDrag.from = null;
+    pointerDrag.active = false;
+    state.mediaDragIndex = null;
+    if (!wasActive || from === null) return;
+    const to = over ? Number(over.dataset.index) : from;
+    moveSelectedMedia(from, to, renderSavedMediaFn);
+  };
+
+  gallery.addEventListener('pointerup', endPointerDrag);
+  gallery.addEventListener('pointercancel', endPointerDrag);
+
+  gallery.addEventListener('dragstart', (event) => {
+    if (event.target.closest('[data-media-move]')) {
+      event.preventDefault();
+      return;
+    }
     const figure = event.target.closest('.sortable-media-item');
-    if (!figure || state.mediaDragIndex === null) return;
+    if (!figure) return;
     event.preventDefault();
-    const targetIndex = Number(figure.dataset.index);
-    moveSelectedMedia(state.mediaDragIndex, targetIndex, renderSavedMediaFn);
-    state.mediaDragIndex = null;
-  });
-  gallery.addEventListener('dragend', () => {
-    state.mediaDragIndex = null;
-    gallery.querySelectorAll('.dragging, .drag-over').forEach((item) => item.classList.remove('dragging', 'drag-over'));
+    event.stopPropagation();
   });
 }
 

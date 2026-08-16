@@ -1,6 +1,7 @@
 import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage, showToast } from './dom.js';
 import { api } from './api.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
+import { previewMediaSrc } from './media-preview.js';
 import { renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
 import { setActiveView } from './tabs.js';
 import { contentStageLabel, postStatusLabel, targetStatusSummary } from './status.js';
@@ -114,7 +115,7 @@ export function renderPosts() {
 
   container.className = 'record-list content-list';
   container.innerHTML = visiblePosts.slice(0, 40).map((post) => {
-    const firstMedia = mediaPathsOf(post)[0];
+    const firstMedia = previewMediaSrc(mediaPathsOf(post)[0]);
     const thumbnail = !firstMedia ? '<span aria-hidden="true">✦</span>'
       : isVideoPath(firstMedia)
         ? '<video src="' + escapeHtml(firstMedia) + '" muted playsinline preload="metadata"></video>'

@@ -229,21 +229,27 @@ async function initApp() {
   const uploadZone = $('#uploadZone');
   if (uploadZone) {
     let dragDepth = 0;
+    const isExternalFileDrag = (event) => (
+      [...(event.dataTransfer?.types || [])].includes('Files') && state.mediaDragIndex === null
+    );
+
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
       uploadZone.addEventListener(eventName, (event) => {
+        if (!isExternalFileDrag(event)) return;
         event.preventDefault();
         event.stopPropagation();
       });
     });
 
     uploadZone.addEventListener('dragenter', (event) => {
-      if (![...(event.dataTransfer?.types || [])].includes('Files')) return;
+      if (!isExternalFileDrag(event)) return;
       dragDepth += 1;
       uploadZone.classList.add('drag-active');
     });
 
     uploadZone.addEventListener('dragover', (event) => {
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      if (!isExternalFileDrag(event) || !event.dataTransfer) return;
+      event.dataTransfer.dropEffect = 'copy';
     });
 
     uploadZone.addEventListener('dragleave', () => {
@@ -254,11 +260,9 @@ async function initApp() {
     uploadZone.addEventListener('drop', (event) => {
       dragDepth = 0;
       uploadZone.classList.remove('drag-active');
+      if (!isExternalFileDrag(event)) return;
       const files = [...(event.dataTransfer?.files || [])];
-      if (!files.length) {
-        setFormMessage('沒有讀取到檔案，請從檔案總管拖入圖片或影片。', 'error');
-        return;
-      }
+      if (!files.length) return;
       const transfer = new DataTransfer();
       files.forEach((file) => transfer.items.add(file));
       const input = $('#imageInput');

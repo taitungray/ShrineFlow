@@ -1,5 +1,6 @@
 import { $, escapeHtml, formatDate, isVideoPath } from './dom.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
+import { previewMediaSrc } from './media-preview.js';
 import { loadPost } from './drafts.js';
 
 const filters = { query: '', type: 'all' };
@@ -85,9 +86,10 @@ export function renderMediaLibrary() {
     const video = isVideoPath(item.path);
     const name = mediaName(item.path);
     const platforms = [...item.platforms].slice(0, 3).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
+    const src = previewMediaSrc(item.path);
     const preview = video
-      ? '<video src="' + escapeHtml(item.path) + '" muted playsinline preload="metadata" aria-label="' + escapeHtml(name) + '"></video>'
-      : '<img src="' + escapeHtml(item.path) + '" alt="' + escapeHtml(name) + '" loading="lazy" />';
+      ? '<video src="' + escapeHtml(src) + '" muted playsinline preload="metadata" aria-label="' + escapeHtml(name) + '"></video>'
+      : '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(name) + '" loading="lazy" />';
     const firstPost = item.posts[0];
     return '<article class="media-library-card">'
       + '<div class="media-library-preview" data-type="' + (video ? 'video' : 'image') + '">' + preview + '</div>'

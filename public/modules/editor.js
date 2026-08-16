@@ -1,5 +1,6 @@
 import { $, escapeHtml, isVideoPath, setPreviewMessage, showToast, fieldValue, setFieldValue, formatDate } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
+import { previewMediaSrc } from './media-preview.js';
 import {
   renderCreatePublishSpec,
   renderCreateContentSettings,
@@ -423,7 +424,7 @@ export function renderSavedMedia(items = []) {
     ? { source: item, type: isVideoPath(item) ? 'video' : 'image', name: '' }
     : item);
   gallery.innerHTML = normalized.map((item, index) => {
-    const source = item.source || '';
+    const source = previewMediaSrc(item.source || '');
     const safeSource = escapeHtml(source);
     const label = escapeHtml(item.name || ('媒體 ' + (index + 1)));
     const isVideo = item.type === 'video' || String(item.type).startsWith('video/') || isVideoPath(source);
@@ -609,6 +610,9 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
       item.serverPath = paths[index] || '';
     });
   }
+  const previewItems = state.selectedMediaItems.length
+    ? state.selectedMediaItems
+    : mediaPathsOf(generated);
   const fbText = $('#facebookText');
   if (fbText) fbText.value = generated.facebook || '';
   const reelText = $('#reelText');
@@ -650,7 +654,7 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
   syncEditorActions();
-  renderSavedMedia(mediaPathsOf(generated));
+  renderSavedMedia(previewItems);
   renderPreviewPlatformTabs();
   updateLivePreview();
   if (state.savedPost?.id) refreshVersionHistory();
