@@ -1,6 +1,7 @@
 import { $, $$, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentMembership, hasPermission, state } from './state.js';
+import { applySettingsPageFromLocation } from './settings.js';
 
 const ROLE_LABELS = Object.freeze({
   owner: 'Owner',
@@ -84,6 +85,7 @@ export function applyPermissionUi() {
     const permissions = String(element.dataset.requiredAny || '').split(',').map((item) => item.trim()).filter(Boolean);
     element.classList.toggle('permission-hidden', !permissions.some(hasPermission));
   });
+  applySettingsPageFromLocation();
 }
 
 function roleOptions(selected) {

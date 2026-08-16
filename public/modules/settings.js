@@ -1,10 +1,11 @@
-import { $, $$, setFormMessage, showToast } from './dom.js';
+import { $, $$, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentClient, state } from './state.js';
 import { loadClientFacebookFields } from './clients-ui.js';
 import { hasPermission } from './state.js';
 import { renderApiStatus } from './api-status.js';
 import { renderPlatformConnections } from './platform-connections.js';
+import { parseSettingsPage, SETTINGS_PAGES } from './settings-page.js';
 
 function tokenHealthMessage(health) {
   if (!health) return '';
@@ -56,13 +57,52 @@ export async function loadSettings() {
   }
 }
 
+function visibleSettingsPages() {
+  return [...$$('.settings-tab')]
+    .filter((tab) => !tab.classList.contains('permission-hidden'))
+    .map((tab) => tab.dataset.settingsPage)
+    .filter((page) => SETTINGS_PAGES.includes(page));
+}
+
+export function applySettingsPage(page, { syncHash = false } = {}) {
+  const requested = SETTINGS_PAGES.includes(page) ? page : 'gemini';
+  const allowedPages = visibleSettingsPages();
+  const activePage = allowedPages.includes(requested)
+    ? requested
+    : (allowedPages[0] || requested);
+
+  $$('.settings-tab').forEach((tab) => {
+    const active = tab.dataset.settingsPage === activePage;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  });
+  $$('.settings-page').forEach((panel) => {
+    panel.classList.toggle('is-hidden', panel.dataset.settingsPage !== activePage);
+  });
+
+  if (syncHash) {
+    const next = '#/settings/' + activePage;
+    if (window.location.hash !== next) window.history.replaceState({}, '', next);
+  }
+}
+
+export function applySettingsPageFromLocation(hash = window.location.hash) {
+  const parsed = parseSettingsPage(hash);
+  if (!parsed) return;
+  applySettingsPage(parsed, { syncHash: false });
+}
+
 export function initSettingsListeners(onSettingsSavedFn) {
-  $$('.settings-jump-link').forEach((button) => {
+  $$('.settings-tab').forEach((button) => {
     button.addEventListener('click', () => {
-      const target = document.getElementById(button.dataset.scrollTarget || '');
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      applySettingsPage(button.dataset.settingsPage, { syncHash: true });
+      window.scrollTo(0, 0);
     });
   });
+  window.addEventListener('hashchange', () => applySettingsPageFromLocation());
+  window.addEventListener('popstate', () => applySettingsPageFromLocation());
+  applySettingsPageFromLocation();
 
   const toggleGeminiKey = $('#toggleGeminiKey');
   if (toggleGeminiKey) {
@@ -136,9 +176,13 @@ export function initSettingsListeners(onSettingsSavedFn) {
       const msg = $('#testFacebookResult');
       if (msg) msg.textContent = '連線測試中…';
       try {
+        const pageId = $('#settingFacebookPageId')?.value?.trim() || '';
+        const pageAccessToken = $('#settingFacebookPageAccessToken')?.value || '';
+        const graphVersion = $('#settingMetaGraphVersion')?.value || '';
+        const canTestForm = Boolean(pageId && pageAccessToken && !pageAccessToken.includes('...'));
         const client = currentClient();
         const facebook = (client?.accounts || []).find((account) => account.platformId === 'facebook');
-        if (client && facebook?.id) {
+        if (!canTestForm && client && facebook?.id) {
           const res = await api('/api/clients/' + client.id + '/accounts/' + encodeURIComponent(facebook.id) + '/test', {
             method: 'POST',
           });
@@ -159,9 +203,9 @@ export function initSettingsListeners(onSettingsSavedFn) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            pageId: $('#settingFacebookPageId')?.value || '',
-            pageAccessToken: $('#settingFacebookPageAccessToken')?.value || '',
-            graphVersion: $('#settingMetaGraphVersion')?.value || '',
+            pageId,
+            pageAccessToken,
+            graphVersion,
           }),
         });
         if (msg) {
@@ -251,6 +295,25 @@ export function initSettingsListeners(onSettingsSavedFn) {
         showToast(error.message, 'error');
       } finally {
         btnRotateSecrets.disabled = false;
+      }
+    });
+  }
+
+  const btnSaveClientFacebook = $('#btnSaveClientFacebook');
+  if (btnSaveClientFacebook) {
+    btnSaveClientFacebook.addEventListener('click', async () => {
+      if (!hasPermission('system.manage')) return;
+      try {
+        await api('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            metaGraphVersion: $('#settingMetaGraphVersion')?.value || '',
+            publicMediaBaseUrl: $('#settingPublicMediaBaseUrl')?.value || '',
+          }),
+        });
+      } catch (error) {
+        showToast('Graph／媒體網址儲存失敗：' + error.message, 'error');
       }
     });
   }

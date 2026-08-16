@@ -14,6 +14,7 @@ const VIEW_ROUTES = {
   inbox: 'inbox',
   platforms: 'platforms',
   settings: 'settings',
+  errors: 'errors',
   team: 'team',
   reviews: 'reviews',
   help: 'help',
@@ -33,6 +34,7 @@ const PAGE_META = {
   inbox: ['INBOX', '收件匣'],
   platforms: ['PLATFORMS', '平台連線'],
   settings: ['SETTINGS', '設定'],
+  errors: ['ERROR LOG', '錯誤記錄'],
   team: ['TEAM & ACCESS', '團隊與權限'],
   reviews: ['REVIEW QUEUE', '審核佇列'],
   help: ['HELP', '幫助'],
@@ -44,10 +46,11 @@ function normalizeView(view = '') {
   return Object.prototype.hasOwnProperty.call(VIEW_ROUTES, view) ? view : 'overview';
 }
 
-function routeFromHash() {
-  const withoutHash = String(window.location.hash || '#/overview').replace(/^#\/?/, '');
+export function routeFromHash(hash = typeof window !== 'undefined' ? window.location.hash : '') {
+  const withoutHash = String(hash || '#/overview').replace(/^#\/?/, '');
   const path = withoutHash.split('?')[0].replace(/\/+$/, '') || 'overview';
   if (path === 'help' || path.startsWith('help/')) return { view: 'help', path };
+  if (path === 'settings' || path.startsWith('settings/')) return { view: 'settings', path };
   if (path === 'content/new') return { view: 'create', path };
   if (path.startsWith('content/')) return { view: 'review', path };
   if (path === 'content') return { view: 'drafts', path };
@@ -88,7 +91,7 @@ export function resetViewScroll({ window: win = window, document: doc = document
   win.scrollTo?.(0, 0);
   if (doc.documentElement) doc.documentElement.scrollTop = 0;
   if (doc.body) doc.body.scrollTop = 0;
-  doc.querySelectorAll?.('.composer-editor-pane, .review-preview').forEach((pane) => {
+  doc.querySelectorAll?.('.composer-editor-pane, .composer-preview-pane, .review-preview').forEach((pane) => {
     pane.scrollTop = 0;
   });
 }

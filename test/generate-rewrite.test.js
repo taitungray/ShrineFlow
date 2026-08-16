@@ -82,6 +82,51 @@ test('generate route supports no-media content generation without creating uploa
   }
 });
 
+test('generate route binds existing library media from mediaSequence', async () => {
+  const app = express();
+  app.use('/api', createGenerateRouter({
+    aiService: {
+      configured: true,
+      async generatePostCopy(input) {
+        assert.equal(input.files.length, 0);
+        return { facebook: '沿用舊圖', reel: '沿用舊圖短影音' };
+      },
+    },
+    repositories: {
+      mediaAssets: {
+        async list() {
+          return [{
+            id: 'asset-photo',
+            clientId: 'default',
+            mediaPath: '/uploads/altar.jpg',
+            originalName: 'altar.jpg',
+            mimeType: 'image/jpeg',
+            status: 'ready',
+          }];
+        },
+      },
+    },
+  }));
+  const server = app.listen(0);
+  try {
+    const form = new FormData();
+    form.set('contentTopic', '沿用舊圖');
+    form.set('mediaSequence', JSON.stringify([
+      { kind: 'library', mediaPath: '/uploads/altar.jpg', mediaId: 'asset-photo' },
+    ]));
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+      method: 'POST',
+      body: form,
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.deepEqual(body.mediaPaths, ['/uploads/altar.jpg']);
+    assert.equal(body.imagePath, '/uploads/altar.jpg');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('generate route returns clear API errors for missing topic and AI failure', async () => {
   const app = express();
   app.use('/api', createGenerateRouter({

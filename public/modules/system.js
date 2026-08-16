@@ -37,52 +37,6 @@ async function refreshStorageHealth() {
   return health;
 }
 
-function errorLogStatusFilter() {
-  return document.querySelector('input[name="errorLogStatusFilter"]:checked')?.value || 'open';
-}
-
-function errorLogStatusLabel(status) {
-  return status === 'fixed' ? '已修正' : '未修正';
-}
-
-async function refreshErrorLog() {
-  const status = errorLogStatusFilter();
-  const entries = await api('/api/system/error-log?limit=50&status=' + encodeURIComponent(status));
-  const result = $('#errorLogResult');
-  const list = $('#errorLogList');
-  if (result) result.textContent = entries.length ? `最近有 ${entries.length} 筆錯誤記錄。` : '目前沒有符合篩選的錯誤記錄。';
-  if (!list) return;
-  list.innerHTML = entries.length
-    ? '<div class="backup-list-heading"><strong>錯誤記錄</strong><span>最多顯示 50 筆</span></div>' + entries.map((entry) => {
-      const count = Number(entry.count || 1);
-      const resolved = entry.resolutionStatus === 'fixed';
-      const action = resolved
-        ? ''
-        : '<button type="button" class="btn-text" data-resolve-error="' + escapeHtml(entry.id) + '">標已修正</button>';
-      return '<div class="backup-row"><div><strong>' + escapeHtml(entry.scope || 'unknown')
-        + ' · ' + escapeHtml(String(entry.status || entry.code || ''))
-        + ' · ' + escapeHtml(errorLogStatusLabel(entry.resolutionStatus))
-        + '</strong><small>' + escapeHtml(formatDate(entry.lastSeenAt || entry.createdAt))
-        + ' · ' + count + ' 次 · ' + escapeHtml(entry.message || '')
-        + '</small></div>' + action + '</div>';
-    }).join('')
-    : '';
-}
-
-async function downloadErrorLog() {
-  const payload = await api('/api/system/error-log/export?status=all');
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const stamp = String(payload.exportedAt || new Date().toISOString()).slice(0, 10);
-  link.href = url;
-  link.download = 'shrineflow-error-log-' + stamp + '.json';
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
 async function refreshSystemHealth() {
   const health = await api('/api/system/health');
   const result = $('#systemHealthResult');
@@ -138,46 +92,6 @@ export function initSystemTools(onRestored) {
       await refreshStorageHealth();
       setMessage('儲存狀態已更新。', 'success');
     } catch (error) {
-      setMessage(error.message, 'danger');
-    }
-  });
-
-  $('#btnRefreshErrorLog')?.addEventListener('click', async () => {
-    try {
-      await refreshErrorLog();
-      setMessage('錯誤記錄已更新。', 'success');
-    } catch (error) {
-      setMessage(error.message, 'danger');
-    }
-  });
-
-  $('#btnExportErrorLog')?.addEventListener('click', async () => {
-    try {
-      await downloadErrorLog();
-      setMessage('錯誤記錄已下載。', 'success');
-    } catch (error) {
-      setMessage(error.message, 'danger');
-    }
-  });
-
-  document.querySelectorAll('input[name="errorLogStatusFilter"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      refreshErrorLog().catch((error) => setMessage(error.message, 'danger'));
-    });
-  });
-
-  $('#errorLogList')?.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-resolve-error]');
-    if (!button) return;
-    try {
-      button.disabled = true;
-      await api('/api/system/error-log/' + encodeURIComponent(button.dataset.resolveError) + '/resolve', {
-        method: 'POST',
-      });
-      await refreshErrorLog();
-      setMessage('已標為修正。', 'success');
-    } catch (error) {
-      button.disabled = false;
       setMessage(error.message, 'danger');
     }
   });
@@ -244,7 +158,6 @@ export function initSystemTools(onRestored) {
 
   refreshBackups().catch(() => {});
   refreshStorageHealth().catch(() => {});
-  refreshErrorLog().catch(() => {});
   refreshSystemHealth().catch(() => {});
   refreshReadiness().catch(() => {});
 }

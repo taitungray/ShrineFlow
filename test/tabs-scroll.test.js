@@ -15,7 +15,7 @@ test('resetViewScroll sends window and nested panes back to top', () => {
     documentElement: { scrollTop: 640 },
     body: { scrollTop: 640 },
     querySelectorAll(selector) {
-      assert.equal(selector, '.composer-editor-pane, .review-preview');
+      assert.equal(selector, '.composer-editor-pane, .composer-preview-pane, .review-preview');
       return [editorPane, previewPane];
     },
   };

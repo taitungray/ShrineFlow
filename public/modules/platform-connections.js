@@ -61,7 +61,7 @@ export function renderPlatformConnections() {
       + '<p>' + escapeHtml(platform.description || '此平台尚未提供連線說明。') + '</p>'
       + '<div class="platform-capabilities" aria-label="可用格式">' + (types || '<span class="helper">尚未取得格式</span>') + '</div>'
       + '<div class="platform-capabilities platform-capability-statuses" aria-label="能力狀態">' + capabilityPills(platform, accounts) + '</div>'
-      + '<div class="platform-connection-footer"><span class="helper">' + (healthNotice || (accounts.length ? '目前品牌：' + accounts.length + ' 個平台連線' : '目前品牌尚未設定')) + '</span><a class="btn-text" href="#/settings">' + (configured ? '管理設定 →' : '前往設定 →') + '</a></div>'
+      + '<div class="platform-connection-footer"><span class="helper">' + (healthNotice || (accounts.length ? '目前品牌：' + accounts.length + ' 個平台連線' : '目前品牌尚未設定')) + '</span><a class="btn-text" href="#/settings/facebook">' + (configured ? '管理設定 →' : '前往設定 →') + '</a></div>'
       + '</article>';
   });
   if (summary) {

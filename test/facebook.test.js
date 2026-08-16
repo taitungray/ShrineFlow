@@ -9,6 +9,7 @@ import {
   FacebookPublishError,
   formatFacebookMessage,
   humanizeFacebookGraphError,
+  isFacebookObjectAccessError,
 } from '../lib/facebook.js';
 
 test('formatFacebookMessage appends only missing hashtags', () => {
@@ -565,5 +566,123 @@ test('verify rejects a user id that cannot be resolved to a page', async () => {
     (error) => error instanceof FacebookPublishError
       && /粉專 ID|me\/accounts/.test(error.message)
       && !/Unsupported post request/.test(error.message),
+  );
+});
+
+test('verify rejects a user token even when the configured page id loads', async () => {
+  const publisher = createFacebookPublisher({
+    pageId: '999888',
+    pageAccessToken: 'user-token',
+    fetchImpl: async (url, options) => {
+      const href = String(url);
+      if (options?.method === 'GET' && href.includes('/me/accounts')) {
+        return new Response(JSON.stringify({ data: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (options?.method === 'GET' && /\/me(?:\?|$)/.test(href)) {
+        return new Response(JSON.stringify({
+          id: '1701654120897096',
+          name: '某人',
+          metadata: { type: 'user' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (options?.method === 'GET' && href.includes('/999888')) {
+        return new Response(JSON.stringify({
+          id: '999888',
+          name: '測試粉專',
+          metadata: { type: 'page' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ error: { message: 'unexpected ' + href, code: 100 } }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+  });
+
+  await assert.rejects(
+    () => publisher.verify(),
+    (error) => error instanceof FacebookPublishError
+      && /用戶權杖|Page token|me\/accounts/.test(error.message)
+      && !/Unsupported post request/.test(error.message),
+  );
+});
+
+test('does not republish to the user id from GET me when me/accounts is empty', async () => {
+  const requests = [];
+  const publisher = createFacebookPublisher({
+    pageId: '999888',
+    pageAccessToken: 'user-token',
+    fetchImpl: async (url, options) => {
+      const href = String(url);
+      requests.push({ href, method: options?.method || 'POST' });
+      if (options?.method === 'GET' && href.includes('/me/accounts')) {
+        return new Response(JSON.stringify({ data: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (options?.method === 'GET' && /\/me(?:\?|$)/.test(href)) {
+        return new Response(JSON.stringify({
+          id: '1701654120897096',
+          name: '某人',
+          metadata: { type: 'user' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({
+        error: {
+          message: "Unsupported post request. Object with ID '999888' does not exist, cannot be loaded due to missing permissions, or does not support this operation.",
+          type: 'GraphMethodException',
+          code: 100,
+          error_subcode: 33,
+        },
+      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    },
+  });
+
+  await assert.rejects(
+    () => publisher.publish({ facebook: '測試貼文' }),
+    (error) => error instanceof FacebookPublishError && isFacebookObjectAccessError(error),
+  );
+  assert.equal(requests.some((request) => request.href.includes('/1701654120897096/')), false);
+});
+
+test('maps page-token object-access failures away from the user-id copy', async () => {
+  const publisher = createFacebookPublisher({
+    pageId: '999888',
+    pageAccessToken: 'page-token',
+    fetchImpl: async (url, options) => {
+      const href = String(url);
+      if (options?.method === 'GET' && href.includes('/me/accounts')) {
+        return new Response(JSON.stringify({ data: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (options?.method === 'GET' && (/\/me(?:\?|$)/.test(href) || /\/999888(?:\?|$)/.test(href))) {
+        return new Response(JSON.stringify({
+          id: '999888',
+          name: '測試粉專',
+          metadata: { type: 'page' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({
+        error: {
+          message: "Unsupported post request. Object with ID '999888' does not exist, cannot be loaded due to missing permissions, or does not support this operation.",
+          type: 'GraphMethodException',
+          code: 100,
+          error_subcode: 33,
+        },
+      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    },
+  });
+
+  await assert.rejects(
+    () => publisher.publish({ facebook: '測試貼文' }),
+    (error) => error instanceof FacebookPublishError
+      && /權限|不支援|pages_manage_posts/.test(error.message)
+      && !/個人 User ID/.test(error.message),
   );
 });

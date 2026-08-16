@@ -13,6 +13,8 @@ import {
   previewSelectedMedia,
   bindUploadReordering,
 } from './modules/upload.js';
+import { buildGenerateMediaPayload } from './modules/media-picker.js';
+import { initMediaPicker } from './modules/media-picker-ui.js';
 import {
   renderPreviewPlatformTabs,
   updateLivePreview,
@@ -34,6 +36,7 @@ import { renderInsights, initInsightsListeners } from './modules/insights.js';
 import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
+import { initErrorLogs } from './modules/error-log-page.js';
 import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js';
 import { initClientErrorReporter } from './modules/client-error-reporter.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
@@ -278,6 +281,7 @@ async function initApp() {
   }
 
   bindUploadReordering(renderSavedMedia);
+  initMediaPicker(renderSavedMedia);
   renderPreviewPlatformTabs();
   updateLivePreview();
 
@@ -296,13 +300,17 @@ async function initApp() {
   if (generateForm) {
     generateForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const files = $('#imageInput').files;
       const formData = new FormData(event.currentTarget);
+      const mediaPayload = buildGenerateMediaPayload(state.selectedMediaItems);
+      formData.delete('media');
+      mediaPayload.files.forEach((file) => formData.append('media', file));
+      if (mediaPayload.sequence.length) formData.set('mediaSequence', JSON.stringify(mediaPayload.sequence));
       if (state.currentClientId) formData.set('clientId', state.currentClientId);
       setLoading(true);
-      setFormMessage(files.length
-        ? '正在讀取 ' + files.length + ' 個媒體並撰寫文案，影片可能需要較長時間。'
-        : '正在根據文字資訊撰寫文案。');
+      const hasLibrary = mediaPayload.sequence.some((entry) => entry.kind === 'library');
+      setFormMessage(mediaPayload.files.length
+        ? '正在讀取 ' + mediaPayload.files.length + ' 個媒體並撰寫文案，影片可能需要較長時間。'
+        : (hasLibrary ? '正在沿用素材庫檔案並撰寫文案。' : '正在根據文字資訊撰寫文案。'));
       try {
         const generated = await api('/api/generate', { method: 'POST', body: formData });
         state.savedPost = null;
@@ -364,6 +372,7 @@ async function initApp() {
     await loadSettings();
   });
   initSystemTools(loadData);
+  initErrorLogs();
 
   const refreshBtn = $('#refreshButton');
   if (refreshBtn) {

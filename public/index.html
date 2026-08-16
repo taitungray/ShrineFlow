@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.04" />
+    <link rel="stylesheet" href="/style.css?v=0.6.11" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -86,6 +86,7 @@
       <div class="sidebar-footer">
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
         <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
+        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span aria-hidden="true">⚠</span>錯誤記錄</a>
         <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
         <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span aria-hidden="true">?</span>幫助</a>
       </div>
@@ -176,7 +177,10 @@
               </label>
               <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
             </div>
-            <p class="helper">單檔 JPG／PNG／MP4，≤ 20MB。多張可拖曳調整順序，第 1 張為主圖。</p>
+            <div class="media-source-actions">
+              <button class="btn-secondary" id="pickLibraryMediaButton" type="button">從素材庫選</button>
+              <p class="helper">單檔 JPG／PNG／MP4，≤ 20MB。可混選庫內檔與新上傳，最多 10 個；第 1 張為主圖。</p>
+            </div>
 
             <div class="field-row">
               <div class="field">
@@ -362,18 +366,20 @@
             <div>
               <p class="section-tag">SETTINGS</p>
               <h2>系統設定</h2>
-              <p class="panel-lede">先填欄位、儲存、測試。步驟說明預設收合，需要時再展開。</p>
+              <p class="panel-lede">用分頁分別設定 Gemini、品牌與各平台。先填、儲存、再測試。步驟說明預設收合。</p>
             </div>
           </div>
-          <nav class="settings-jump" aria-label="跳到設定區塊">
-            <button type="button" class="settings-jump-link" data-scroll-target="geminiSettingsCard">Gemini</button>
-            <button type="button" class="settings-jump-link" data-scroll-target="brandManageCard">品牌</button>
-            <button type="button" class="settings-jump-link" data-scroll-target="clientFacebookCard">Facebook</button>
-            <button type="button" class="settings-jump-link" data-scroll-target="clientInstagramCard">Instagram</button>
-            <button type="button" class="settings-jump-link" data-scroll-target="clientThreadsCard">Threads</button>
-            <button type="button" class="settings-jump-link" data-scroll-target="backupSettingsCard">備份</button>
+          <nav class="settings-tabs" role="tablist" aria-label="設定分頁">
+            <button type="button" class="settings-tab active" role="tab" id="settingsTabGemini" data-settings-page="gemini" data-required-permission="system.manage" aria-controls="settingsPageGemini" aria-selected="true">Gemini</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabBrand" data-settings-page="brand" data-required-permission="system.manage" aria-controls="settingsPageBrand" aria-selected="false">品牌</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabFacebook" data-settings-page="facebook" data-required-permission="account.manage" aria-controls="settingsPageFacebook" aria-selected="false">Facebook</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabInstagram" data-settings-page="instagram" data-required-permission="account.manage" aria-controls="settingsPageInstagram" aria-selected="false">Instagram</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabThreads" data-settings-page="threads" data-required-permission="account.manage" aria-controls="settingsPageThreads" aria-selected="false">Threads</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabBackup" data-settings-page="backup" data-required-permission="system.manage" aria-controls="settingsPageBackup" aria-selected="false">備份</button>
           </nav>
 
+          <div class="settings-pages">
+          <section class="settings-page" id="settingsPageGemini" role="tabpanel" data-settings-page="gemini" aria-labelledby="settingsTabGemini" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="geminiSettingsCard" data-required-permission="system.manage">
             <legend class="group-title">🤖 Gemini AI 設定</legend>
             <div class="field">
@@ -422,7 +428,10 @@
               <span id="secretRotationStatus" class="test-result"></span>
             </div>
           </fieldset>
+          <button class="primary-button" type="submit" id="saveSettingsBtn" data-required-permission="system.manage" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
+          </section>
 
+          <section class="settings-page is-hidden" id="settingsPageBrand" role="tabpanel" data-settings-page="brand" aria-labelledby="settingsTabBrand" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="brandManageCard" data-required-permission="system.manage">
             <legend class="group-title">🏷️ 品牌管理</legend>
             <div class="field-row">
@@ -439,7 +448,9 @@
               <button type="button" id="btnCreateClient" class="btn-secondary" aria-label="新增品牌">＋ 新增品牌</button>
             </div>
           </fieldset>
+          </section>
 
+          <section class="settings-page is-hidden" id="settingsPageFacebook" role="tabpanel" data-settings-page="facebook" aria-labelledby="settingsTabFacebook" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientFacebookCard" data-required-permission="account.manage">
             <legend class="group-title">📘 目前品牌的 Facebook</legend>
             <p class="helper">貼粉專 ID 與 Page Access Token，儲存後測試。到期日可留白。</p>
@@ -519,7 +530,7 @@
                 <p class="setup-warn">只改網址成 <code>me/accounts</code> 不會變長期。不要在 Explorer 跑 <code>oauth/access_token</code>（常出現錯誤 101）。要先延長<strong>用戶權杖</strong>，再重查粉專 Token。</p>
                 <ol class="setup-steps">
                   <li>確認仍是用戶權杖（<code>me?fields=id,name</code> 是人名）。只複製右側 <code>EAA...</code>，不要複製 JSON 或 <code>id</code>。</li>
-                  <li>開 Token Debugger → Debug → <strong>Extend Access Token</strong>。沒有此按鈕＝App 選錯。</li>
+                  <li>開 Token Debugger → 除錯 → 按藍色 <strong>延伸存取權杖</strong>（英文介面寫 Extend Access Token）。沒有此按鈕＝貼成粉專 token 或 App 選錯。</li>
                   <li>延長後的用戶權杖貼回 Explorer 右側，再 GET <code>me/accounts?fields=id,name,access_token&amp;limit=100</code>。用粉專那筆 <code>access_token</code> 覆寫上面欄位 → 儲存 → 測試。</li>
                   <li>Debugger 看<strong>粉專</strong> Token：<code>Expires</code> 為 <strong>Never</strong> 才算換成。到期日留白。改密碼、撤銷 App、失去粉專角色才會失效。</li>
                 </ol>
@@ -533,7 +544,9 @@
               </div>
             </details>
           </fieldset>
+          </section>
 
+          <section class="settings-page is-hidden" id="settingsPageInstagram" role="tabpanel" data-settings-page="instagram" aria-labelledby="settingsTabInstagram" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientInstagramCard" data-required-permission="account.manage">
             <legend class="group-title">📸 目前品牌的 Instagram</legend>
             <p class="helper">數字 User ID＋Token（常與 Facebook Page Token 相同），不是 @帳號。</p>
@@ -572,7 +585,9 @@
               </div>
             </details>
           </fieldset>
+          </section>
 
+          <section class="settings-page is-hidden" id="settingsPageThreads" role="tabpanel" data-settings-page="threads" aria-labelledby="settingsTabThreads" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientThreadsCard" data-required-permission="account.manage">
             <legend class="group-title">🧵 目前品牌的 Threads</legend>
             <p class="helper">數字 User ID＋Threads Token。不要貼 Facebook 的 <code>EAA...</code>。</p>
@@ -611,7 +626,9 @@
               </div>
             </details>
           </fieldset>
+          </section>
 
+          <section class="settings-page is-hidden" id="settingsPageBackup" role="tabpanel" data-settings-page="backup" aria-labelledby="settingsTabBackup" data-required-permission="system.manage">
           <fieldset class="form-group-card" id="backupSettingsCard" data-required-permission="system.manage">
             <legend class="group-title">🛡️ 備份與儲存管理</legend>
             <details class="disclosure compact">
@@ -645,34 +662,12 @@
               <span id="systemStorageMessage" class="test-result"></span>
             </div>
             <div id="backupList" class="backup-list" aria-live="polite"></div>
-            <div class="action-box">
-              <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
-              <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
-              <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
-            </div>
-            <div class="field">
-              <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
-              <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
-                <label class="radio-pill">
-                  <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
-                  <span>未修正</span>
-                </label>
-                <label class="radio-pill">
-                  <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
-                  <span>已修正</span>
-                </label>
-                <label class="radio-pill">
-                  <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
-                  <span>全部</span>
-                </label>
-              </div>
-            </div>
-            <div id="errorLogList" class="backup-list" aria-live="polite"></div>
+            <p class="helper" data-required-permission="system.manage">系統錯誤記錄已移到獨立頁。<a class="field-link" href="#/errors" data-view-target="errors" data-route-target="errors">前往錯誤記錄 →</a></p>
             <p class="helper" id="readinessResult">部署檢查只提供準備度提示，不取代登入／HTTPS／反向代理設定。</p>
             <div id="readinessList" class="backup-list" aria-live="polite"></div>
           </fieldset>
-
-          <button class="primary-button" type="submit" id="saveSettingsBtn" data-required-permission="system.manage" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
+          </section>
+          </div>
         </form>
 
         <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
@@ -975,7 +970,7 @@
               <ol class="setup-steps">
                 <li>同一個 Meta App。權限在 App 儀表板「使用案例 → 權限 → + 新增」加。</li>
                 <li>Facebook：粉專 ID＋Page Token 來自 Explorer 左邊 JSON <code>me/accounts</code> 的 <code>data[]</code>，不是右側用戶權杖。</li>
-                <li>換長期：Token Debugger 的 <strong>Extend Access Token</strong> 延長用戶權杖，再重跑 <code>me/accounts</code>。不要在 Explorer 跑 <code>oauth/access_token</code>。</li>
+                <li>換長期：Token Debugger 對<strong>用戶權杖</strong>按 <strong>延伸存取權杖</strong>，再重跑 <code>me/accounts</code>。不要在 Explorer 跑 <code>oauth/access_token</code>。</li>
                 <li>Instagram 用數字 User ID＋Page Token；Threads 必須另拿 Threads Token。</li>
               </ol>
             </div>
@@ -1086,6 +1081,41 @@
           </div>
         </section>
 
+        <section class="panel module-panel is-hidden" id="errorLogPanel" data-view-panel="errors">
+          <div class="panel-heading compact">
+            <div>
+              <p class="section-tag">ERROR LOG</p>
+              <h2>錯誤記錄</h2>
+              <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
+            </div>
+            <a class="btn-text" href="#/settings" data-view-target="settings" data-route-target="settings">前往設定 →</a>
+          </div>
+          <div class="action-box" data-required-permission="system.manage">
+            <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
+            <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
+            <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
+          </div>
+          <div class="field" data-required-permission="system.manage">
+            <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
+            <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
+              <label class="radio-pill">
+                <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
+                <span>未修正</span>
+              </label>
+              <label class="radio-pill">
+                <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
+                <span>已修正</span>
+              </label>
+              <label class="radio-pill">
+                <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
+                <span>全部</span>
+              </label>
+            </div>
+          </div>
+          <p id="errorLogMessage" class="test-result" aria-live="polite"></p>
+          <div id="errorLogList" class="backup-list error-log-list" aria-live="polite"></div>
+        </section>
+
         <section class="panel module-panel is-hidden" id="helpPanel" data-view-panel="help">
           <div class="panel-heading">
             <div>
@@ -1122,6 +1152,34 @@
       <button id="mobileMoreToggle" type="button" aria-label="開啟更多導覽" aria-controls="appSidebar" aria-expanded="false"><span aria-hidden="true">⋯</span><small>更多</small></button>
     </nav>
 
+    <dialog class="module-dialog media-picker-dialog" id="mediaPickerDialog" aria-labelledby="mediaPickerTitle">
+      <form method="dialog">
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
+        <p class="section-tag">MEDIA</p>
+        <h3 id="mediaPickerTitle">從素材庫選</h3>
+        <p class="dialog-lede">勾選目前品牌已上傳的圖片或影片，加入這則貼文。可與新上傳混排。</p>
+        <div class="module-toolbar" aria-label="素材挑選篩選">
+          <div class="field module-search-field">
+            <label for="mediaPickerSearch" class="field-label">搜尋素材</label>
+            <input id="mediaPickerSearch" type="search" placeholder="搜尋檔名…" autocomplete="off" />
+          </div>
+          <div class="field module-filter-field">
+            <span id="pickerMediaTypeLabel" class="field-label">類型</span>
+            <div class="radio-pill-group module-filter-pills" role="radiogroup" aria-labelledby="pickerMediaTypeLabel">
+              <label class="radio-pill"><input type="radio" name="pickerMediaType" value="all" checked /><span>全部</span></label>
+              <label class="radio-pill"><input type="radio" name="pickerMediaType" value="image" /><span>圖片</span></label>
+              <label class="radio-pill"><input type="radio" name="pickerMediaType" value="video" /><span>影片</span></label>
+            </div>
+          </div>
+        </div>
+        <p class="module-summary" id="mediaPickerSummary" aria-live="polite"></p>
+        <div id="mediaPickerGrid" class="media-picker-grid" aria-live="polite"></div>
+        <div class="dialog-actions">
+          <button class="btn-text" id="mediaPickerCancel" type="button" value="cancel">取消</button>
+          <button class="primary-button" id="mediaPickerConfirm" type="button">加入所選</button>
+        </div>
+      </form>
+    </dialog>
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
         <div class="schedule-dialog-body">
@@ -1277,6 +1335,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.04" type="module"></script>
+    <script src="/app.js?v=0.6.11" type="module"></script>
   </body>
 </html>

@@ -1,8 +1,21 @@
-import { $, escapeHtml, setFormMessage } from './dom.js';
-import { state } from './state.js';
+import { $, isVideoPath, setFormMessage } from './dom.js';
+import { state, mediaPathsOf } from './state.js';
+import { previewMediaSrc } from './media-preview.js';
+import { mergeSelectedMedia, seedSelectedMedia } from './media-picker.js';
+
+function revokePreviewUrl(source) {
+  if (String(source || '').startsWith('blob:')) URL.revokeObjectURL(source);
+}
+
+function selectedItemIsVideo(item = {}) {
+  return Boolean(item.file?.type?.startsWith('video/')
+    || String(item.type || '').startsWith('video/')
+    || item.type === 'video'
+    || isVideoPath(item.serverPath || item.source || item.name || ''));
+}
 
 export function clearUploadPreview(renderSavedMediaFn) {
-  state.selectedMediaItems.forEach((item) => URL.revokeObjectURL(item.source));
+  state.selectedMediaItems.forEach((item) => revokePreviewUrl(item.source));
   state.uploadPreviewUrls = [];
   state.selectedMediaItems = [];
   const gallery = $('#uploadPreviewGallery');
@@ -14,18 +27,26 @@ export function clearUploadPreview(renderSavedMediaFn) {
 
 export function syncSelectedMediaFiles() {
   const transfer = new DataTransfer();
-  state.selectedMediaItems.forEach((item) => transfer.items.add(item.file));
+  state.selectedMediaItems.forEach((item) => {
+    if (item.file) transfer.items.add(item.file);
+  });
   const input = $('#imageInput');
   if (input) input.files = transfer.files;
+}
+
+export function refreshSelectedMediaPreview(renderSavedMediaFn) {
+  syncSelectedMediaFiles();
+  renderUploadPreview();
+  if (typeof renderSavedMediaFn === 'function') renderSavedMediaFn(state.selectedMediaItems);
+  const uploadZone = $('#uploadZone');
+  if (uploadZone) uploadZone.classList.toggle('has-media', state.selectedMediaItems.length > 0);
 }
 
 export function moveSelectedMedia(fromIndex, toIndex, renderSavedMediaFn) {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= state.selectedMediaItems.length || toIndex >= state.selectedMediaItems.length) return;
   const [item] = state.selectedMediaItems.splice(fromIndex, 1);
   state.selectedMediaItems.splice(toIndex, 0, item);
-  syncSelectedMediaFiles();
-  renderUploadPreview();
-  if (typeof renderSavedMediaFn === 'function') renderSavedMediaFn(state.selectedMediaItems);
+  refreshSelectedMediaPreview(renderSavedMediaFn);
   setFormMessage('已調整順序；第 1 張會作為主要圖片。', 'success');
 }
 
@@ -39,8 +60,9 @@ export function renderUploadPreview() {
     figure.draggable = false;
     figure.dataset.index = String(index);
     figure.title = '拖曳調整順序';
-    const media = document.createElement(item.file.type.startsWith('video/') ? 'video' : 'img');
-    media.src = item.source;
+    const video = selectedItemIsVideo(item);
+    const media = document.createElement(video ? 'video' : 'img');
+    media.src = previewMediaSrc(item.source || item.serverPath || '');
     media.draggable = false;
     media.setAttribute('draggable', 'false');
     media.setAttribute('aria-label', '已選媒體 ' + (index + 1));
@@ -49,7 +71,7 @@ export function renderUploadPreview() {
       media.playsInline = true;
       media.preload = 'metadata';
     } else {
-      media.alt = item.file.name;
+      media.alt = item.name || item.file?.name || ('媒體 ' + (index + 1));
     }
     const badge = document.createElement('span');
     badge.className = 'media-order-badge';
@@ -149,55 +171,51 @@ export function bindUploadReordering(renderSavedMediaFn) {
 
 export function previewSelectedMedia(fileList, renderSavedMediaFn) {
   const files = [...(fileList || [])];
-  if (!files.length) {
-    clearUploadPreview(renderSavedMediaFn);
-    return false;
-  }
-  if (files.length > 10) {
-    $('#imageInput').value = '';
-    clearUploadPreview(renderSavedMediaFn);
-    setFormMessage('一次最多選擇 10 個檔案。', 'error');
-    return false;
-  }
+  if (!files.length) return false;
   const unsupported = files.find((file) => !file.type.startsWith('image/') && !file.type.startsWith('video/'));
   if (unsupported) {
-    $('#imageInput').value = '';
-    clearUploadPreview(renderSavedMediaFn);
+    syncSelectedMediaFiles();
     setFormMessage('「' + unsupported.name + '」不是圖片或影片。', 'error');
     return false;
   }
   const oversized = files.find((file) => file.size > 20 * 1024 * 1024);
   if (oversized) {
-    $('#imageInput').value = '';
-    clearUploadPreview(renderSavedMediaFn);
+    syncSelectedMediaFiles();
     setFormMessage('「' + oversized.name + '」超過 20MB。', 'error');
     return false;
   }
 
-  clearUploadPreview(renderSavedMediaFn);
-  state.generated = null;
-  state.editorDirty = true;
-  state.selectedMediaItems = files.map((file) => {
-    const source = URL.createObjectURL(file);
-    state.uploadPreviewUrls.push(source);
-    return { file, source, type: file.type, name: file.name };
+  state.selectedMediaItems = seedSelectedMedia(
+    state.selectedMediaItems,
+    mediaPathsOf(state.generated || state.savedPost || {}),
+  );
+  const incoming = files.map((file) => ({
+    kind: 'file',
+    file,
+    source: '',
+    type: file.type,
+    name: file.name,
+  }));
+  const result = mergeSelectedMedia(state.selectedMediaItems, incoming);
+  result.items.forEach((item) => {
+    if (item.file && !item.source) {
+      item.source = URL.createObjectURL(item.file);
+      state.uploadPreviewUrls.push(item.source);
+    }
   });
-  renderUploadPreview();
-  if (typeof renderSavedMediaFn === 'function') renderSavedMediaFn(state.selectedMediaItems);
-  const uploadZone = $('#uploadZone');
-  if (uploadZone) uploadZone.classList.add('has-media');
-  state.savedPost = null;
-  const draftBadge = $('#draftState');
-  if (draftBadge) {
-    draftBadge.textContent = '待產生';
-    draftBadge.classList.remove('ready');
-  }
+  state.selectedMediaItems = result.items;
+  state.editorDirty = true;
+  refreshSelectedMediaPreview(renderSavedMediaFn);
   const saveBtn = $('#saveButton');
-  if (saveBtn) saveBtn.disabled = true;
+  if (saveBtn && result.added) saveBtn.disabled = true;
   const scheduleBtn = $('#scheduleButton');
-  if (scheduleBtn) scheduleBtn.disabled = true;
+  if (scheduleBtn && result.added) scheduleBtn.disabled = true;
   const publishBtn = $('#publishNowButton');
-  if (publishBtn) publishBtn.disabled = true;
+  if (publishBtn && result.added) publishBtn.disabled = true;
+  if (!result.added && result.skippedLimit) {
+    setFormMessage('已達 10 個上限，沒有加入新檔案。', 'error');
+    return false;
+  }
   const imageCount = files.filter((file) => file.type.startsWith('image/')).length;
   const videoCount = files.length - imageCount;
   setFormMessage('已選擇 ' + files.length + ' 個檔案（圖片 ' + imageCount + '、影片 ' + videoCount + '）。', 'success');
