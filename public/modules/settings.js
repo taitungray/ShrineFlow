@@ -1,4 +1,4 @@
-import { $, setFormMessage, showToast } from './dom.js';
+import { $, $$, setFormMessage, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentClient, state } from './state.js';
 import { loadClientFacebookFields } from './clients-ui.js';
@@ -57,6 +57,13 @@ export async function loadSettings() {
 }
 
 export function initSettingsListeners(onSettingsSavedFn) {
+  $$('.settings-jump-link').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = document.getElementById(button.dataset.scrollTarget || '');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
   const toggleGeminiKey = $('#toggleGeminiKey');
   if (toggleGeminiKey) {
     toggleGeminiKey.addEventListener('click', () => {

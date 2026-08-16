@@ -753,7 +753,7 @@ select:focus, textarea:focus, input:focus {
   overflow: hidden;
 }
 
-.disclosure.compact { margin: 0 0 14px; }
+.disclosure.compact { margin: 12px 0 0; }
 
 .disclosure summary {
   display: flex;
@@ -780,6 +780,56 @@ select:focus, textarea:focus, input:focus {
   padding: 14px;
   border-top: 1px solid var(--border);
   background: var(--bg-subtle);
+}
+
+.disclosure-body .helper,
+.disclosure-body .setup-steps,
+.disclosure-body .setup-note,
+.disclosure-body .setup-warn {
+  margin-bottom: 10px;
+}
+
+.disclosure-body .setup-steps:last-child,
+.disclosure-body .helper:last-child {
+  margin-bottom: 0;
+}
+
+.settings-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.settings-jump-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.settings-jump-link:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+#geminiSettingsCard,
+#brandManageCard,
+#clientFacebookCard,
+#clientInstagramCard,
+#clientThreadsCard,
+#backupSettingsCard {
+  scroll-margin-top: 96px;
 }
 
 /* Button System */
