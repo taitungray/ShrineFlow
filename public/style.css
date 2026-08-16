@@ -2938,8 +2938,9 @@ select:focus, textarea:focus, input:focus {
 .composer-panel {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .composer-shell-header {
@@ -2955,21 +2956,25 @@ select:focus, textarea:focus, input:focus {
 .composer-editor-pane,
 .composer-preview-pane {
   min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.composer-editor-pane {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .composer-editor-pane .panel-heading,
 .composer-preview-pane .panel-heading {
+  flex: 0 0 auto;
   margin-bottom: 16px;
 }
 
 .composer-preview-pane {
-  position: sticky;
-  top: 104px;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  max-height: calc(100dvh - 120px);
   padding: 2px 0 0;
   overflow: hidden;
 }
@@ -2980,6 +2985,40 @@ select:focus, textarea:focus, input:focus {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 2px;
+}
+
+html:has(#composerPanel:not(.is-hidden)) {
+  overflow: hidden;
+}
+
+body:has(#composerPanel:not(.is-hidden)) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body:has(#composerPanel:not(.is-hidden)) .shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+body:has(#composerPanel:not(.is-hidden)) .workspace-grid {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body:has(#composerPanel:not(.is-hidden)) .composer-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .preview-media-gallery {
@@ -3083,16 +3122,6 @@ select:focus, textarea:focus, input:focus {
     grid-template-columns: 1fr;
   }
 
-  .composer-preview-pane {
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .composer-preview-pane .review-preview {
-    overflow: visible;
-  }
-
   .composer-mode-switch {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3110,7 +3139,6 @@ select:focus, textarea:focus, input:focus {
 
 @media (max-width: 767px) {
   .composer-panel {
-    display: block;
     padding: 14px;
   }
 

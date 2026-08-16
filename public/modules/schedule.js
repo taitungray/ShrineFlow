@@ -1,7 +1,8 @@
 import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue } from './dom.js';
-import { state, PLATFORM_NAMES } from './state.js';
+import { state, PLATFORM_NAMES, currentClient } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api } from './api.js';
+import { getActiveTarget } from './targets-ui.js';
 import { targetStatusLabel } from './status.js';
 
 let reschedulingItem = null;
@@ -354,9 +355,12 @@ export function initScheduleDialog(refreshListsFn) {
       const now = new Date(Date.now() + 60 * 60 * 1000);
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       $('#scheduledAt').value = now.toISOString().slice(0, 16);
-      setFieldValue($('#scheduleChannel'), 'facebook');
-      renderAccountOptions('facebook');
-      renderContentTypeOptions('facebook');
+      const activeAccount = (currentClient()?.accounts || state.accounts || []).find((item) => item.id === state.activeTargetId);
+      const channel = activeAccount?.platformId || 'facebook';
+      setFieldValue($('#scheduleChannel'), channel);
+      renderAccountOptions(channel);
+      if (activeAccount?.id && $('#scheduleAccount')) $('#scheduleAccount').value = activeAccount.id;
+      renderContentTypeOptions(channel);
       setScheduleMode('manual', { locked: false });
       dialog.showModal();
     });
@@ -398,16 +402,17 @@ export function initScheduleDialog(refreshListsFn) {
             body: JSON.stringify({ scheduledAt, scheduledLocal, timeZone, scheduleMode: 'manual' }),
           });
         } else {
+          const activeTarget = getActiveTarget();
           await api('/api/schedule', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               postId: state.savedPost.id,
-              targetId: state.activeTargetId || undefined,
+              targetId: activeTarget?.id || undefined,
               ...(mode === 'manual' ? { scheduledAt, scheduledLocal, timeZone } : {}),
               scheduleMode: mode,
               channel,
-              accountId: $('#scheduleAccount').value || state.activeTargetId,
+              accountId: activeTarget?.accountId || $('#scheduleAccount').value || state.activeTargetId,
               contentType: fieldValue($('#scheduleContentType')) || 'post',
               contentSettings: readContentSettings(),
             }),
