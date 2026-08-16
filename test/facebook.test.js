@@ -99,6 +99,45 @@ test('publishes multiple local images as one Facebook post', async () => {
   }
 });
 
+test('schedules a multi-photo post as unpublished temporary photos then a scheduled feed', async () => {
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'facebook-scheduled-multi-photo-'));
+  const imagePaths = [path.join(temporaryDirectory, 'one.jpg'), path.join(temporaryDirectory, 'two.png')];
+  await Promise.all(imagePaths.map((filePath) => fs.writeFile(filePath, Buffer.from([1, 2, 3]))));
+  const requests = [];
+  const scheduledAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+  try {
+    const publisher = createFacebookPublisher({
+      pageId: '12345',
+      pageAccessToken: 'secret-token',
+      fetchImpl: async (url, options) => {
+        requests.push({ url, options });
+        const endpoint = String(url).endsWith('/photos') ? { id: 'photo-' + requests.length } : { id: 'post-1' };
+        return new Response(JSON.stringify(endpoint), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      },
+    });
+    const result = await publisher.publish(
+      { facebook: '排程多圖' },
+      { mediaFilePaths: imagePaths, scheduledAt },
+    );
+    assert.equal(requests.length, 3);
+    assert.equal(requests[0].options.body.get('published'), 'false');
+    assert.equal(requests[0].options.body.get('temporary'), 'true');
+    assert.equal(requests[1].options.body.get('published'), 'false');
+    assert.equal(requests[1].options.body.get('temporary'), 'true');
+    assert.equal(requests[2].options.body.get('published'), 'false');
+    assert.equal(requests[2].options.body.get('unpublished_content_type'), 'SCHEDULED');
+    assert.equal(
+      requests[2].options.body.get('scheduled_publish_time'),
+      String(Math.floor(new Date(scheduledAt).getTime() / 1000)),
+    );
+    assert.equal(result.type, 'multi-photo');
+    assert.equal(result.scheduled, true);
+  } finally {
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});
+
 test('publishes one local video to the page videos endpoint', async () => {
   const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'facebook-video-'));
   const videoPath = path.join(temporaryDirectory, 'clip.mp4');
@@ -375,6 +414,7 @@ test('schedules a text feed post with published=false and scheduled_publish_time
     { scheduledAt },
   );
   assert.equal(body.get('published'), 'false');
+  assert.equal(body.get('unpublished_content_type'), 'SCHEDULED');
   assert.equal(body.get('scheduled_publish_time'), String(Math.floor(new Date(scheduledAt).getTime() / 1000)));
   assert.equal(result.externalId, '12345_999');
   assert.equal(result.scheduled, true);

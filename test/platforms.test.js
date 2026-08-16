@@ -59,3 +59,19 @@ test('builds fresh publishing state from saved client credentials', () => {
   assert.deepEqual(state.platforms.map((platform) => platform.configured), [false, true, true]);
   assert.deepEqual(state.accounts.map((account) => account.configured), [false, true, true]);
 });
+
+test('enables Facebook from client page credentials without env fallback', () => {
+  const state = buildPublishingState({
+    facebookConfigured: false,
+    facebookPageId: '',
+    clients: [{
+      accounts: [{
+        platformId: 'facebook',
+        credentials: { pageId: '1701654120897096', pageAccessToken: 'page-token' },
+      }],
+    }],
+  });
+
+  assert.equal(state.platforms[0].configured, true);
+  assert.equal(state.platforms[0].enabled, true);
+});
