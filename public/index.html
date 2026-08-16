@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.16" />
+    <link rel="stylesheet" href="/style.css?v=0.6.17" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -1093,7 +1093,7 @@
             <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
             <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
           </div>
-          <div class="field" data-required-permission="system.manage">
+          <div class="field inline-field" data-required-permission="system.manage">
             <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
             <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
               <label class="radio-pill">
@@ -1153,9 +1153,11 @@
     <dialog class="module-dialog media-picker-dialog" id="mediaPickerDialog" aria-labelledby="mediaPickerTitle">
       <form method="dialog">
         <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
-        <p class="section-tag">MEDIA</p>
-        <h3 id="mediaPickerTitle">從素材庫選</h3>
-        <p class="dialog-lede">勾選目前品牌已上傳的圖片或影片，加入這則貼文。可與新上傳混排。</p>
+        <div class="dialog-heading">
+          <p class="section-tag">MEDIA</p>
+          <h3 id="mediaPickerTitle">從素材庫選</h3>
+          <p class="dialog-lede">勾選目前品牌已上傳的圖片或影片，加入這則貼文。可與新上傳混排。</p>
+        </div>
         <div class="module-toolbar" aria-label="素材挑選篩選">
           <div class="field module-search-field">
             <label for="mediaPickerSearch" class="field-label">搜尋素材</label>
@@ -1181,8 +1183,10 @@
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
         <div class="schedule-dialog-body">
-        <p class="section-tag">PUBLISH</p>
-        <h3>排程發布</h3>
+        <div class="dialog-heading">
+          <p class="section-tag">PUBLISH</p>
+          <h3>排程發布</h3>
+        </div>
         <div class="field">
           <span id="scheduleChannelLabel" class="field-label">平台</span>
           <div class="radio-pill-group" id="scheduleChannel" role="radiogroup" aria-labelledby="scheduleChannelLabel"></div>
@@ -1220,9 +1224,11 @@
     </dialog>
     <dialog class="module-dialog reauth-dialog" id="reauthDialog" aria-labelledby="reauthTitle">
       <form id="reauthForm">
-        <p class="section-tag">SECURITY</p>
-        <h3 id="reauthTitle">再次確認身分</h3>
-        <p class="dialog-lede" id="reauthDescription">變更成員、平台憑證或系統設定前，請再登入一次。</p>
+        <div class="dialog-heading">
+          <p class="section-tag">SECURITY</p>
+          <h3 id="reauthTitle">再次確認身分</h3>
+          <p class="dialog-lede" id="reauthDescription">變更成員、平台憑證或系統設定前，請再登入一次。</p>
+        </div>
         <div class="field" id="reauthPasswordField">
           <label for="reauthPassword" class="field-label">密碼</label>
           <input id="reauthPassword" name="password" type="password" autocomplete="current-password" />
@@ -1238,9 +1244,11 @@
     <dialog id="templateDialog" class="module-dialog">
       <form method="dialog" id="templateForm">
         <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
-        <p class="section-tag">TEMPLATE</p>
-        <h3>建立可重用模板</h3>
-        <p class="dialog-lede">套用模板只會帶入欄位，不會直接覆蓋已保存內容。</p>
+        <div class="dialog-heading">
+          <p class="section-tag">TEMPLATE</p>
+          <h3>建立可重用模板</h3>
+          <p class="dialog-lede">套用模板只會帶入欄位，不會直接覆蓋已保存內容。</p>
+        </div>
         <fieldset class="form-group-card">
           <legend class="group-title">🧩 模板內容</legend>
           <div class="field">
@@ -1295,9 +1303,11 @@
     <dialog id="campaignDialog" class="module-dialog campaign-dialog">
       <form method="dialog" id="campaignForm">
         <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
-        <p class="section-tag">CAMPAIGN</p>
-        <h3>建立內容活動</h3>
-        <p class="dialog-lede">活動只整理內容與發布進度，不會改變內容本身。</p>
+        <div class="dialog-heading">
+          <p class="section-tag">CAMPAIGN</p>
+          <h3>建立內容活動</h3>
+          <p class="dialog-lede">活動只整理內容與發布進度，不會改變內容本身。</p>
+        </div>
         <fieldset class="form-group-card">
           <legend class="group-title">◈ 活動資訊</legend>
           <div class="field">
@@ -1333,6 +1343,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.16" type="module"></script>
+    <script src="/app.js?v=0.6.17" type="module"></script>
   </body>
 </html>
