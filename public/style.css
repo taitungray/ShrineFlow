@@ -2209,7 +2209,7 @@ dialog:not([open]) {
 }
 
 .nav-badge {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 20px;
@@ -2223,6 +2223,10 @@ dialog:not([open]) {
   font-size: 0.72rem !important;
   font-weight: 800;
   line-height: 1;
+}
+
+.nav-badge[hidden] {
+  display: none !important;
 }
 
 .nav-badge[data-type="warning"] {

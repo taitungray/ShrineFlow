@@ -29,6 +29,18 @@ test('calendar hides crisis pause and duplicate agenda in month view', async () 
   assert.match(css, /data-calendar-view="month"\] \.calendar-agenda/, 'month view hides the duplicate agenda list');
 });
 
+test('nav badges stay hidden until they have a count', async () => {
+  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const insightsNav = html.match(/href="#\/insights"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
+
+  assert.match(css, /\.nav-badge\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important/, 'empty nav badges must not paint a blank circle');
+  assert.match(html, /id="navDraftsBadge" hidden/, 'content badge starts hidden');
+  assert.match(html, /id="navPublishingBadge" hidden/, 'publishing badge starts hidden');
+  assert.match(insightsNav, /<span aria-hidden="true">▥<\/span>/, 'insights uses a bar icon, not a circle');
+  assert.equal(insightsNav.includes('◌'), false, 'insights icon must not look like a notification dot');
+});
+
 test('publishing logs reuse content-card density', async () => {
   const js = await fs.readFile(path.join(root, 'public', 'modules', 'publishing-logs.js'), 'utf8');
 
