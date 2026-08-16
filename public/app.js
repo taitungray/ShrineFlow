@@ -27,6 +27,7 @@ import { renderOverview } from './modules/overview.js';
 import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
 import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js';
 import { renderPlatformConnections } from './modules/platform-connections.js';
+import { renderApiStatus } from './modules/api-status.js';
 import { renderTemplates, initTemplateManager } from './modules/templates.js';
 import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
 import { renderInsights, initInsightsListeners } from './modules/insights.js';
@@ -149,6 +150,7 @@ async function loadData() {
     connected: false,
     error: error.message,
   }));
+  state.facebookStatus = facebookStatus;
 
   state.posts = posts;
   state.schedule = schedule;
@@ -195,25 +197,7 @@ async function loadData() {
   await loadTeamManagement();
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
 
-  const status = $('#apiStatus');
-  if (status) {
-    const client = currentClient();
-    const clientLabel = client ? client.name : '未選品牌';
-    const aiOk = Boolean(config.aiConfigured);
-    const facebookAccount = (client?.accounts || []).find((account) => account.platformId === 'facebook' && account.configured);
-    const fbOk = Boolean(facebookAccount) || Boolean(facebookStatus.connected);
-    const compact = window.matchMedia('(max-width: 768px)').matches;
-    status.textContent = compact
-      ? ((aiOk ? 'AI✓' : 'AI✗') + ' · ' + (fbOk ? 'FB✓' : 'FB✗'))
-      : (clientLabel + ' · ' + (aiOk ? config.provider + ' 已連線' : 'Gemini 未連線') + ' · ' + (facebookAccount ? 'FB 已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定')));
-    status.title = [
-      clientLabel,
-      aiOk ? (config.provider + ' 已連線') : 'Gemini 未連線',
-      facebookAccount ? 'FB 已設定' : (facebookStatus.connected ? 'FB 全域已連線' : 'FB 未設定'),
-      facebookStatus.error || '',
-    ].filter(Boolean).join('\n');
-    status.dataset.ready = config.aiConfigured ? 'true' : 'false';
-  }
+  renderApiStatus();
 
   if (config.aiConfigured) {
     setFormMessage('先選品牌，再建立內容；每個平台都能各自覆寫與排程。');
@@ -349,6 +333,8 @@ async function initApp() {
       await refreshLists();
       await loadTeamManagement();
       loadClientFacebookFields();
+      renderApiStatus();
+      renderPlatformConnections();
     },
     onClientsUpdated: async () => {
       state.clients = await api('/api/clients');
@@ -360,6 +346,9 @@ async function initApp() {
       applyPermissionUi();
       await refreshLists();
       await loadTeamManagement();
+      loadClientFacebookFields();
+      renderApiStatus();
+      renderPlatformConnections();
     },
   });
   initSettingsListeners(async () => {

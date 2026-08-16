@@ -1,8 +1,10 @@
 import { $, setFormMessage, showToast } from './dom.js';
 import { api } from './api.js';
-import { currentClient } from './state.js';
+import { currentClient, state } from './state.js';
 import { loadClientFacebookFields } from './clients-ui.js';
 import { hasPermission } from './state.js';
+import { renderApiStatus } from './api-status.js';
+import { renderPlatformConnections } from './platform-connections.js';
 
 function tokenHealthMessage(health) {
   if (!health) return '';
@@ -10,7 +12,18 @@ function tokenHealthMessage(health) {
   if (health.status === 'expiring') return `Token 將於 ${health.expiresInDays} 天內到期`;
   if (health.status === 'valid') return `Token 有效，剩餘 ${health.expiresInDays} 天`;
   if (health.status === 'not_configured') return '尚未設定 Token';
-  return '尚未提供 Token 到期資訊';
+  return '';
+}
+
+async function refreshConnectionStatus() {
+  try {
+    state.clients = await api('/api/clients');
+  } catch {
+    // Keep existing client cache if refresh fails.
+  }
+  loadClientFacebookFields();
+  renderApiStatus();
+  renderPlatformConnections();
 }
 
 export async function loadSettings() {
@@ -131,6 +144,7 @@ export function initSettingsListeners(onSettingsSavedFn) {
             msg.className = res.connected ? 'helper text-success' : 'helper text-danger';
           }
           showToast(message, res.connected ? 'success' : 'error');
+          if (res.connected) await refreshConnectionStatus();
           return;
         }
 

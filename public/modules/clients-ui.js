@@ -104,6 +104,7 @@ export function initClientListeners({ onClientChanged, onClientsUpdated } = {}) 
         });
         state.clients = state.clients.map((item) => (item.id === updated.id ? updated : item));
         if (!state.clients.some((item) => item.id === updated.id)) state.clients.push(updated);
+        loadClientFacebookFields();
         showToast('品牌 Facebook 連線已儲存', 'success');
         if (typeof onClientsUpdated === 'function') await onClientsUpdated();
       } catch (error) {

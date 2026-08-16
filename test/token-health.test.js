@@ -13,7 +13,7 @@ test('token health distinguishes valid, expiring, expired and unknown dates', ()
   assert.equal(getTokenHealth({ configured: true, tokenExpiresAt: '2026-08-13T00:00:00.000Z' }, NOW).status, 'expired');
   const unknown = getTokenHealth({ configured: true }, NOW);
   assert.equal(unknown.status, 'unknown');
-  assert.equal(accountHealthMessage(unknown), '尚未提供 Token 到期資訊');
+  assert.equal(accountHealthMessage(unknown), '到期日未填（可留白）');
 });
 
 test('unconfigured accounts are not reported as unknown configured tokens', () => {

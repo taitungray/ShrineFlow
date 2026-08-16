@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.78" />
+    <link rel="stylesheet" href="/style.css?v=0.5.85" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -428,6 +428,7 @@
               <span class="field-link-row">
                 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立應用程式 →</a>
                 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer →</a>
+                <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger →</a>
               </span>
             </div>
             <p class="helper">ShrineFlow 不會跳出 Facebook／Instagram／Threads 登入。三個平台都要先建<strong>同一個</strong> Meta 應用程式，再把各平台的 ID 與 Token 貼到下方卡片。憑證只存在目前品牌，不會跟其他品牌混用。</p>
@@ -445,21 +446,42 @@
               </li>
               <li><strong>不要勾</strong>：廣告／行銷 API、應用程式廣告、WhatsApp、即時遊戲、oEmbed 內嵌、Live、募款、Messenger（之後要做收件匣再加）。</li>
               <li>商家選粉專所屬的 Business；沒有就新建或先跳過。自己的粉專／IG／Threads 先維持<strong>開發模式</strong>即可，不必立刻送 App Review。</li>
-              <li>用 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a> 右上選剛建的 App，產生 Token。短效 Token 會過期，測通後請換成長期 Token，並可填到期日。</li>
-              <li>貼上後按該平台的「儲存」再「測試連線」。儲存／測試會再請你 Google 確認一次。</li>
+              <li>建完 App 後進儀表板：<strong>使用案例 → 自訂（Pages API）→ 權限</strong>。這頁才是加粉專權限的地方，不是 Graph Explorer 右上角搜尋。<code>pages_show_list</code> 若已顯示「可供測試」就不用動。對 <code>pages_manage_posts</code>、<code>pages_read_engagement</code> 按「+ 新增」。Inbox 才需要 <code>pages_read_user_content</code>，先可略過。IG 同理：到 Instagram 使用案例的權限加 <code>instagram_basic</code>、<code>instagram_content_publish</code>。</li>
+              <li>權限加完再到下方各平台卡片。Facebook 的 Token <strong>不要靠「用戶或粉絲專頁」下拉</strong>（常常沒粉專）。正確來源是 Explorer 左邊 JSON 的 <code>data[].access_token</code>。完整步驟寫在「📘 目前品牌的 Facebook」。</li>
+              <li>貼上後按該平台的「儲存」再「測試連線」。儲存／測試會再請你 Google 確認一次。測試顯示連線成功＝已設定；到期日留白不算失敗。</li>
             </ol>
             <p class="setup-note">不要把 App Secret 填在下面。Webhook／收件匣才需要。公開媒體網址請用 HTTPS（雲端為 <code>https://media.shrineflow.uk</code>）；本機 localhost 無法給 Meta 抓圖。</p>
           </fieldset>
 
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📘 目前品牌的 Facebook</legend>
-            <p class="helper">填粉專 ID＋Page Access Token。不是個人帳號 Token。</p>
+            <p class="helper">ShrineFlow 只吃<strong>粉專 ID + Page Access Token</strong>。權限先在 App 儀表板加好，再用 Explorer 查 JSON。App Secret、完整 Token 不要傳給任何人。</p>
+            <p class="setup-subtitle">第一次：拿粉專 Token（測連線）</p>
             <ol class="setup-steps">
-              <li>建立 App 時勾使用案例<strong>管理粉絲專頁的所有內容</strong>（在「內容管理」或「全部」，不一定在精選）。</li>
-              <li>Graph API Explorer 右上選剛建的 App。</li>
-              <li>權限勾 <code>pages_show_list</code>、<code>pages_read_engagement</code>、<code>pages_manage_posts</code>。</li>
-              <li>先產生 User Token，再改選要發布的粉專，複製 <strong>Page Access Token</strong> 與粉專 ID。</li>
+              <li>App 儀表板 → 使用案例 → 自訂「管理粉絲專頁的所有內容」（Pages API）→ 權限。<code>pages_show_list</code> 若已是「可供測試」就略過。對 <code>pages_manage_posts</code>、<code>pages_read_engagement</code> 按「+ 新增」。不要加 <code>manage_pages</code>、<code>publish_pages</code>（已失效，會 Invalid Scopes）。</li>
+              <li>開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a>，「Meta 應用程式」選這個 App。右側「新增權限」只會出現你已加進使用案例的項目；勾 <code>pages_show_list</code>、<code>pages_read_engagement</code>、<code>pages_manage_posts</code>。按「產生存取權杖」並允許。</li>
+              <li>右側「存取權杖」那串 <code>EAA...</code> 現在是<strong>用戶權杖</strong>，<strong>不要</strong>貼進下面欄位。先 GET <code>me?fields=id,name</code>：<code>name</code> 應是你的人名。這份 JSON 不是 Token；裡面的 <code>id</code> 也不是粉專 ID。</li>
+              <li>方法維持 GET，網址改成 <code>me/accounts?fields=id,name,access_token&amp;limit=100</code> 按提交。左側 JSON 的 <code>data[]</code> 才是粉專清單。</li>
+              <li>「用戶或粉絲專頁」下拉<strong>常常沒有粉專</strong>，不要靠它、也不要為此再按一次「產生存取權杖」。找到對應 <code>name</code> 那筆：<code>id</code> → 粉專 ID；<code>access_token</code>（<code>EAA...</code>）→ Page Access Token。</li>
+              <li>貼到下面欄位 →「儲存此品牌 FB 連線」→「測試連線」。成功顯示粉專名稱＝已通。到期日留白即可。</li>
             </ol>
+            <p class="setup-subtitle">之後：換成長期粉專 Token</p>
+            <p class="setup-warn">只改網址成 <code>me/accounts</code> <strong>不會</strong>變長期。也<strong>不要</strong>在 Explorer 跑 <code>oauth/access_token</code>（常出現錯誤 101：Cannot get application info，因為 Explorer 會再夾帶一組權杖）。粉專權杖不能直接拿去延長；要先延長<strong>用戶權杖</strong>，再重查粉專 Token。</p>
+            <ol class="setup-steps">
+              <li>確認右側仍是用戶權杖：GET <code>me?fields=id,name</code>，<code>name</code> 必須是人名。若已是粉專名，下拉改回用戶權杖，必要時再產一次用戶權杖（短效過期也要重產用戶權杖）。</li>
+              <li>只複製右側那串 <code>EAA...</code>，不要複製 JSON、不要複製 <code>id</code>。</li>
+              <li>開 <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Access Token Debugger</a> → 貼上 → Debug → 最下面按 <strong>Extend Access Token</strong>。沒有 Extend 按鈕＝Explorer 選的 App 跟儀表板「設定 → 基本」的應用程式編號不是同一個。</li>
+              <li>把延長後的<strong>用戶</strong>權杖貼回 Explorer 右側權杖欄。再 GET <code>me/accounts?fields=id,name,access_token&amp;limit=100</code>。用 JSON 裡粉專那筆 <code>access_token</code> <strong>覆寫</strong>下面欄位 → 儲存 → 測試。</li>
+              <li>長期粉專 Token 看起來還是 <code>EAA...</code>。用 Debugger 檢查<strong>粉專</strong>那串：<code>Expires</code> 為 <strong>Never</strong> 才算換成。到期日欄<strong>留白</strong>（系統不會猜期限）。改密碼、撤銷 App、失去粉專角色才會失效。</li>
+            </ol>
+            <p class="setup-note">備援（進階）：也可用 App 編號＋密鑰在瀏覽器或伺服器對 Graph 做 <code>grant_type=fb_exchange_token</code> 延長用戶權杖，再 <code>me/accounts</code> 取粉專 Token。這步不要在 Graph Explorer 做。密鑰不要填進本頁。</p>
+            <p class="setup-subtitle">常見踩雷</p>
+            <ul class="setup-usecases">
+              <li>Debugger 顯示 Cannot parse access token → 貼到的是 JSON 或數字 ID，不是 <code>EAA...</code>。</li>
+              <li><code>data</code> 是空陣列 → Explorer 登入帳號必須是粉專管理員，且跟 App 角色是同一個 Facebook。</li>
+              <li>頂欄短暫顯示「FB 未設定」但測試已成功 → 先看測試結果；儲存後重新整理即可。</li>
+              <li>短效 Token 約 1–2 小時。發文突然失敗就依上面「第一次」重拿粉專 Token，或走「長期」流程。</li>
+            </ul>
             <div class="field">
               <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
               <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
@@ -470,7 +492,8 @@
                 <label for="settingFacebookPageAccessToken" class="field-label">Page Access Token</label>
                 <span class="field-link-row">
                   <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立 App →</a>
-                  <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">開發者憑證 →</a>
+                  <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph Explorer →</a>
+                  <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger →</a>
                 </span>
               </div>
               <div class="input-action">
@@ -481,7 +504,7 @@
             <div class="field">
               <label for="settingFacebookTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
               <input id="settingFacebookTokenExpiresAt" type="date" />
-              <p class="helper">若 Meta 未提供到期日可留白；系統不會猜測期限。</p>
+              <p class="helper">可留白。測試成功但沒到期日＝正常。長期粉專 Token 在 Debugger 常顯示 Never，此欄不要亂填。</p>
             </div>
 
             <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
@@ -500,12 +523,13 @@
 
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">📸 目前品牌的 Instagram</legend>
-            <p class="helper">填 Instagram <strong>數字 User ID</strong>＋Token，不是 @帳號名稱。有圖／影時，上方「公開媒體基底網址」必須可被 Meta 下載。</p>
+            <p class="helper">填 Instagram <strong>數字 User ID</strong>＋Token，不是 @帳號。有圖／影時，上方「公開媒體基底網址」必須可被 Meta 下載（雲端用 <code>https://media.shrineflow.uk</code>）。</p>
             <ol class="setup-steps">
-              <li>建立 App 時勾使用案例<strong>管理 Instagram 的訊息和內容</strong>。Instagram 必須是<strong>專業帳號</strong>（商業或創作者），並綁定這個品牌的 Facebook 粉專。</li>
-              <li>Explorer 權限勾 <code>instagram_basic</code>、<code>instagram_content_publish</code>，以及粉專相關權限。</li>
-              <li>用粉專查 <code>instagram_business_account</code>，得到的 ID 貼到「Instagram User ID」。</li>
-              <li>Token 通常用「已含 IG 權限的 Page Access Token」。配額或權限錯誤時，檢查 App 權限與當日發布上限。</li>
+              <li>同一個 Meta App。使用案例勾<strong>管理 Instagram 的訊息和內容</strong>。IG 必須是專業帳號（商業或創作者），並綁這個品牌的 Facebook 粉專。</li>
+              <li>App 儀表板 → 該使用案例 → 權限：加 <code>instagram_basic</code>、<code>instagram_content_publish</code>。Explorer 右側搜尋不到＝還沒加進使用案例。</li>
+              <li>用<strong>已含 IG 權限的粉專 Token</strong>（通常就是 Facebook 卡片那串 Page Access Token）。在 Explorer 右側貼該 Token，GET <code>me/accounts?fields=id,name,instagram_business_account</code>，或 GET <code>{粉專ID}?fields=instagram_business_account</code>。</li>
+              <li><code>instagram_business_account.id</code> 貼到「Instagram User ID」。沒這欄＝IG 還沒綁粉專，或權限不足。</li>
+              <li>Access Token 貼同一串 Page Access Token。到期日留白規則同 Facebook。儲存 → 測試連線。配額／權限錯誤時查 App 權限與當日發布上限。</li>
             </ol>
             <div class="field">
               <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
@@ -538,11 +562,12 @@
 
           <fieldset class="form-group-card" data-required-permission="account.manage">
             <legend class="group-title">🧵 目前品牌的 Threads</legend>
-            <p class="helper">填 Threads <strong>數字 User ID</strong>＋Threads Token，不是 Facebook 粉專 Token，也不是 @帳號。</p>
+            <p class="helper">填 Threads <strong>數字 User ID</strong>＋<strong>Threads</strong> Token。不是 Facebook 粉專 Token，也不是 @帳號。</p>
             <ol class="setup-steps">
-              <li>建立 App 時勾使用案例<strong>存取 Threads API</strong>。同一個 App 再加入 Threads 產品，用 Threads 帳號授權取得 Access Token。</li>
-              <li>User ID 可在 Threads Graph（<code>graph.threads.net</code>）用 <code>/me</code> 查，貼數字 ID。</li>
-              <li>純文字可不設公開媒體網址；有圖／影則必須，且網址要能被 Meta 下載。文字請勿過長；影片處理較慢，失敗可稍後再試。</li>
+              <li>同一個 Meta App。建立時勾使用案例<strong>存取 Threads API</strong>，儀表板再加入 Threads 產品。</li>
+              <li>用 Threads 帳號授權取得 Access Token（開頭常是 <code>THQVJ...</code> 或 Threads 文件指定格式）。不要把 FB 的 <code>EAA...</code> 貼來這裡。</li>
+              <li>User ID：對 Threads Graph（<code>graph.threads.net</code>）GET <code>/me</code>，貼回傳的數字 <code>id</code>。那不是粉專 ID。</li>
+              <li>儲存 → 測試連線。純文字可不設公開媒體網址；有圖／影則必須 HTTPS（如 <code>https://media.shrineflow.uk</code>）。文字勿過長；影片處理較慢，失敗可稍後再試。</li>
             </ol>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
@@ -913,19 +938,19 @@
               <span class="field-link-row">
                 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立應用程式 →</a>
                 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer →</a>
+                <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger →</a>
               </span>
             </div>
-            <p class="helper">Facebook、Instagram、Threads 都要先在 Meta 建應用程式，再把 ID／Token 貼進設定。這裡只顯示狀態，不能填金鑰。</p>
+            <p class="helper">這裡只顯示狀態，不能填金鑰。建 App、拿 Token、換長期權杖的完整步驟在「⚙️ 設定」的 Facebook／Instagram／Threads 卡片。</p>
             <ol class="setup-steps">
-              <li>建立 Meta 應用程式（Business），把你的帳號加成 App 管理員／開發者。</li>
-              <li>使用案例要勾：<strong>管理粉絲專頁的所有內容</strong>、<strong>管理 Instagram 的訊息和內容</strong>、<strong>存取 Threads API</strong>。粉專／IG 常在「內容管理」或「全部」，不在精選。</li>
-              <li>「使用 Facebook 登入」能勾就勾；沒出現通常是已自動帶入，直接下一步。</li>
-              <li>不要勾廣告、WhatsApp、遊戲、oEmbed、Messenger。</li>
-              <li>Facebook：粉專 ID＋Page Access Token（<code>pages_manage_posts</code>）。</li>
-              <li>Instagram：專業帳號綁粉專，貼數字 User ID＋含 <code>instagram_content_publish</code> 的 Token。</li>
-              <li>Threads：Threads API 的 User ID＋Threads Token，不是粉專 Token。</li>
+              <li>同一個 Meta App（Business）。使用案例勾：<strong>管理粉絲專頁的所有內容</strong>、<strong>管理 Instagram 的訊息和內容</strong>、<strong>存取 Threads API</strong>。粉專／IG 常在「內容管理」或「全部」。</li>
+              <li>權限在 App 儀表板「使用案例 → 權限 → + 新增」加。Explorer 右側搜尋列只看得到已加入的權限。</li>
+              <li>Facebook：粉專 ID＋Page Token 來自 Explorer 左邊 JSON <code>me/accounts</code> 的 <code>data[]</code>，不是右側用戶權杖，也不是下拉選單。</li>
+              <li>換長期：用 Token Debugger 的 <strong>Extend Access Token</strong> 延長<strong>用戶</strong>權杖，再重跑 <code>me/accounts</code> 取粉專 Token。不要在 Explorer 跑 <code>oauth/access_token</code>。</li>
+              <li>Instagram：專業帳號綁粉專，數字 User ID＋含 <code>instagram_content_publish</code> 的 Page Token。</li>
+              <li>Threads：Threads User ID＋Threads Token，不是粉專 Token。</li>
             </ol>
-            <p class="setup-note">完整步驟在「設定」的 Facebook／Instagram／Threads 卡片。公開媒體網址（IG／Threads 有圖影時）用 HTTPS，例如 <code>https://media.shrineflow.uk</code>。</p>
+            <p class="setup-note">公開媒體網址（IG／Threads 有圖影時）用 HTTPS，例如 <code>https://media.shrineflow.uk</code>。測試連線成功＝已設定；到期日留白不算失敗。</p>
           </fieldset>
           <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
           <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
@@ -1193,6 +1218,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.78" type="module"></script>
+    <script src="/app.js?v=0.5.85" type="module"></script>
   </body>
 </html>

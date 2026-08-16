@@ -13,7 +13,7 @@ function tokenHealthLabel(account) {
   if (health.status === 'valid') return `Token 尚餘 ${health.expiresInDays} 天`;
   if (health.connectionStatus === 'error') return '最近連線失敗';
   if (health.connectionStatus === 'connected') return '最近已驗證';
-  return 'Token 到期資訊未提供';
+  return '到期日未填（可留白）';
 }
 
 const CAPABILITY_LABELS = {

@@ -27,6 +27,7 @@ export const state = {
   notifications: [],
   reviewQueue: [],
   config: null,
+  facebookStatus: { connected: false, configured: false, error: '' },
   clients: [],
   currentClientId: localStorage.getItem('shrineflow.currentClientId') || '',
   activeTargetId: '',
