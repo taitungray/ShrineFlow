@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.95" />
+    <link rel="stylesheet" href="/style.css?v=0.5.98" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -1076,6 +1076,7 @@
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
         <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
+        <div class="schedule-dialog-body">
         <p class="section-tag">PUBLISH</p>
         <h3>排程發布</h3>
         <div class="field">
@@ -1106,7 +1107,10 @@
           <p class="helper" id="scheduledAtHint"></p>
         </div>
         <p class="helper" id="scheduleFormMessage" aria-live="assertive"></p>
+        </div>
+        <div class="dialog-actions schedule-dialog-actions">
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
+        </div>
       </form>
     </dialog>
     <dialog class="module-dialog reauth-dialog" id="reauthDialog" aria-labelledby="reauthTitle">
@@ -1224,6 +1228,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.5.95" type="module"></script>
+    <script src="/app.js?v=0.5.98" type="module"></script>
   </body>
 </html>

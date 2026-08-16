@@ -1,7 +1,7 @@
 import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss } from './dom.js';
 import { state, PLATFORM_NAMES, currentClient } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
-import { api } from './api.js';
+import { api, createIdempotencyKey } from './api.js';
 import { getActiveTarget } from './targets-ui.js';
 import { targetStatusLabel } from './status.js';
 import { humanizePlatformError } from './platform-errors.js';
@@ -303,13 +303,16 @@ export function initScheduleDialog(refreshListsFn) {
         return;
       }
       if (button.dataset.scheduleAction === 'retry') {
+        if (button.dataset.busy === 'true') return;
         const platformName = PLATFORM_NAMES[item.channel] || item.channel;
         if (!window.confirm(`確定立刻重發「${platformName}」？`)) return;
+        button.dataset.busy = 'true';
+        button.disabled = true;
         try {
           showToast('重發中…', 'info');
           await api('/api/publish/target', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
             body: JSON.stringify({
               postId: item.postId || button.dataset.postId,
               targetId: item.targetId,
@@ -320,6 +323,9 @@ export function initScheduleDialog(refreshListsFn) {
         } catch (error) {
           if (typeof refreshListsFn === 'function') await refreshListsFn();
           showToast(error.message || '重發失敗。', 'error');
+        } finally {
+          button.dataset.busy = 'false';
+          button.disabled = false;
         }
         return;
       }
@@ -400,6 +406,13 @@ export function initScheduleDialog(refreshListsFn) {
     form.addEventListener('submit', async (event) => {
       if (event.submitter?.value === 'cancel' || event.submitter?.classList.contains('close-button')) return;
       event.preventDefault();
+      if (form.dataset.busy === 'true') return;
+      const submit = $('#scheduleSubmitButton');
+      form.dataset.busy = 'true';
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = '排程中…';
+      }
       try {
         const mode = fieldValue($('#scheduleMode')) || 'manual';
         const scheduledLocal = $('#scheduledAt').value;
@@ -407,17 +420,18 @@ export function initScheduleDialog(refreshListsFn) {
         const scheduledAt = scheduledLocal ? new Date(scheduledLocal).toISOString() : '';
         const isRescheduling = Boolean(reschedulingItem);
         const channel = fieldValue($('#scheduleChannel')) || 'facebook';
+        const headers = { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() };
         if (isRescheduling) {
           await api('/api/schedule/' + encodeURIComponent(reschedulingItem.targetId), {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ scheduledAt, scheduledLocal, timeZone, scheduleMode: 'manual' }),
           });
         } else {
           const activeTarget = getActiveTarget();
           await api('/api/schedule', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
               postId: state.savedPost.id,
               targetId: activeTarget?.id || undefined,
@@ -446,6 +460,12 @@ export function initScheduleDialog(refreshListsFn) {
         setScheduleFormMessage(error.message, 'error');
         setPreviewMessage(error.message, 'error');
         showToast(error.message, 'error');
+      } finally {
+        form.dataset.busy = 'false';
+        if (submit) {
+          submit.textContent = '確認排程';
+          renderContentSettings(fieldValue($('#scheduleChannel')), fieldValue($('#scheduleContentType')));
+        }
       }
     });
   }

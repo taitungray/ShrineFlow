@@ -18,6 +18,10 @@ export function storeReauthToken(token) {
   else sessionStorage.removeItem(REAUTH_STORAGE_KEY);
 }
 
+export function createIdempotencyKey() {
+  return globalThis.crypto?.randomUUID?.() || `sf-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
 export async function api(path, options = {}) {
   const response = await fetch(path, { ...options, headers: requestHeaders(options) });
   const data = await response.json().catch(() => ({}));

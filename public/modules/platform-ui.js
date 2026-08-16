@@ -101,7 +101,8 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
   }
   const submit = $('#scheduleSubmitButton');
   if (submit) {
-    const blocked = !contentType.canPublish || blocksStoryScheduling;
+    const formBusy = $('#scheduleForm')?.dataset.busy === 'true';
+    const blocked = !contentType.canPublish || blocksStoryScheduling || formBusy;
     submit.disabled = blocked;
     submit.title = blocksStoryScheduling
       ? 'Facebook 限時動態無法排程，請改用貼文或 Reel'

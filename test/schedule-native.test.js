@@ -235,6 +235,199 @@ test('POST /schedule calls Facebook before persisting scheduled target', async (
   }
 });
 
+test('POST /schedule concurrent requests only call Facebook once', async () => {
+  let publishCalls = 0;
+  let releasePublish;
+  const publishGate = new Promise((resolve) => {
+    releasePublish = resolve;
+  });
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        publishCalls += 1;
+        await publishGate;
+        return { externalId: 'graph-once' };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-dup',
+      clientId: 'client-1',
+      facebook: '連點防重',
+      targets: [{
+        id: 'target-dup',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'draft',
+      }],
+    }]);
+    const url = `http://127.0.0.1:${server.address().port}/api/schedule`;
+    const payload = {
+      postId: 'post-dup',
+      targetId: 'target-dup',
+      accountId: 'facebook:1',
+      channel: 'facebook',
+      contentType: 'post',
+      scheduledAt: '2026-08-17T00:00:00.000Z',
+    };
+    const first = fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const second = fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    try {
+      assert.equal(publishCalls, 1);
+    } finally {
+      releasePublish();
+    }
+    const responses = await Promise.all([first, second]);
+    const statuses = responses.map((response) => response.status).sort();
+    assert.deepEqual(statuses, [201, 409]);
+    const posts = await readJson(jsonFiles.posts, []);
+    assert.equal(posts[0].targets[0].status, 'scheduled');
+    assert.equal(posts[0].targets[0].externalId, 'graph-once');
+    assert.equal(publishCalls, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('POST /schedule rejects a second schedule after success without calling Facebook again', async () => {
+  let publishCalls = 0;
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        publishCalls += 1;
+        return { externalId: `graph-${publishCalls}` };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-again',
+      clientId: 'client-1',
+      facebook: '已排程不可再排',
+      targets: [{
+        id: 'target-again',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'draft',
+      }],
+    }]);
+    const url = `http://127.0.0.1:${server.address().port}/api/schedule`;
+    const payload = {
+      postId: 'post-again',
+      targetId: 'target-again',
+      accountId: 'facebook:1',
+      channel: 'facebook',
+      contentType: 'post',
+      scheduledAt: '2026-08-17T01:00:00.000Z',
+    };
+    const first = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const second = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 409);
+    assert.equal(publishCalls, 1);
+    const body = await second.json();
+    assert.match(body.error, /已排程|發布中/);
+    const posts = await readJson(jsonFiles.posts, []);
+    assert.equal(posts[0].targets[0].externalId, 'graph-1');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('POST /schedule replays the same idempotency key without a second Facebook publish', async () => {
+  let publishCalls = 0;
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        publishCalls += 1;
+        return { externalId: 'graph-idempotent' };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-key',
+      clientId: 'client-1',
+      facebook: '冪等排程',
+      targets: [{
+        id: 'target-key',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'draft',
+      }],
+    }]);
+    const url = `http://127.0.0.1:${server.address().port}/api/schedule`;
+    const payload = {
+      postId: 'post-key',
+      targetId: 'target-key',
+      accountId: 'facebook:1',
+      channel: 'facebook',
+      contentType: 'post',
+      scheduledAt: '2026-08-17T02:00:00.000Z',
+    };
+    const headers = { 'Content-Type': 'application/json', 'Idempotency-Key': 'sched-key-1' };
+    const first = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
+    const second = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 201);
+    assert.equal((await second.json()).replayed, true);
+    assert.equal(publishCalls, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('POST /schedule compensates remote success when local version changes before persistence', async () => {
   const calls = [];
   const app = express();
@@ -290,7 +483,10 @@ test('POST /schedule compensates remote success when local version changes befor
     assert.equal(body.code, 'SCHEDULE_LOCAL_SYNC_FAILED');
     assert.deepEqual(calls, ['publish', ['delete', 'graph-orphan']]);
     const posts = await readJson(jsonFiles.posts, []);
-    assert.equal(posts[0].targets.length, 0);
+    const target = posts[0].targets[0];
+    assert.ok(target);
+    assert.notEqual(target.status, 'scheduled');
+    assert.equal(target.externalId || null, null);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -372,7 +568,7 @@ test('POST /schedule rejects a nonexistent daylight-saving local time before per
   }
 });
 
-test('POST /schedule reschedules when target already has externalId', async () => {
+test('POST /schedule does not reschedule an already scheduled Facebook target', async () => {
   const calls = [];
   const app = express();
   app.use(express.json());
@@ -423,11 +619,9 @@ test('POST /schedule reschedules when target already has externalId', async () =
         scheduledAt: '2026-08-15T10:00:00.000Z',
       }),
     });
-    assert.equal(response.status, 201);
-    assert.deepEqual(calls, [['delete', 'graph-old'], ['publish']]);
-    const item = await response.json();
-    assert.equal(item.externalId, 'graph-new');
-    assert.equal((await readJson(jsonFiles.posts, []))[0].targets[0].externalId, 'graph-new');
+    assert.equal(response.status, 409);
+    assert.deepEqual(calls, []);
+    assert.equal((await readJson(jsonFiles.posts, []))[0].targets[0].externalId, 'graph-old');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

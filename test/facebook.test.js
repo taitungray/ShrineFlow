@@ -8,6 +8,7 @@ import {
   createFacebookPublisher,
   FacebookPublishError,
   formatFacebookMessage,
+  humanizeFacebookGraphError,
 } from '../lib/facebook.js';
 
 test('formatFacebookMessage appends only missing hashtags', () => {
@@ -472,5 +473,97 @@ test('maps expired Graph access tokens to operator-facing Chinese', async () => 
       && error.code === 190
       && /Token 已過期/.test(error.message)
       && !/Session has expired/.test(error.message),
+  );
+});
+
+test('maps missing-object Graph errors to operator-facing Chinese', () => {
+  const message = humanizeFacebookGraphError({
+    message: "Unsupported post request. Object with ID '1701654120897096' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api",
+    type: 'GraphMethodException',
+    code: 100,
+    error_subcode: 33,
+  });
+  assert.match(message, /粉專 ID|Page token|me\/accounts/);
+  assert.equal(/Unsupported post request/.test(message), false);
+});
+
+test('resolves a user token plus user id to the only page in me/accounts before scheduling', async () => {
+  const requests = [];
+  const publisher = createFacebookPublisher({
+    pageId: '1701654120897096',
+    pageAccessToken: 'user-token',
+    fetchImpl: async (url, options) => {
+      const href = String(url);
+      requests.push({ href, method: options?.method || 'POST' });
+      if (href.includes('/me/accounts')) {
+        return new Response(JSON.stringify({
+          data: [{ id: '999888', name: '測試粉專', access_token: 'page-token' }],
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (href.includes('/1701654120897096/')) {
+        return new Response(JSON.stringify({
+          error: {
+            message: "Unsupported post request. Object with ID '1701654120897096' does not exist, cannot be loaded due to missing permissions, or does not support this operation.",
+            type: 'GraphMethodException',
+            code: 100,
+            error_subcode: 33,
+          },
+        }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (href.includes('/999888/feed')) {
+        assert.equal(options.headers.Authorization, 'Bearer page-token');
+        return new Response(JSON.stringify({ id: '999888_1' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ error: { message: 'unexpected ' + href, code: 100 } }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+  });
+
+  const scheduledAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const result = await publisher.publish({ facebook: '排程貼文' }, { scheduledAt });
+  assert.equal(result.externalId, '999888_1');
+  assert.equal(result.scheduled, true);
+  assert.equal(requests.some((request) => request.href.includes('/999888/feed')), true);
+  assert.equal(requests.some((request) => request.href.includes('/1701654120897096/feed')), true);
+});
+
+test('verify rejects a user id that cannot be resolved to a page', async () => {
+  const publisher = createFacebookPublisher({
+    pageId: '1701654120897096',
+    pageAccessToken: 'user-token',
+    fetchImpl: async (url, options) => {
+      if (options?.method === 'GET' && String(url).includes('/me/accounts')) {
+        return new Response(JSON.stringify({ data: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (options?.method === 'GET' && /\/1701654120897096(?:\?|$)/.test(String(url))) {
+        return new Response(JSON.stringify({
+          id: '1701654120897096',
+          name: '某人',
+          metadata: { type: 'user' },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({
+        error: {
+          message: "Unsupported post request. Object with ID '1701654120897096' does not exist, cannot be loaded due to missing permissions, or does not support this operation.",
+          code: 100,
+          error_subcode: 33,
+        },
+      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    },
+  });
+
+  await assert.rejects(
+    () => publisher.verify(),
+    (error) => error instanceof FacebookPublishError
+      && /粉專 ID|me\/accounts/.test(error.message)
+      && !/Unsupported post request/.test(error.message),
   );
 });

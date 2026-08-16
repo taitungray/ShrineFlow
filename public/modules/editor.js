@@ -7,7 +7,7 @@ import {
   readCreateContentSettings,
   readTargetContentSettings,
 } from './platform-ui.js';
-import { api } from './api.js';
+import { api, createIdempotencyKey } from './api.js';
 import {
   buildTargetsPayload,
   getActiveTarget,
@@ -833,6 +833,7 @@ export function initEditorListeners(refreshListsFn) {
   $('#evergreenDisableButton')?.addEventListener('click', () => evergreenAction('disable'));
   const publishButton = $('#publishNowButton');
   publishButton?.addEventListener('click', async () => {
+    if (publishButton.dataset.busy === 'true') return;
     const post = state.savedPost;
     if (!post) return setPreviewMessage('請先儲存草稿，再立即發布。', 'error');
     if (state.editorDirty) return setPreviewMessage('內容有未儲存變更，請先儲存草稿。', 'error');
@@ -854,15 +855,19 @@ export function initEditorListeners(refreshListsFn) {
     if (target.status === 'published') {
       return setPreviewMessage(`${platformName} 已經發布，請建立副本後再重新發布。`, 'error');
     }
-    if (!window.confirm(`確定立即發布到 ${platformName}？`)) return;
-
     publishButton.dataset.busy = 'true';
     syncEditorActions();
+    if (!window.confirm(`確定立即發布到 ${platformName}？`)) {
+      publishButton.dataset.busy = 'false';
+      syncEditorActions();
+      return;
+    }
+
     setPreviewMessage(`正在發布到 ${platformName}…`, 'info');
     try {
       await api('/api/publish/target', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
         body: JSON.stringify({ postId: post.id, targetId: target.id }),
       });
       if (typeof refreshListsFn === 'function') await refreshListsFn();

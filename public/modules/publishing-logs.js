@@ -1,6 +1,6 @@
 import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { state, PLATFORM_NAMES } from './state.js';
-import { api } from './api.js';
+import { api, createIdempotencyKey } from './api.js';
 import { loadPost } from './drafts.js';
 import { publishingStatusGroup, targetStatusLabel } from './status.js';
 
@@ -87,12 +87,14 @@ export function initPublishingLogs(refreshListsFn) {
     }
     const item = state.schedule.find((record) => record.targetId === button.dataset.targetId);
     if (!item) return;
+    if (button.dataset.busy === 'true') return;
     if (!window.confirm('確定重試此平台發布？')) return;
     try {
+      button.dataset.busy = 'true';
       button.disabled = true;
       await api('/api/publish/target', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
         body: JSON.stringify({ postId: item.postId || button.dataset.postId, targetId: item.targetId }),
       });
       if (typeof refreshListsFn === 'function') await refreshListsFn();
@@ -100,6 +102,9 @@ export function initPublishingLogs(refreshListsFn) {
     } catch (error) {
       if (typeof refreshListsFn === 'function') await refreshListsFn();
       showToast(error.message || '重試發布失敗。', 'error');
+    } finally {
+      button.dataset.busy = 'false';
+      button.disabled = false;
     }
   });
 }
