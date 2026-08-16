@@ -1,3 +1,5 @@
+import { humanizePlatformError } from './platform-errors.js';
+
 export const $ = (selector) => document.querySelector(selector);
 export const $$ = (selector) => document.querySelectorAll(selector);
 
@@ -37,14 +39,59 @@ export function bindDialogDismiss(dialog) {
   });
 }
 
+function closeToastPopover(toast) {
+  if (typeof toast.hidePopover !== 'function') return;
+  if (!toast.matches(':popover-open')) return;
+  try { toast.hidePopover(); } catch {}
+}
+
+function openToastPopover(toast) {
+  if (typeof toast.showPopover !== 'function') return;
+  if (toast.matches(':popover-open')) return;
+  try { toast.showPopover(); } catch {}
+}
+
+function attachToastToOpenDialog(toast) {
+  const host = document.querySelector('dialog[open]') || document.body;
+  if (toast.parentElement !== host) host.append(toast);
+}
+
+function restoreToastToBody(toast) {
+  if (toast.parentElement !== document.body) document.body.append(toast);
+}
+
+export function hideToast() {
+  const toast = $('#toast');
+  if (!toast) return;
+  toast.classList.remove('show');
+  closeToastPopover(toast);
+  restoreToastToBody(toast);
+  window.clearTimeout(showToast.timer);
+}
+
 export function showToast(message, type = 'info') {
   const toast = $('#toast');
   if (!toast) return;
-  toast.textContent = message;
+  const text = humanizePlatformError(message) || String(message || '');
+  toast.replaceChildren();
+  const body = document.createElement('span');
+  body.className = 'toast-message';
+  body.textContent = text;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'toast-close';
+  close.setAttribute('aria-label', '關閉通知');
+  close.textContent = '×';
+  close.addEventListener('click', hideToast);
+  toast.append(body, close);
   toast.dataset.type = type;
+  attachToastToOpenDialog(toast);
   toast.classList.add('show');
+  openToastPopover(toast);
   window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 3600);
+  if (type !== 'error') {
+    showToast.timer = window.setTimeout(hideToast, 3600);
+  }
 }
 
 export function setFormMessage(message, type = '') {

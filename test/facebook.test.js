@@ -452,3 +452,25 @@ test('marks transient Graph API failures as retriable', async () => {
     (error) => error instanceof FacebookPublishError && error.retriable && error.traceId === 'trace-1',
   );
 });
+
+test('maps expired Graph access tokens to operator-facing Chinese', async () => {
+  const publisher = createFacebookPublisher({
+    pageId: '12345',
+    pageAccessToken: 'expired-token',
+    fetchImpl: async () => new Response(JSON.stringify({
+      error: {
+        message: 'Error validating access token: Session has expired on Saturday, 15-Aug-26 18:00:00 PDT.',
+        type: 'OAuthException',
+        code: 190,
+      },
+    }), { status: 400, headers: { 'Content-Type': 'application/json' } }),
+  });
+
+  await assert.rejects(
+    () => publisher.verify(),
+    (error) => error instanceof FacebookPublishError
+      && error.code === 190
+      && /Token 已過期/.test(error.message)
+      && !/Session has expired/.test(error.message),
+  );
+});

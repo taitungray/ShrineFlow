@@ -11,7 +11,7 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.93" />
+    <link rel="stylesheet" href="/style.css?v=0.5.95" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -1105,6 +1105,7 @@
           <input id="scheduledAt" type="datetime-local" required />
           <p class="helper" id="scheduledAtHint"></p>
         </div>
+        <p class="helper" id="scheduleFormMessage" aria-live="assertive"></p>
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
       </form>
     </dialog>
@@ -1222,7 +1223,7 @@
         </div>
       </form>
     </dialog>
-    <div id="toast" class="toast" role="status"></div>
-    <script src="/app.js?v=0.5.93" type="module"></script>
+    <div id="toast" class="toast" role="status" popover="manual"></div>
+    <script src="/app.js?v=0.5.95" type="module"></script>
   </body>
 </html>

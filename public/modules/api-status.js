@@ -7,6 +7,11 @@ export function facebookStatusLabel() {
     (account) => account.platformId === 'facebook' && account.configured
   );
   const facebookStatus = state.facebookStatus || {};
+  const statusError = String(facebookStatus.error || '');
+  if (facebookStatus.connected === false && (facebookStatus.configured || facebookAccount)) {
+    if (/expired|過期|validating access token/i.test(statusError)) return 'FB Token 已過期';
+    if (statusError) return 'FB 連線失敗';
+  }
   if (facebookAccount) return 'FB 已設定';
   if (facebookStatus.connected) return 'FB 全域已連線';
   return 'FB 未設定';
@@ -21,7 +26,7 @@ export function renderApiStatus() {
   const clientLabel = client ? client.name : '未選品牌';
   const aiOk = Boolean(config.aiConfigured);
   const fbLabel = facebookStatusLabel();
-  const fbOk = fbLabel !== 'FB 未設定';
+  const fbOk = !['FB 未設定', 'FB Token 已過期', 'FB 連線失敗'].includes(fbLabel);
   const compact = window.matchMedia('(max-width: 768px)').matches;
   status.textContent = compact
     ? ((aiOk ? 'AI✓' : 'AI✗') + ' · ' + (fbOk ? 'FB✓' : 'FB✗'))

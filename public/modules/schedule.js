@@ -4,6 +4,7 @@ import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, 
 import { api } from './api.js';
 import { getActiveTarget } from './targets-ui.js';
 import { targetStatusLabel } from './status.js';
+import { humanizePlatformError } from './platform-errors.js';
 
 let reschedulingItem = null;
 let draggedTargetId = '';
@@ -12,6 +13,13 @@ let calendarCursor = new Date();
 calendarCursor.setHours(0, 0, 0, 0);
 
 const CALENDAR_WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+
+function setScheduleFormMessage(message = '', type = '') {
+  const el = $('#scheduleFormMessage');
+  if (!el) return;
+  el.textContent = humanizePlatformError(message) || String(message || '');
+  el.dataset.type = type;
+}
 
 function dateKey(date) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
@@ -342,6 +350,7 @@ export function initScheduleDialog(refreshListsFn) {
       setFieldValue($('#scheduleContentType'), item.contentType);
       renderContentSettings(item.channel, item.contentType);
       setScheduleMode('manual', { locked: true });
+      setScheduleFormMessage('');
       dialog.showModal();
     });
   }
@@ -363,6 +372,7 @@ export function initScheduleDialog(refreshListsFn) {
       if (activeAccount?.id && $('#scheduleAccount')) $('#scheduleAccount').value = activeAccount.id;
       renderContentTypeOptions(channel);
       setScheduleMode('manual', { locked: false });
+      setScheduleFormMessage('');
       dialog.showModal();
     });
   }
@@ -433,6 +443,7 @@ export function initScheduleDialog(refreshListsFn) {
         setPreviewMessage(message, 'success');
         showToast(message, 'success');
       } catch (error) {
+        setScheduleFormMessage(error.message, 'error');
         setPreviewMessage(error.message, 'error');
         showToast(error.message, 'error');
       }
