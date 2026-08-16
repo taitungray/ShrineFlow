@@ -11,7 +11,8 @@
       body.auth-required > :not(#authGate) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
-    <link rel="stylesheet" href="/style.css?v=0.5.98" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css?v=0.6.04" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -39,16 +40,19 @@
         <div class="topbar-leading">
           <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="開啟導覽選單" aria-controls="appSidebar" aria-expanded="false">☰</button>
           <div class="page-heading">
-            <p class="section-tag" id="pageSectionTag">OVERVIEW</p>
+            <p class="section-tag visually-hidden" id="pageSectionTag">OVERVIEW</p>
             <h1 id="currentPageTitle">總覽</h1>
           </div>
         </div>
         <div class="topbar-actions">
           <div class="field client-switcher">
-            <label for="currentClientSelect" class="field-label">目前品牌</label>
+            <label for="currentClientSelect" class="field-label visually-hidden">目前品牌</label>
             <select id="currentClientSelect" aria-label="切換品牌"></select>
           </div>
-          <div class="status-pill" id="apiStatus">檢查連線中…</div>
+          <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="檢查連線中">
+            <span class="status-dot" data-status="ai" title="檢查連線中…">Gemini</span>
+            <span class="status-dot" data-status="fb" title="檢查連線中…">FB</span>
+          </div>
           <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
             <span class="user-avatar" id="userAvatar" aria-hidden="true">U</span>
             <span class="user-identity-copy"><strong id="userDisplayName">使用者</strong><small id="userRoleLabel">—</small></span>
@@ -83,6 +87,7 @@
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
         <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
         <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
+        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span aria-hidden="true">?</span>幫助</a>
       </div>
     </aside>
     <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
@@ -642,7 +647,25 @@
             <div id="backupList" class="backup-list" aria-live="polite"></div>
             <div class="action-box">
               <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
+              <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
               <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
+            </div>
+            <div class="field">
+              <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
+              <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
+                <label class="radio-pill">
+                  <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
+                  <span>未修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
+                  <span>已修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
+                  <span>全部</span>
+                </label>
+              </div>
             </div>
             <div id="errorLogList" class="backup-list" aria-live="polite"></div>
             <p class="helper" id="readinessResult">部署檢查只提供準備度提示，不取代登入／HTTPS／反向代理設定。</p>
@@ -1062,6 +1085,32 @@
             <div class="audit-list" id="auditEventList" aria-live="polite"></div>
           </div>
         </section>
+
+        <section class="panel module-panel is-hidden" id="helpPanel" data-view-panel="help">
+          <div class="panel-heading">
+            <div>
+              <p class="section-tag">HELP</p>
+              <h2>幫助</h2>
+              <p class="panel-lede">操作手冊。可貼錯誤原文，也可查「怎麼排程」「Token」「審核」。</p>
+            </div>
+          </div>
+          <div class="help-toolbar">
+            <div class="field help-search-field">
+              <label for="helpSearch" class="field-label">搜尋說明</label>
+              <input id="helpSearch" type="search" placeholder="貼錯誤原文，或輸入：排程、Token、審核、Queue…" autocomplete="off" />
+            </div>
+            <div class="field">
+              <span id="helpKindLabel" class="field-label">類型</span>
+              <div class="radio-pill-group help-filter-pills" id="helpKindFilter" role="radiogroup" aria-labelledby="helpKindLabel"></div>
+            </div>
+            <div class="field">
+              <span id="helpTopicLabel" class="field-label">主題</span>
+              <div class="radio-pill-group help-filter-pills" id="helpTopicFilter" role="radiogroup" aria-labelledby="helpTopicLabel"></div>
+            </div>
+          </div>
+          <p class="helper" id="helpStatus">載入說明中…</p>
+          <div id="helpArticleList" class="help-article-list" aria-live="polite"></div>
+        </section>
       </section>
     </main>
 
@@ -1075,7 +1124,6 @@
 
     <dialog id="scheduleDialog" class="schedule-dialog">
       <form method="dialog" id="scheduleForm">
-        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
         <div class="schedule-dialog-body">
         <p class="section-tag">PUBLISH</p>
         <h3>排程發布</h3>
@@ -1111,6 +1159,7 @@
         <div class="dialog-actions schedule-dialog-actions">
         <button class="primary-button" id="scheduleSubmitButton" value="default" type="submit" aria-label="確認排程">確認排程</button>
         </div>
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
       </form>
     </dialog>
     <dialog class="module-dialog reauth-dialog" id="reauthDialog" aria-labelledby="reauthTitle">
@@ -1228,6 +1277,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.5.98" type="module"></script>
+    <script src="/app.js?v=0.6.04" type="module"></script>
   </body>
 </html>

@@ -16,6 +16,7 @@ const VIEW_ROUTES = {
   settings: 'settings',
   team: 'team',
   reviews: 'reviews',
+  help: 'help',
 };
 
 const PAGE_META = {
@@ -34,6 +35,7 @@ const PAGE_META = {
   settings: ['SETTINGS', '設定'],
   team: ['TEAM & ACCESS', '團隊與權限'],
   reviews: ['REVIEW QUEUE', '審核佇列'],
+  help: ['HELP', '幫助'],
 };
 
 function normalizeView(view = '') {
@@ -43,7 +45,9 @@ function normalizeView(view = '') {
 }
 
 function routeFromHash() {
-  const path = String(window.location.hash || '#/overview').replace(/^#\/?/, '').replace(/\/+$/, '') || 'overview';
+  const withoutHash = String(window.location.hash || '#/overview').replace(/^#\/?/, '');
+  const path = withoutHash.split('?')[0].replace(/\/+$/, '') || 'overview';
+  if (path === 'help' || path.startsWith('help/')) return { view: 'help', path };
   if (path === 'content/new') return { view: 'create', path };
   if (path.startsWith('content/')) return { view: 'review', path };
   if (path === 'content') return { view: 'drafts', path };
@@ -79,6 +83,21 @@ function closeMobileNavigation() {
 }
 
 let lastComposerView = '';
+
+export function resetViewScroll({ window: win = window, document: doc = document } = {}) {
+  win.scrollTo?.(0, 0);
+  if (doc.documentElement) doc.documentElement.scrollTop = 0;
+  if (doc.body) doc.body.scrollTop = 0;
+  doc.querySelectorAll?.('.composer-editor-pane, .review-preview').forEach((pane) => {
+    pane.scrollTop = 0;
+  });
+}
+
+export function dismissOpenDialogs({ document: doc = document } = {}) {
+  doc.querySelectorAll?.('dialog[open]').forEach((dialog) => {
+    if (typeof dialog.close === 'function') dialog.close();
+  });
+}
 
 export function setComposerMode(mode = 'edit') {
   const composer = $('#composerPanel');
@@ -125,6 +144,8 @@ export function setActiveView(view, { syncHash = true, routePath = '' } = {}) {
 
   updatePageChrome(normalizedView);
   closeMobileNavigation();
+  dismissOpenDialogs();
+  resetViewScroll();
 
   if (syncHash) {
     const nextHash = '#/' + activePath;

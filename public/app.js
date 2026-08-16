@@ -35,12 +35,14 @@ import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
 import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js';
+import { initClientErrorReporter } from './modules/client-error-reporter.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
 import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
 import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
 import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
+import { initHelp } from './modules/help.js';
 import { renderBestTimes } from './modules/best-times.js';
 import { renderRemoteSchedule } from './modules/remote-schedule.js';
 
@@ -208,8 +210,10 @@ async function loadData() {
 
 async function initApp() {
   if (!(await initializeAuth())) return;
+  initClientErrorReporter();
   initAuthListeners();
   initTabs();
+  initHelp();
   initInsightsListeners();
   initInboxListeners();
   initContentFilters(refreshLists);

@@ -36,7 +36,7 @@ import { createTemplatesRouter } from './lib/routes/templates.js';
 import { createCampaignsRouter } from './lib/routes/campaigns.js';
 import { createWebhookRouter } from './lib/routes/webhooks.js';
 import { cleanupOrphanUploads } from './lib/storage-management.js';
-import { appendErrorLog } from './lib/error-log.js';
+import { appendErrorLog, shouldRecordHttpError } from './lib/error-log.js';
 import { inspectSystemHealth } from './lib/system-health.js';
 import { assertProductionAuthEnabled } from './lib/deployment-readiness.js';
 import { createAuthMiddleware, createAuthRouter } from './lib/auth.js';
@@ -249,7 +249,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use((request, response, next) => {
   const startedAt = Date.now();
   response.once('finish', () => {
-    if (response.statusCode < 429 && response.statusCode < 500) return;
+    if (!shouldRecordHttpError(response.statusCode, request.path)) return;
     appendErrorLog({
       scope: 'http',
       method: request.method,
@@ -268,6 +268,9 @@ const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
     response.setHeader('Expires', '0');
   },
 };
+app.get('/favicon.ico', (_request, response) => {
+  response.redirect(301, '/favicon.svg');
+});
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 

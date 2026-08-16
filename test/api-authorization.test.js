@@ -130,6 +130,17 @@ test('API authorization derives scope from stored resources and hides cross-clie
   }
 });
 
+test('media preview is a content.view route', () => {
+  assert.equal(resolveApiAuthorizationRule({ method: 'GET', path: '/media/preview' }).permission, 'content.view');
+  assert.equal(resolveApiAuthorizationRule({ method: 'GET', path: '/media/preview' }).mode, 'optionalClient');
+});
+
+test('client error ingest is available to signed-in operators', () => {
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/system/client-errors' }).permission, 'content.view');
+  assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/system/error-log/abc/resolve' }).permission, 'system.manage');
+  assert.equal(resolveApiAuthorizationRule({ method: 'GET', path: '/system/error-log/export' }).permission, 'system.manage');
+});
+
 test('settings mutations use distinct audit actions', () => {
   assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings' }).action, 'system.settings_updated');
   assert.equal(resolveApiAuthorizationRule({ method: 'POST', path: '/settings/test-gemini' }).action, 'system.gemini_tested');
