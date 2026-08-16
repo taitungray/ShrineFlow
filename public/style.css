@@ -428,9 +428,12 @@ body::before {
 .panel-heading > .btn-secondary,
 .panel-heading > .btn-dark,
 .panel-heading > .primary-button,
-.panel-heading > .btn-text {
+.panel-heading > .btn-text,
+.panel-heading > a,
+.panel-heading > .badge {
   flex: 0 0 auto;
   width: auto;
+  margin-left: auto;
   white-space: nowrap;
 }
 
@@ -440,30 +443,23 @@ body::before {
   padding-bottom: 8px;
 }
 
-.panel-heading > div,
-.composer-shell-header > div,
-.version-history-heading > div,
 .dialog-heading {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 12px;
   min-width: 0;
-  flex: 1 1 220px;
 }
 
 .panel-heading .section-tag,
-.composer-shell-header .section-tag,
-.version-history-heading .section-tag,
 .dialog-heading .section-tag {
   margin: 0;
   flex: 0 0 auto;
 }
 
-.panel-heading h2,
-.composer-shell-header h2 {
+.panel-heading h2 {
   margin: 0;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   flex: 0 0 auto;
 }
 
@@ -472,8 +468,8 @@ body::before {
   flex: 0 0 auto;
 }
 
-.panel-heading .panel-lede,
-.composer-shell-header .panel-lede,
+.panel-heading > .panel-lede,
+.composer-shell-header > .panel-lede,
 .dialog-heading .dialog-lede {
   margin: 0;
   max-width: none;
@@ -1838,9 +1834,8 @@ dialog:not([open]) {
     padding-bottom: 8px;
   }
 
-  .panel-heading h2,
-  .composer-shell-header h2 {
-    font-size: 1.08rem;
+  .panel-heading h2 {
+    font-size: 1rem;
   }
 
   h2 {

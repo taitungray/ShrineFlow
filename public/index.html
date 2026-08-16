@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.17" />
+    <link rel="stylesheet" href="/style.css?v=0.6.18" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -100,11 +100,7 @@
         <!-- ========== 總覽 ========== -->
         <section class="panel overview-panel" id="overviewPanel" data-view-panel="overview">
           <div class="panel-heading overview-heading">
-            <div>
-              <p class="section-tag">WORKSPACE</p>
-              <h2>內容工作台</h2>
-              <p class="panel-lede">集中查看內容進度、排程與平台發布狀態。</p>
-            </div>
+            <p class="panel-lede">集中查看內容進度、排程與平台發布狀態。</p>
             <button class="primary-button" type="button" data-view-target="create" data-route-target="content/new" aria-label="新增內容">＋ 新增內容</button>
           </div>
           <div class="overview-summary" aria-label="內容摘要">
@@ -131,11 +127,7 @@
         <!-- ========== Composer ========== -->
         <section class="panel composer-panel is-hidden" id="composerPanel" data-view-panel="composer" data-composer-mode="edit">
           <div class="composer-shell-header">
-            <div>
-              <p class="section-tag">COMPOSER</p>
-              <h2>建立與發布內容</h2>
-              <p class="panel-lede">先建立母稿，再檢查每個平台的文案、素材與排程。</p>
-            </div>
+            <p class="panel-lede">先建立母稿，再檢查每個平台的文案、素材與排程。</p>
             <div class="composer-mode-switch" role="tablist" aria-label="Composer 顯示模式">
               <button class="composer-mode-button active" type="button" data-composer-mode="edit" role="tab" aria-selected="true">編輯</button>
               <button class="composer-mode-button" type="button" data-composer-mode="preview" role="tab" aria-selected="false">預覽</button>
@@ -145,10 +137,7 @@
         <!-- ========== 編輯區 ========== -->
         <form class="composer-editor-pane" id="generateForm">
           <div class="panel-heading">
-            <div>
-              <p class="section-tag">CONTENT EDITOR</p>
-              <h2>內容編輯</h2>
-            </div>
+            <h2>內容編輯</h2>
           </div>
 
           <!-- STEP 1：發布格式（要發去哪裡 → 編輯預覽勾平台） -->
@@ -319,10 +308,7 @@
 
           <section class="version-history" id="versionHistory" hidden aria-labelledby="versionHistoryTitle">
             <div class="version-history-heading">
-              <div>
-                <p class="section-tag">VERSION HISTORY</p>
-                <h3 id="versionHistoryTitle">版本歷史</h3>
-              </div>
+              <h3 id="versionHistoryTitle">版本歷史</h3>
               <div class="version-history-actions">
                 <button class="btn-text" id="createVersionButton" type="button">建立版本</button>
                 <button class="btn-text" id="refreshVersionsButton" type="button" aria-label="重新整理版本歷史">重新整理</button>
@@ -335,10 +321,7 @@
         <!-- ========== 預覽區 ========== -->
         <section class="composer-preview-pane" id="reviewPanel">
           <div class="panel-heading">
-            <div>
-              <p class="section-tag">LIVE PREVIEW</p>
-              <h2>平台預覽</h2>
-            </div>
+            <h2>平台預覽</h2>
             <span class="badge" id="draftState">尚未產生</span>
           </div>
 
@@ -361,11 +344,7 @@
         <!-- ========== 設定 ========== -->
         <form class="panel is-hidden" id="settingsForm" data-view-panel="settings">
           <div class="panel-heading">
-            <div>
-              <p class="section-tag">SETTINGS</p>
-              <h2>系統設定</h2>
-              <p class="panel-lede">用分頁分別設定 Gemini、品牌與各平台。先填、儲存、再測試。步驟說明預設收合。</p>
-            </div>
+            <p class="panel-lede">用分頁分別設定 Gemini、品牌與各平台。先填、儲存、再測試。步驟說明預設收合。</p>
           </div>
           <nav class="settings-tabs" role="tablist" aria-label="設定分頁">
             <button type="button" class="settings-tab active" role="tab" id="settingsTabGemini" data-settings-page="gemini" data-required-permission="system.manage" aria-controls="settingsPageGemini" aria-selected="true">Gemini</button>
@@ -671,10 +650,6 @@
         <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
         <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
           <div class="panel-heading compact">
-            <div>
-              <p class="section-tag">DRAFTS</p>
-              <h2>內容</h2>
-            </div>
             <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
           </div>
           <div class="content-toolbar" aria-label="內容篩選工具">
@@ -760,23 +735,13 @@
         <!-- 排程 -->
         <section class='panel module-panel is-hidden' id='reviewsPanel' data-view-panel='reviews'>
           <div class='panel-heading compact'>
-            <div>
-              <p class='section-tag'>REVIEW QUEUE</p>
-              <h2>審核佇列</h2>
-              <p class='panel-lede'>集中查看送審版本，核准或留下修改意見。</p>
-            </div>
+            <p class='panel-lede'>集中查看送審版本，核准或留下修改意見。</p>
             <button class='btn-text' id='refreshReviewButton' type='button'>重新整理</button>
           </div>
           <div id='reviewQueueList' class='list-empty' aria-live='polite'></div>
         </section>
 
         <section class='panel is-hidden' id='schedulePanel' data-view-panel='schedule'>
-          <div class="panel-heading compact">
-            <div>
-              <p class="section-tag">CALENDAR</p>
-              <h2>日曆</h2>
-            </div>
-          </div>
           <div class="calendar-toolbar" aria-label="日曆控制">
             <div class="calendar-month-nav">
               <button class="btn-icon" id="calendarPrevious" type="button" aria-label="上一個日期範圍">‹</button>
@@ -829,7 +794,7 @@
         <!-- ========== 素材庫 ========== -->
         <section class="panel module-panel is-hidden" id="mediaPanel" data-view-panel="media">
           <div class="panel-heading compact">
-            <div><p class="section-tag">MEDIA</p><h2>素材庫</h2><p class="panel-lede">集中查看已上傳素材、使用內容與平台分布。</p></div>
+            <p class="panel-lede">集中查看已上傳素材、使用內容與平台分布。</p>
             <a class="btn-secondary" href="#/content/new" data-view-target="create" data-route-target="content/new">＋ 新增內容</a>
           </div>
           <div class="module-toolbar" aria-label="素材篩選工具">
@@ -851,7 +816,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="templatesPanel" data-view-panel="templates">
           <div class="panel-heading compact">
-            <div><p class="section-tag">TEMPLATES</p><h2>模板</h2><p class="panel-lede">保存常用內容結構、語氣、Hashtag 與平台預設。</p></div>
+            <p class="panel-lede">保存常用內容結構、語氣、Hashtag 與平台預設。</p>
             <button class="btn-secondary" id="newTemplateButton" type="button">＋ 建立模板</button>
           </div>
           <div class="module-toolbar" aria-label="模板工具">
@@ -864,7 +829,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
           <div class="panel-heading compact">
-            <div><p class="section-tag">CAMPAIGNS</p><h2>活動</h2><p class="panel-lede">集中整理多篇內容、日期範圍與發布進度。</p></div>
+            <p class="panel-lede">集中整理多篇內容、日期範圍與發布進度。</p>
             <button class="btn-secondary" id="newCampaignButton" type="button">＋ 建立活動</button>
           </div>
           <div class="module-toolbar" aria-label="活動工具">
@@ -877,7 +842,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
           <div class="panel-heading compact">
-            <div><p class="section-tag">PUBLISHING LOGS</p><h2>發布紀錄</h2><p class="panel-lede">以平台目標查看排程、發布結果、錯誤與重試。</p></div>
+            <p class="panel-lede">以平台目標查看排程、發布結果、錯誤與重試。</p>
             <a class="btn-text" href="#/calendar" data-view-target="schedule" data-route-target="calendar">查看日曆 →</a>
           </div>
           <div class="module-summary-grid" id="publishingSummary" aria-label="發布摘要"></div>
@@ -905,7 +870,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="insightsPanel" data-view-panel="insights">
           <div class="panel-heading compact">
-            <div><p class="section-tag">INSIGHTS</p><h2>成效</h2><p class="panel-lede">先查看本機營運摘要；外部平台成效只顯示已同步的真實資料。</p></div>
+            <p class="panel-lede">先查看本機營運摘要；外部平台成效只顯示已同步的真實資料。</p>
             <a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">管理平台 →</a>
           </div>
           <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="營運摘要"></div>
@@ -927,7 +892,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
           <div class="panel-heading compact">
-            <div><p class="section-tag">INBOX</p><h2>收件匣</h2><p class="panel-lede">集中查看平台最近對話與回覆；只顯示 API 真實回傳，不建立永久訊息倉儲。</p></div>
+            <p class="panel-lede">集中查看平台最近對話與回覆；只顯示 API 真實回傳，不建立永久訊息倉儲。</p>
             <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
           </div>
             <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註、同步 cursor 與 webhook 同步提示只保存本機 metadata，不建立永久訊息倉儲。Webhook 會讓下一次讀取從最新資料重新同步。</span></div>
@@ -958,7 +923,7 @@
         </section>
         <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
           <div class="panel-heading compact">
-            <div><p class="section-tag">PLATFORMS</p><h2>平台連線</h2><p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。Token 請到設定填寫。</p></div>
+            <p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。Token 請到設定填寫。</p>
             <a class="btn-secondary" href="#/settings" data-view-target="settings" data-route-target="settings">⚙️ 前往設定</a>
           </div>
           <details class="disclosure compact" data-required-permission="account.manage">
@@ -1008,11 +973,7 @@
 
         <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
           <div class="panel-heading compact">
-            <div>
-              <p class="section-tag">TEAM & ACCESS</p>
-              <h2>團隊與權限</h2>
-              <p class="panel-lede">管理目前品牌的成員、邀請、角色與操作紀錄。</p>
-            </div>
+            <p class="panel-lede">管理目前品牌的成員、邀請、角色與操作紀錄。</p>
             <button class="btn-text" id="refreshTeamButton" type="button">↻ 重新整理</button>
           </div>
           <div class="module-summary-grid" id="teamSummary" aria-label="團隊摘要"></div>
@@ -1081,11 +1042,7 @@
 
         <section class="panel module-panel is-hidden" id="errorLogPanel" data-view-panel="errors">
           <div class="panel-heading compact">
-            <div>
-              <p class="section-tag">ERROR LOG</p>
-              <h2>錯誤記錄</h2>
-              <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
-            </div>
+            <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
             <a class="btn-text" href="#/settings" data-view-target="settings" data-route-target="settings">前往設定 →</a>
           </div>
           <div class="action-box" data-required-permission="system.manage">
@@ -1116,11 +1073,7 @@
 
         <section class="panel module-panel is-hidden" id="helpPanel" data-view-panel="help">
           <div class="panel-heading">
-            <div>
-              <p class="section-tag">HELP</p>
-              <h2>幫助</h2>
-              <p class="panel-lede">操作手冊。可貼錯誤原文，也可查「怎麼排程」「Token」「審核」。</p>
-            </div>
+            <p class="panel-lede">操作手冊。可貼錯誤原文，也可查「怎麼排程」「Token」「審核」。</p>
           </div>
           <div class="help-toolbar">
             <div class="field help-search-field">
@@ -1343,6 +1296,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.17" type="module"></script>
+    <script src="/app.js?v=0.6.18" type="module"></script>
   </body>
 </html>
