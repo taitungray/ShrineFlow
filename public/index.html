@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.31" />
+    <link rel="stylesheet" href="/style.css?v=0.6.32" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -118,9 +118,9 @@
               <fieldset class="form-group-card quick-actions-card">
                 <legend class="group-title">快速開始</legend>
                 <div class="quick-actions">
-                  <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><strong>建立內容</strong><small>從母稿開始編輯</small></button>
-                  <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><strong>內容管理</strong><small>草稿與已發布清單</small></button>
-                  <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><strong>發布日曆</strong><small>掌握社群發布節奏</small></button>
+                  <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><div class="quick-action-text"><strong>建立內容</strong><small>從母稿開始編輯</small></div></button>
+                  <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><div class="quick-action-text"><strong>內容管理</strong><small>草稿與已發布清單</small></div></button>
+                  <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><div class="quick-action-text"><strong>發布日曆</strong><small>掌握社群發布節奏</small></div></button>
                 </div>
               </fieldset>
             </div>
@@ -1399,6 +1399,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.31" type="module"></script>
+    <script src="/app.js?v=0.6.32" type="module"></script>
   </body>
 </html>

@@ -603,12 +603,11 @@
 }
 
 .quick-action {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  column-gap: 10px;
+  display: flex;
   align-items: center;
+  gap: 12px;
   min-height: 56px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   color: var(--text-secondary);
@@ -627,15 +626,25 @@
 }
 
 .quick-action > span {
-  align-self: center;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
   color: var(--brand);
   font-size: 1.25rem;
-  text-align: center;
+}
+
+.quick-action-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
 }
 
 .quick-action strong {
   color: var(--text-primary);
   font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .quick-action small {
@@ -865,22 +874,25 @@
   }
 
   .topbar {
-    width: calc(100% - 20px);
-    min-height: 52px;
-    gap: 8px;
+    width: calc(100% - 16px);
+    margin: 0 auto;
+    min-height: 48px;
+    gap: 6px;
   }
 
   .topbar-leading {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
   }
 
   .mobile-menu-toggle {
     display: inline-flex;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     align-items: center;
     justify-content: center;
     padding: 0;
@@ -893,14 +905,14 @@
 
   .page-heading h1 {
     overflow: hidden;
-    font-size: 1.08rem;
+    font-size: 1.05rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .topbar-actions {
     display: flex;
-    flex: 0 1 50%;
+    flex: 0 1 auto;
     min-width: 0;
     align-items: center;
     gap: 6px;
@@ -910,14 +922,14 @@
   .client-switcher {
     width: auto;
     min-width: 0;
-    max-width: none;
+    max-width: 140px;
     flex: 1 1 auto;
   }
 
   .client-switcher select {
-    min-height: 44px;
-    padding: 8px 28px 8px 10px;
-    font-size: 0.82rem;
+    min-height: 40px;
+    padding: 6px 24px 6px 8px;
+    font-size: 0.8rem;
   }
 
   .status-cluster,
@@ -926,22 +938,27 @@
   }
 
   .shell {
-    width: auto;
-    margin: 0 8px 20px;
-    padding: 12px 0 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 10px calc(24px + env(safe-area-inset-bottom));
   }
 
   .workspace-grid {
+    width: 100%;
+    max-width: 100%;
     gap: 12px;
   }
 
   .overview-heading {
     align-items: stretch;
     flex-direction: column;
+    gap: 8px;
   }
 
   .overview-heading .primary-button {
     width: 100%;
+    min-height: 44px;
   }
 
   .overview-summary {
@@ -950,8 +967,8 @@
   }
 
   .summary-card {
-    min-height: 102px;
-    padding: 12px;
+    min-height: 96px;
+    padding: 12px 10px;
   }
 
   .summary-card strong {
@@ -964,11 +981,16 @@
   }
 
   .overview-recent-item {
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px 4px;
   }
 
   .overview-recent-item time {
-    display: none;
+    display: block;
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
   }
 
   .mobile-bottom-nav {

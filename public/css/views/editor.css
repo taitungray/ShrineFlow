@@ -331,10 +331,22 @@
   .composer-editor-pane .action-row .btn-dark,
   .composer-editor-pane .action-row .btn-save,
   .composer-editor-pane .action-row .primary-button {
-    flex: 0 0 auto;
+    flex: 1 1 calc(50% - 6px);
     width: auto;
     min-height: 44px;
-    padding: 10px 14px;
+    padding: 10px 10px;
+    font-size: 0.82rem;
+  }
+
+  .preview-header-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .copy-preview-btn {
+    min-height: 36px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
   }
 
   .media-gallery {

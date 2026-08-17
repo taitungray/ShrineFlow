@@ -226,27 +226,57 @@
   .calendar-toolbar {
     align-items: stretch;
     flex-direction: column;
+    gap: 10px;
   }
 
   .calendar-month-nav strong {
     min-width: 0;
     flex: 1;
+    font-size: 0.95rem;
   }
 
   .calendar-view-switch {
-    justify-content: center;
+    justify-content: stretch;
+    width: 100%;
   }
 
-  .calendar-grid {
-    display: none;
+  .calendar-view-switch .radio-pill {
+    flex: 1 1 0;
+  }
+
+  .calendar-weekdays,
+  .calendar-days {
+    gap: 3px;
+  }
+
+  .calendar-day {
+    min-height: 64px;
+    padding: 4px;
+    border-radius: var(--r-sm);
+  }
+
+  .calendar-day-number {
+    font-size: 0.65rem;
+  }
+
+  .calendar-event {
+    padding: 2px 4px;
+    font-size: 0.62rem;
+    border-radius: 3px;
+  }
+
+  .calendar-grid-week .calendar-day {
+    min-height: 100px;
   }
 
   #schedulePanel[data-calendar-view="month"] .calendar-agenda,
   #schedulePanel[data-calendar-view="week"] .calendar-agenda {
     display: block;
+    margin-top: 16px;
   }
 
   .calendar-list-heading {
-    margin-top: 6px;
+    margin-top: 10px;
   }
 }
+

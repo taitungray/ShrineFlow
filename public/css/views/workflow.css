@@ -469,31 +469,45 @@ a.content-card-action {
   }
 
   .content-card {
-    min-height: 92px;
-    gap: 8px;
+    min-height: 84px;
+    gap: 10px;
     padding: 10px;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 
   .content-card .record-thumb {
-    flex-basis: 46px;
-    width: 46px;
-    height: 46px;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .content-card .record-body {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .content-card .record-body strong {
-    font-size: 0.82rem;
+    font-size: 0.84rem;
+    line-height: 1.3;
   }
 
   .content-card .record-body > span:not(.content-platforms) {
-    max-width: 42vw;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .content-card-side {
-    min-width: 96px;
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: 4px;
   }
 
   .content-card-side .record-arrow {
-    display: none;
+    display: inline-block;
+    font-size: 0.9rem;
   }
 }
 

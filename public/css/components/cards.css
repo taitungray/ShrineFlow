@@ -309,3 +309,28 @@ h4 {
   font-family: "Noto Serif TC", serif;
   font-weight: 700;
 }
+
+@media (max-width: 767px) {
+  .panel {
+    padding: 16px 12px;
+    min-height: 0;
+    border-radius: var(--r-md);
+  }
+
+  .form-group-card {
+    padding: 14px 12px;
+    margin-bottom: 12px;
+  }
+
+  .panel-heading {
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .record-card {
+    padding: 10px;
+    gap: 10px;
+  }
+}
+
