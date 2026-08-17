@@ -268,7 +268,7 @@ const staticOptions = {
       response.setHeader('Pragma', 'no-cache');
       response.setHeader('Expires', '0');
     } else {
-      if (filePath.endsWith('.html')) {
+      if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
         response.setHeader('Cache-Control', 'no-cache, must-revalidate');
       } else {
         response.setHeader('Cache-Control', 'public, max-age=86400');
