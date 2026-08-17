@@ -23,7 +23,7 @@ export function createIdempotencyKey() {
 }
 
 export async function api(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: requestHeaders(options) });
+  const response = await fetch(path, { credentials: 'same-origin', ...options, headers: requestHeaders(options) });
   const data = await response.json().catch(() => ({}));
   if (response.status === 401 && data.code === 'REAUTH_REQUIRED' && !options._reauthRetry && typeof reauthHandler === 'function') {
     await reauthHandler();
