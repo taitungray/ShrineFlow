@@ -2,8 +2,10 @@ import { $, escapeHtml, formatDate, isVideoPath } from './dom.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
 import { loadPost } from './drafts.js';
+import { GRID_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const filters = { query: '', type: 'all' };
+let mediaPage = 1;
 
 function postTitle(post) {
   return post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容';
@@ -48,6 +50,7 @@ function collectMedia() {
 }
 
 function renderEmpty(container, filtered) {
+  removeListPager(container);
   container.className = 'list-empty module-empty';
   container.innerHTML = filtered
     ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的素材。</p><button class="btn-text" type="button" data-clear-media-filters>清除篩選</button></div>'
@@ -57,6 +60,7 @@ function renderEmpty(container, filtered) {
     filters.type = 'all';
     if ($('#mediaSearch')) $('#mediaSearch').value = '';
     document.querySelector('input[name="mediaType"][value="all"]')?.click();
+    mediaPage = 1;
     renderMediaLibrary();
   });
 }
@@ -81,8 +85,10 @@ export function renderMediaLibrary() {
     renderEmpty(grid, Boolean(allMedia.length));
     return;
   }
+  const paged = paginate(visible, { page: mediaPage, pageSize: GRID_PAGE_SIZE });
+  mediaPage = paged.page;
   grid.className = 'media-library-grid';
-  grid.innerHTML = visible.map((item) => {
+  grid.innerHTML = paged.items.map((item) => {
     const video = isVideoPath(item.path);
     const name = mediaName(item.path);
     const platforms = [...item.platforms].slice(0, 3).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
@@ -106,15 +112,24 @@ export function renderMediaLibrary() {
       + '<div class="media-library-actions">' + (firstPost ? '<button class="btn-text" type="button" data-media-post-id="' + escapeHtml(firstPost.id) + '">查看相關貼文 →</button>' : '<span class="helper">可於新增內容引用</span>') + '</div>'
       + '</article>';
   }).join('');
+  syncListPager(grid, paged, {
+    label: '素材庫分頁',
+    onPage: (page) => {
+      mediaPage = page;
+      renderMediaLibrary();
+    },
+  });
 }
 
 export function initMediaLibrary() {
   $('#mediaSearch')?.addEventListener('input', (event) => {
     filters.query = event.target.value.trim();
+    mediaPage = 1;
     renderMediaLibrary();
   });
   document.querySelectorAll('input[name="mediaType"]').forEach((input) => input.addEventListener('change', () => {
     filters.type = input.value;
+    mediaPage = 1;
     renderMediaLibrary();
   }));
   $('#mediaGrid')?.addEventListener('click', (event) => {

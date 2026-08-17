@@ -127,6 +127,16 @@ test('phone CSS does not use 100vw and does not lock composer to 100dvh', async 
   assert.match(lastDecls(phone, '.composer-workspace'), /overflow\s*:\s*visible/, 'composer-workspace overflow:hidden clips editor fields on phone');
 });
 
+test('list pager wraps and keeps 44px tap targets', async () => {
+  const css = await loadCss('public/style.css');
+  const pager = lastDecls(css, '.list-pager-bar');
+
+  assert.match(pager, /flex-wrap\s*:\s*wrap/, 'pager bar must wrap instead of scrolling sideways');
+  assert.match(css, /\.list-pager-controls,\s*\.list-pager-pages\s*\{[^}]*flex-wrap\s*:\s*wrap/, 'pager controls and page numbers must wrap');
+  assert.doesNotMatch(css, /\.list-pager[^{]*\{[^}]*overflow-x\s*:\s*auto/, 'pager must not use a horizontal scrollbar');
+  assert.match(css, /\.list-pager-nav,\s*\.list-pager-page\s*\{[^}]*min-height\s*:\s*44px/, 'pager buttons must stay 44px');
+});
+
 test('phone chrome uses the header and does not double-pad the bottom nav', async () => {
   const css = await loadCss('public/style.css');
   const phone = mediaBlocks(css, 767);

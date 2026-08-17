@@ -39,7 +39,7 @@ test('nav badges stay hidden until they have a count', async () => {
   assert.match(css, /\.nav-badge\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important/, 'empty nav badges must not paint a blank circle');
   assert.match(html, /id="navDraftsBadge" hidden/, 'content badge starts hidden');
   assert.match(html, /id="navPublishingBadge" hidden/, 'publishing badge starts hidden');
-  assert.match(insightsNav, /<span aria-hidden="true">▥<\/span>/, 'insights uses a bar icon, not a circle');
+  assert.match(insightsNav, /href="#nav-insights"/, 'insights uses a bar-chart icon, not a circle');
   assert.equal(insightsNav.includes('◌'), false, 'insights icon must not look like a notification dot');
 });
 

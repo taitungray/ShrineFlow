@@ -4,8 +4,10 @@ import { api, createIdempotencyKey } from './api.js';
 import { loadPost } from './drafts.js';
 import { previewMediaSrc } from './media-preview.js';
 import { publishingStatusGroup, targetStatusLabel, targetStatusSummary } from './status.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const filters = { status: 'all', platform: 'all' };
+let publishingPage = 1;
 
 function postTitle(post) {
   return post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
@@ -78,12 +80,15 @@ export function renderPublishingLogs() {
     && (filters.platform === 'all' || item.channel === filters.platform)
   ));
   if (!visible.length) {
+    removeListPager(list);
     list.className = 'list-empty module-empty';
     list.innerHTML = '<div class="empty-state"><span class="empty-icon">↗</span><p>' + (items.length ? '找不到符合條件的發布紀錄。' : '還沒有發布紀錄。') + '</p></div>';
     return;
   }
+  const paged = paginate(visible, { page: publishingPage, pageSize: LIST_PAGE_SIZE });
+  publishingPage = paged.page;
   list.className = 'record-list content-list publishing-log-list';
-  list.innerHTML = visible.slice(0, 60).map((item) => {
+  list.innerHTML = paged.items.map((item) => {
     const post = state.posts.find((record) => record.id === item.postId) || {};
     const target = targetOf(post, item);
     const firstMedia = previewMediaSrc((target?.mediaPaths && target.mediaPaths[0]) || mediaPathsOf(post)[0] || '');
@@ -132,15 +137,24 @@ export function renderPublishingLogs() {
       + retryAction + calendarAction + '</span></span>'
       + '</article>';
   }).join('');
+  syncListPager(list, paged, {
+    label: '發布紀錄分頁',
+    onPage: (page) => {
+      publishingPage = page;
+      renderPublishingLogs();
+    },
+  });
 }
 
 export function initPublishingLogs(refreshListsFn) {
   document.querySelectorAll('input[name="publishingStatus"]').forEach((input) => input.addEventListener('change', () => {
     filters.status = input.value;
+    publishingPage = 1;
     renderPublishingLogs();
   }));
   document.querySelectorAll('input[name="publishingPlatform"]').forEach((input) => input.addEventListener('change', () => {
     filters.platform = input.value;
+    publishingPage = 1;
     renderPublishingLogs();
   }));
   $('#publishingLogList')?.addEventListener('click', async (event) => {

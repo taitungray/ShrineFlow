@@ -12,18 +12,21 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 16px;
   width: 100%;
 }
 
 .field.client-switcher {
-  flex: 0 1 220px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 1 auto;
   width: auto;
-  min-width: 132px;
-  max-width: 240px;
+  min-width: 0;
+  max-width: none;
   margin: 0;
-  gap: 0;
+  gap: 8px;
 }
 
 .field-label-group, .field-label {
@@ -53,12 +56,12 @@
   color: var(--brand);
   font-size: 0.74rem;
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   transition: var(--transition);
 }
 .field-link:hover {
   color: var(--brand-hover);
-  text-decoration: underline;
 }
 
 .field-link-row {
@@ -378,7 +381,13 @@ input.datetime-24h-native,
   overflow: hidden;
 }
 
-.disclosure.compact { margin: 12px 0 0; }
+.disclosure.compact { margin: 8px 0 16px; }
+
+.disclosure + .field-row,
+.disclosure + .field,
+.disclosure + .action-box {
+  margin-top: 4px;
+}
 
 .disclosure summary {
   display: flex;

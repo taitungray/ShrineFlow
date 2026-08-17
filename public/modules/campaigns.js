@@ -2,9 +2,13 @@ import { $, escapeHtml, formatDate, showToast, bindDialogDismiss } from './dom.j
 import { api } from './api.js';
 import { state } from './state.js';
 import { loadPost } from './drafts.js';
+import { GRID_PAGE_SIZE, LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const filters = { query: '' };
 const STATUS_LABELS = { planned: '規劃中', active: '進行中', completed: '已完成', archived: '已封存' };
+let campaignsPage = 1;
+let campaignPostPage = 1;
+const campaignSelectedIds = new Set();
 
 function postTitle(post) {
   return post?.title || post?.internalTitle || post?.contentTopic || post?.godName || '未命名內容';
@@ -24,6 +28,7 @@ function statusProgress(posts) {
 }
 
 function renderEmpty(grid, filtered) {
+  removeListPager(grid);
   grid.className = 'list-empty module-empty';
   grid.innerHTML = filtered
     ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的活動。</p><button class="btn-text" type="button" data-clear-campaign-filter>清除搜尋</button></div>'
@@ -31,6 +36,7 @@ function renderEmpty(grid, filtered) {
   grid.querySelector('[data-clear-campaign-filter]')?.addEventListener('click', () => {
     filters.query = '';
     if ($('#campaignSearch')) $('#campaignSearch').value = '';
+    campaignsPage = 1;
     renderCampaigns();
   });
   grid.querySelector('[data-new-campaign]')?.addEventListener('click', () => openCampaignDialog());
@@ -48,8 +54,10 @@ export function renderCampaigns() {
     renderEmpty(grid, Boolean(state.campaigns?.length));
     return;
   }
+  const paged = paginate(visible, { page: campaignsPage, pageSize: GRID_PAGE_SIZE });
+  campaignsPage = paged.page;
   grid.className = 'campaigns-grid';
-  grid.innerHTML = visible.map((campaign) => {
+  grid.innerHTML = paged.items.map((campaign) => {
     const posts = campaignPosts(campaign);
     const progress = statusProgress(posts);
     const postList = posts.slice(0, 3).map((post) => '<button class="campaign-post" type="button" data-campaign-post-id="' + escapeHtml(post.id) + '">' + escapeHtml(postTitle(post)) + '</button>').join('');
@@ -67,15 +75,47 @@ export function renderCampaigns() {
       + '<div class="campaign-actions"><button class="btn-secondary" type="button" data-campaign-action="edit" data-campaign-id="' + escapeHtml(campaign.id) + '">編輯活動</button><button class="btn-text campaign-delete" type="button" data-campaign-action="delete" data-campaign-id="' + escapeHtml(campaign.id) + '">刪除</button></div>'
       + '</article>';
   }).join('');
+  syncListPager(grid, paged, {
+    label: '活動分頁',
+    onPage: (page) => {
+      campaignsPage = page;
+      renderCampaigns();
+    },
+  });
 }
 
-function renderPostSelection(selectedIds = []) {
+function syncCampaignSelectionFromDom() {
+  const container = $('#campaignPostSelection');
+  container?.querySelectorAll('input[name="campaignPost"]').forEach((input) => {
+    if (input.checked) campaignSelectedIds.add(input.value);
+    else campaignSelectedIds.delete(input.value);
+  });
+}
+
+function renderPostSelection(selectedIds = null) {
   const container = $('#campaignPostSelection');
   if (!container) return;
-  const selected = new Set(selectedIds);
-  container.innerHTML = state.posts.length
-    ? state.posts.slice(0, 60).map((post) => '<label class="selection-check"><input type="checkbox" name="campaignPost" value="' + escapeHtml(post.id) + '"' + (selected.has(post.id) ? ' checked' : '') + ' /><span><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(post.status || 'draft') + (post.createdAt ? ' · ' + escapeHtml(formatDate(post.createdAt)) : '') + '</small></span></label>').join('')
-    : '<p class="helper">目前沒有內容可加入活動，請先建立內容。</p>';
+  if (selectedIds) {
+    campaignSelectedIds.clear();
+    selectedIds.forEach((id) => campaignSelectedIds.add(id));
+    campaignPostPage = 1;
+  }
+  if (!state.posts.length) {
+    removeListPager(container);
+    container.innerHTML = '<p class="helper">目前沒有內容可加入活動，請先建立內容。</p>';
+    return;
+  }
+  const paged = paginate(state.posts, { page: campaignPostPage, pageSize: LIST_PAGE_SIZE });
+  campaignPostPage = paged.page;
+  container.innerHTML = paged.items.map((post) => '<label class="selection-check"><input type="checkbox" name="campaignPost" value="' + escapeHtml(post.id) + '"' + (campaignSelectedIds.has(post.id) ? ' checked' : '') + ' /><span><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(post.status || 'draft') + (post.createdAt ? ' · ' + escapeHtml(formatDate(post.createdAt)) : '') + '</small></span></label>').join('');
+  syncListPager(container, paged, {
+    label: '活動內容分頁',
+    onPage: (page) => {
+      syncCampaignSelectionFromDom();
+      campaignPostPage = page;
+      renderPostSelection();
+    },
+  });
 }
 
 function openCampaignDialog(campaign = null) {
@@ -94,6 +134,7 @@ function openCampaignDialog(campaign = null) {
 }
 
 function readCampaignForm() {
+  syncCampaignSelectionFromDom();
   return {
     name: $('#campaignName')?.value?.trim() || '',
     objective: $('#campaignObjective')?.value?.trim() || '',
@@ -101,7 +142,7 @@ function readCampaignForm() {
     endDate: $('#campaignEndDate')?.value || '',
     description: $('#campaignDescription')?.value?.trim() || '',
     status: document.querySelector('input[name="campaignStatus"]:checked')?.value || 'planned',
-    postIds: [...document.querySelectorAll('input[name="campaignPost"]:checked')].map((input) => input.value),
+    postIds: [...campaignSelectedIds],
   };
 }
 
@@ -109,6 +150,7 @@ export function initCampaignManager(onChanged) {
   $('#newCampaignButton')?.addEventListener('click', () => openCampaignDialog());
   $('#campaignSearch')?.addEventListener('input', (event) => {
     filters.query = event.target.value.trim();
+    campaignsPage = 1;
     renderCampaigns();
   });
   $('#campaignsGrid')?.addEventListener('click', async (event) => {

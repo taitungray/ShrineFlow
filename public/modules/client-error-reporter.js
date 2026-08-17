@@ -4,6 +4,19 @@ const recentKeys = new Map();
 let started = false;
 let originalFetch = null;
 
+export function formatClientErrorDetail(event = {}) {
+  const parts = [];
+  const filename = String(event.filename || '');
+  if (filename) parts.push('file: ' + filename);
+  const line = Number(event.lineno);
+  const column = Number(event.colno);
+  if (Number.isFinite(line) && line > 0) parts.push('line: ' + line);
+  if (Number.isFinite(column) && column > 0) parts.push('col: ' + column);
+  const stack = String(event.error?.stack || event.reason?.stack || '').trim();
+  if (stack) parts.push(stack);
+  return parts.join('\n');
+}
+
 export function shouldIgnoreClientErrorUrl(url = '') {
   const value = String(url || '');
   if (!value) return false;
@@ -75,6 +88,7 @@ function onWindowError(event) {
     path,
     code: event.error?.name || '',
     message,
+    detail: formatClientErrorDetail(event),
   });
 }
 
@@ -85,6 +99,7 @@ function onUnhandledRejection(event) {
     scope: 'client_js',
     code: reason?.name || '',
     message,
+    detail: formatClientErrorDetail({ error: reason, reason }),
   });
 }
 

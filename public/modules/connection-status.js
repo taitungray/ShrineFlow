@@ -4,15 +4,15 @@ export function facebookStatusLabel(client, facebookStatus = {}) {
   );
   const statusError = String(facebookStatus.error || '');
   if (facebookStatus.connected === false && (facebookStatus.configured || facebookAccount)) {
-    if (/expired|過期|validating access token/i.test(statusError)) return 'FB Token 已過期';
-    if (statusError) return 'FB 連線失敗';
+    if (/expired|過期|validating access token/i.test(statusError)) return 'Facebook Token 已過期';
+    if (statusError) return 'Facebook 連線失敗';
   }
-  if (facebookAccount) return 'FB 已設定';
-  if (facebookStatus.connected) return 'FB 全域已連線';
-  return 'FB 未設定';
+  if (facebookAccount) return 'Facebook 已設定';
+  if (facebookStatus.connected) return 'Facebook 全域已連線';
+  return 'Facebook 未設定';
 }
 
-const FB_NOT_READY = new Set(['FB 未設定', 'FB Token 已過期', 'FB 連線失敗']);
+const FB_NOT_READY = new Set(['Facebook 未設定', 'Facebook Token 已過期', 'Facebook 連線失敗']);
 
 export function buildConnectionStatus({ client, config = {}, facebookStatus = {} } = {}) {
   const provider = config.provider || 'Gemini';
@@ -27,7 +27,7 @@ export function buildConnectionStatus({ client, config = {}, facebookStatus = {}
     },
     fb: {
       key: 'fb',
-      label: 'FB',
+      label: 'Facebook',
       ready: !FB_NOT_READY.has(fbText),
       text: fbText,
     },

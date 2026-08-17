@@ -53,8 +53,30 @@ test('error log keeps bounded safe metadata and truncates old entries', async ()
     assert.equal(entries[0].message.includes('super-secret'), false);
     assert.equal(entries[0].message.includes('[REDACTED]'), true);
     assert.equal(Object.prototype.hasOwnProperty.call(entries[0], 'stack'), false);
+    assert.equal(entries[0].detail, '');
     assert.equal(entries[0].count, 1);
     assert.equal(entries[0].resolutionStatus, 'open');
+  });
+});
+
+test('error log stores redacted detail separately from the short message', async () => {
+  await withTempErrorLog(async () => {
+    const longStack = 'ReferenceError: restoreRecoverySnapshotForPost is not defined\n    at loadPost (drafts.js:348:64)\n' + 'x'.repeat(5000);
+    await ingestClientError({
+      scope: 'client_js',
+      path: '/modules/drafts.js',
+      code: 'ReferenceError',
+      message: 'restoreRecoverySnapshotForPost is not defined',
+      detail: `api_key=super-secret-key\n${longStack}`,
+    }, { actorId: 'tester-detail' });
+    const entries = await listErrorLogs({ limit: 10 });
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].message, 'restoreRecoverySnapshotForPost is not defined');
+    assert.match(entries[0].detail, /at loadPost \(drafts\.js:348:64\)/);
+    assert.equal(entries[0].detail.includes('super-secret-key'), false);
+    assert.equal(entries[0].detail.includes('[REDACTED]'), true);
+    assert.ok(entries[0].detail.length <= ERROR_LOG_RETENTION_POLICY.maxDetailLength);
+    assert.equal(Object.prototype.hasOwnProperty.call(entries[0], 'stack'), false);
   });
 });
 

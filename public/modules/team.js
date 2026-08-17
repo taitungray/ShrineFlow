@@ -2,6 +2,7 @@ import { $, $$, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentMembership, hasPermission, state } from './state.js';
 import { applySettingsPageFromLocation } from './settings.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const ROLE_LABELS = Object.freeze({
   owner: 'Owner',
@@ -57,6 +58,7 @@ const teamState = {
   invitations: [],
   events: [],
   activeSection: 'members',
+  auditPage: 1,
 };
 
 function actorCanAssignOwner() {
@@ -162,10 +164,12 @@ function renderAudit() {
   const list = $('#auditEventList');
   if (!list) return;
   if (!canViewAudit()) {
+    removeListPager(list);
     list.innerHTML = '<div class="empty-state module-empty"><span class="empty-icon">🔒</span><p>你沒有查看操作紀錄的權限。</p></div>';
     return;
   }
   if (!state.currentClientId) {
+    removeListPager(list);
     list.innerHTML = '<div class="empty-state module-empty"><span class="empty-icon">🏷️</span><p>請先建立或選擇品牌，再查看操作紀錄。</p></div>';
     return;
   }
@@ -174,10 +178,20 @@ function renderAudit() {
     event.action, event.actorEmail, event.actorId, event.resourceType, event.resourceId, auditLabel(event.action),
   ].some((value) => String(value || '').toLowerCase().includes(query)));
   if (!events.length) {
+    removeListPager(list);
     list.innerHTML = '<div class="empty-state module-empty"><span class="empty-icon">◷</span><p>沒有符合條件的操作紀錄。</p></div>';
     return;
   }
-  list.innerHTML = events.map((event) => `<article class="audit-event-card"><span class="audit-event-mark" aria-hidden="true">◷</span><div><strong>${escapeHtml(auditLabel(event.action))}</strong><p>${escapeHtml(event.actorEmail || event.actorId)}${event.clientId ? '' : ' · 全站'}${event.resourceType ? ` · ${escapeHtml(event.resourceType)}` : ''}${event.resourceId ? ` #${escapeHtml(event.resourceId)}` : ''}</p><small>${escapeHtml(formatDate(event.createdAt))}</small></div></article>`).join('');
+  const paged = paginate(events, { page: teamState.auditPage, pageSize: LIST_PAGE_SIZE });
+  teamState.auditPage = paged.page;
+  list.innerHTML = paged.items.map((event) => `<article class="audit-event-card"><span class="audit-event-mark" aria-hidden="true">◷</span><div><strong>${escapeHtml(auditLabel(event.action))}</strong><p>${escapeHtml(event.actorEmail || event.actorId)}${event.clientId ? '' : ' · 全站'}${event.resourceType ? ` · ${escapeHtml(event.resourceType)}` : ''}${event.resourceId ? ` #${escapeHtml(event.resourceId)}` : ''}</p><small>${escapeHtml(formatDate(event.createdAt))}</small></div></article>`).join('');
+  syncListPager(list, paged, {
+    label: '操作紀錄分頁',
+    onPage: (page) => {
+      teamState.auditPage = page;
+      renderAudit();
+    },
+  });
 }
 
 function renderSummary() {
@@ -238,7 +252,10 @@ export async function loadTeamManagement() {
     teamState.invitations = [];
   }
   if (canViewAudit()) {
-    tasks.push(api(`/api/audit-events?clientId=${encodeURIComponent(clientId)}&limit=50`).then((data) => { teamState.events = data.events || []; }));
+    tasks.push(api(`/api/audit-events?clientId=${encodeURIComponent(clientId)}&limit=500`).then((data) => {
+      teamState.events = data.events || [];
+      teamState.auditPage = 1;
+    }));
   } else {
     teamState.events = [];
   }
@@ -300,7 +317,10 @@ export function initTeamListeners() {
     teamState.activeSection = button.dataset.teamSection;
     renderSections();
   });
-  $('#auditSearch')?.addEventListener('input', renderAudit);
+  $('#auditSearch')?.addEventListener('input', () => {
+    teamState.auditPage = 1;
+    renderAudit();
+  });
   $('#teamPanel')?.addEventListener('change', async (event) => {
     const workflowToggle = event.target.closest('#approvalRequiredToggle');
     if (workflowToggle) {

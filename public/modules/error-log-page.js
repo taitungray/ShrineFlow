@@ -3,6 +3,10 @@ import { api } from './api.js';
 import { hasPermission } from './state.js';
 import { routeFromHash } from './tabs.js';
 import { canViewErrorLogs, renderErrorLogListHtml } from './error-logs.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+
+let errorPage = 1;
+let cachedErrorEntries = [];
 
 function errorLogStatusFilter() {
   return document.querySelector('input[name="errorLogStatusFilter"]:checked')?.value || 'open';
@@ -20,13 +24,39 @@ async function refreshErrorLog() {
   const list = $('#errorLogList');
   if (!canViewErrorLogs(hasPermission)) {
     if (result) result.textContent = '';
-    if (list) list.innerHTML = renderErrorLogListHtml([], { allowed: false });
+    if (list) {
+      removeListPager(list);
+      list.innerHTML = renderErrorLogListHtml([], { allowed: false });
+    }
     return;
   }
   const status = errorLogStatusFilter();
-  const entries = await api('/api/system/error-log?limit=50&status=' + encodeURIComponent(status));
-  if (result) result.textContent = entries.length ? `最近有 ${entries.length} 筆錯誤記錄。` : '目前沒有符合篩選的錯誤記錄。';
-  if (list) list.innerHTML = renderErrorLogListHtml(entries, { allowed: true });
+  cachedErrorEntries = await api('/api/system/error-log?limit=500&status=' + encodeURIComponent(status));
+  errorPage = 1;
+  if (result) result.textContent = cachedErrorEntries.length ? `最近有 ${cachedErrorEntries.length} 筆錯誤記錄。` : '目前沒有符合篩選的錯誤記錄。';
+  renderErrorLogEntries(list);
+}
+
+function renderErrorLogEntries(list = $('#errorLogList')) {
+  if (!list) return;
+  if (!cachedErrorEntries.length) {
+    removeListPager(list);
+    list.innerHTML = renderErrorLogListHtml([], { allowed: true });
+    return;
+  }
+  const paged = paginate(cachedErrorEntries, { page: errorPage, pageSize: LIST_PAGE_SIZE });
+  errorPage = paged.page;
+  list.innerHTML = renderErrorLogListHtml(paged.items, {
+    allowed: true,
+    countLabel: '共 ' + paged.total + ' 筆',
+  });
+  syncListPager(list, paged, {
+    label: '錯誤記錄分頁',
+    onPage: (page) => {
+      errorPage = page;
+      renderErrorLogEntries(list);
+    },
+  });
 }
 
 async function downloadErrorLog() {

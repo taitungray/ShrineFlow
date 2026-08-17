@@ -8,19 +8,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-      body.auth-required > :not(#authGate) { display: none !important; }
+      body.auth-required > :not(#authGate):not(.nav-sprite) { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.43" />
+    <link rel="stylesheet" href="/style.css?v=0.6.50" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
+    <svg class="nav-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <symbol id="nav-content" viewBox="0 0 24 24"><path fill="none" d="M7 3.75h7.2L17.5 7.1V20.25H7z"/><path fill="none" d="M14 3.75V7.4h3.5"/><path fill="none" d="M9.4 11.2h5.4M9.4 14.4h5.4M9.4 17.6h3.4"/></symbol>
+      <symbol id="nav-calendar" viewBox="0 0 24 24"><rect fill="none" x="4" y="5.5" width="16" height="14.75" rx="2"/><path fill="none" d="M4 10h16M8 3.75v3.4M16 3.75v3.4"/><rect fill="currentColor" stroke="none" x="8.3" y="13.2" width="2.4" height="2.4" rx="0.4"/></symbol>
+      <symbol id="nav-media" viewBox="0 0 24 24"><rect fill="none" x="3.75" y="5.5" width="16.5" height="13" rx="2"/><circle fill="none" cx="8.6" cy="10.1" r="1.45"/><path fill="none" d="M3.9 16.4l4.4-3.6 3.2 2.5 2.7-2.1 5.6 3.4"/></symbol>
+      <symbol id="nav-reviews" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="8.25"/><path fill="none" d="M8.4 12.2l2.5 2.5 4.8-5.1"/></symbol>
+      <symbol id="nav-publishing" viewBox="0 0 24 24"><path fill="none" d="M12 15.5V4.75"/><path fill="none" d="M8.2 8.4 12 4.75 15.8 8.4"/><path fill="none" d="M5 14.5v4.75h14V14.5"/></symbol>
+      <symbol id="nav-inbox" viewBox="0 0 24 24"><path fill="none" d="M4 13.2 7.1 6.5h9.8L20 13.2v5.3H4z"/><path fill="none" d="M4 13.2h4.4l1.5 2.3h4.2l1.5-2.3H20"/></symbol>
+      <symbol id="nav-overview" viewBox="0 0 24 24"><path fill="none" d="M4.5 11.2 12 4.6l7.5 6.6"/><path fill="none" d="M7 10.4V19.4h10V10.4"/></symbol>
+      <symbol id="nav-templates" viewBox="0 0 24 24"><rect fill="none" x="8" y="6.2" width="11.2" height="13.1" rx="1.6"/><path fill="none" d="M15.4 4.7H6.6A1.6 1.6 0 0 0 5 6.3v11.2"/></symbol>
+      <symbol id="nav-campaigns" viewBox="0 0 24 24"><path fill="none" d="M7 4.6v15.8"/><path fill="none" d="M7 5.2h11.2l-2.6 3.7 2.6 3.7H7"/></symbol>
+      <symbol id="nav-insights" viewBox="0 0 24 24"><path fill="none" d="M4.5 19.2h15"/><path fill="none" d="M7 19.2V13h2.6v6.2M11.7 19.2V8.4h2.6v10.8M16.4 19.2V5.6H19v13.6"/></symbol>
+      <symbol id="nav-platforms" viewBox="0 0 24 24"><circle fill="none" cx="7" cy="12" r="2.6"/><circle fill="none" cx="17" cy="7.4" r="2.6"/><circle fill="none" cx="17" cy="16.6" r="2.6"/><path fill="none" d="M9.4 11.2 14.6 8.4M9.4 12.8l5.2 2.8"/></symbol>
+      <symbol id="nav-settings" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="3.1"/><path fill="none" d="M12 4v2.3M12 17.7V20M4 12h2.3M17.7 12H20M6.2 6.2l1.6 1.6M16.2 16.2l1.6 1.6M17.8 6.2l-1.6 1.6M7.8 16.2l-1.6 1.6"/></symbol>
+      <symbol id="nav-team" viewBox="0 0 24 24"><circle fill="none" cx="9" cy="8.2" r="2.4"/><path fill="none" d="M4.6 18.4v-1.3a4.4 4.4 0 0 1 8.8 0v1.3"/><circle fill="none" cx="16.4" cy="8.8" r="2"/><path fill="none" d="M14.2 18.4v-.9a3.4 3.4 0 0 1 5.2-2.9"/></symbol>
+      <symbol id="nav-errors" viewBox="0 0 24 24"><path fill="none" d="M12 4.4 20.4 19H3.6z"/><path fill="none" d="M12 10v4.2"/><circle fill="currentColor" stroke="none" cx="12" cy="16.6" r="0.75"/></symbol>
+      <symbol id="nav-help" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="8.25"/><path fill="none" d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.35c-.7.36-1.1.86-1.1 1.65"/><circle fill="currentColor" stroke="none" cx="12" cy="16.35" r="0.75"/></symbol>
+      <symbol id="nav-plus" viewBox="0 0 24 24"><path fill="none" d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="nav-more" viewBox="0 0 24 24"><circle fill="currentColor" stroke="none" cx="6" cy="12" r="1.4"/><circle fill="currentColor" stroke="none" cx="12" cy="12" r="1.4"/><circle fill="currentColor" stroke="none" cx="18" cy="12" r="1.4"/></symbol>
+    </svg>
+
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.43</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.50</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -46,18 +66,21 @@
         </div>
         <div class="topbar-actions">
           <div class="field client-switcher">
-            <label for="currentClientSelect" class="field-label visually-hidden">目前品牌</label>
+            <label for="currentClientSelect" class="field-label">品牌</label>
             <select id="currentClientSelect" aria-label="切換品牌"></select>
           </div>
-          <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="檢查連線中">
-            <span class="status-dot" data-status="ai" title="檢查連線中…">Gemini</span>
-            <span class="status-dot" data-status="fb" title="檢查連線中…">FB</span>
+          <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="連線狀態">
+            <span class="status-cluster-label">連線</span>
+            <a class="status-dot" data-status="ai" href="#/settings/gemini" title="檢查連線中…">Gemini</a>
+            <a class="status-dot" data-status="fb" href="#/settings/facebook" title="檢查連線中…">Facebook</a>
           </div>
-          <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
-            <span class="user-avatar" id="userAvatar" aria-hidden="true">U</span>
-            <span class="user-identity-copy"><strong id="userDisplayName">使用者</strong><small id="userRoleLabel">—</small></span>
+          <div class="topbar-account">
+            <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
+              <span class="user-avatar" id="userAvatar" aria-hidden="true">U</span>
+              <span class="user-identity-copy"><strong id="userDisplayName">使用者</strong><small id="userRoleLabel">—</small></span>
+            </div>
+            <button class="btn-text is-hidden" id="authLogoutButton" type="button">登出</button>
           </div>
-          <button class="btn-text is-hidden" id="authLogoutButton" type="button">登出</button>
         </div>
       </div>
     </header>
@@ -68,28 +91,29 @@
         <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">讀取中</em></span>
         <p>Social publishing workspace</p>
       </div>
-      <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">＋</span> 新增內容</a>
+      <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span> 新增內容</a>
       <nav class="app-nav" aria-label="工作區導覽">
         <p class="nav-group-label">工作區</p>
-        <a class="app-nav-item active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span aria-hidden="true">⌂</span>總覽</a>
-        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span>內容<span class="nav-badge" id="navDraftsBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span>日曆<span class="nav-badge" id="navScheduleBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span aria-hidden="true">▧</span>素材庫</a>
+        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span>內容<span class="nav-badge" id="navDraftsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span>日曆<span class="nav-badge" id="navScheduleBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-media" /></svg></span>素材庫</a>
+        <a class="app-nav-item permission-hidden" id="reviewNavItem" href="#/reviews" data-view-target="reviews" data-route-target="reviews" data-required-any="content.approve,content.submit_review"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-reviews" /></svg></span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-publishing" /></svg></span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-inbox" /></svg></span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
         <p class="nav-group-label nav-group-label-spaced">管理</p>
-        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span aria-hidden="true">◇</span>模板</a>
-        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span aria-hidden="true">◈</span>活動</a>
-        <a class="app-nav-item nav-secondary" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span aria-hidden="true">↗</span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
-        <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span aria-hidden="true">▥</span>成效</a>
-        <a class="app-nav-item nav-secondary" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span aria-hidden="true">✉</span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
-        <a class='app-nav-item nav-secondary permission-hidden' id='reviewNavItem' href='#/reviews' data-view-target='reviews' data-route-target='reviews' data-required-any='content.approve,content.submit_review'><span aria-hidden='true'>✓</span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
+        <a class="app-nav-item nav-secondary active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span>總覽</a>
+        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-templates" /></svg></span>模板</a>
+        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-campaigns" /></svg></span>活動</a>
+        <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-insights" /></svg></span>成效</a>
       </nav>
-      <div class="sidebar-footer">
-        <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span aria-hidden="true">♙</span>團隊與權限</a>
-        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span aria-hidden="true">◎</span>平台連線</a>
-        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span aria-hidden="true">⚠</span>錯誤記錄<span class="nav-badge" id="navErrorsBadge" hidden></span></a>
-        <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span aria-hidden="true">⚙</span>設定</a>
-        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span aria-hidden="true">?</span>幫助</a>
-      </div>
+      <nav class="sidebar-footer" aria-label="系統導覽">
+        <p class="nav-group-label">系統</p>
+        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-platforms" /></svg></span>平台連線</a>
+        <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-settings" /></svg></span>設定</a>
+        <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-team" /></svg></span>團隊與權限</a>
+        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-errors" /></svg></span>錯誤記錄<span class="nav-badge" id="navErrorsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-help" /></svg></span>幫助</a>
+      </nav>
     </aside>
     <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
 
@@ -111,17 +135,11 @@
           </div>
           <div class="overview-grid">
             <div class="overview-col-left">
-              <fieldset class="form-group-card overview-attention-card" id="overviewAttentionCard">
-                <legend class="group-title">待辦與警示</legend>
+              <fieldset class="form-group-card overview-now-card" id="overviewAttentionCard">
+                <legend class="group-title">此刻</legend>
+                <div class="overview-health" id="overviewHealth" aria-label="連線狀態"></div>
                 <div id="overviewAttentionList" class="overview-attention-list"><p class="helper">檢查待辦事項中…</p></div>
-              </fieldset>
-              <fieldset class="form-group-card quick-actions-card">
-                <legend class="group-title">快速開始</legend>
-                <div class="quick-actions">
-                  <button class="quick-action" type="button" data-view-target="create" data-route-target="content/new"><span aria-hidden="true">✦</span><div class="quick-action-text"><strong>建立內容</strong><small>從母稿開始編輯</small></div></button>
-                  <button class="quick-action" type="button" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><div class="quick-action-text"><strong>內容管理</strong><small>草稿與已發布清單</small></div></button>
-                  <button class="quick-action" type="button" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><div class="quick-action-text"><strong>發布日曆</strong><small>掌握社群發布節奏</small></div></button>
-                </div>
+                <div id="overviewNextList" class="overview-next-list" hidden></div>
               </fieldset>
             </div>
             <fieldset class="form-group-card overview-recent-card">
@@ -501,7 +519,7 @@
               <input id="settingFacebookTokenExpiresAt" type="date" />
             </div>
             <div class="action-box">
-              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 FB 連線</button>
+              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 Facebook 連線</button>
               <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
@@ -644,7 +662,7 @@
               <div class="disclosure-body">
                 <ol class="setup-steps">
                   <li>同一個 Meta App。勾使用案例<strong>存取 Threads API</strong>，儀表板再加入 Threads 產品。</li>
-                  <li>用 Threads 帳號授權取得 Token（開頭常是 <code>THQVJ...</code>）。不要把 FB 的 <code>EAA...</code> 貼來這裡。</li>
+                  <li>用 Threads 帳號授權取得 Token（開頭常是 <code>THQVJ...</code>）。不要把 Facebook 的 <code>EAA...</code> 貼來這裡。</li>
                   <li>對 Threads Graph（<code>graph.threads.net</code>）GET <code>/me</code>，數字 <code>id</code> 貼 User ID。那不是粉專 ID。</li>
                   <li>純文字可不設媒體網址；有圖／影則必須 HTTPS（如 <code>https://media.shrineflow.uk</code>）。到期日可留白。</li>
                 </ol>
@@ -669,13 +687,13 @@
               </div>
               <div class="field">
                 <span class="field-label">未使用素材</span>
-                <p class="helper" id="storageHealthResult">按下檢查以計算可清理項目。</p>
+                <p class="helper helper-live" id="storageHealthResult">按下檢查以計算可清理項目。</p>
               </div>
             </div>
             <div class="field-row">
               <div class="field">
                 <span class="field-label">系統健康狀態</span>
-                <p class="helper" id="systemHealthResult">按下檢查以確認 JSON、備份、配額與排程器。</p>
+                <p class="helper helper-live" id="systemHealthResult">按下檢查以確認 JSON、備份、配額與排程器。</p>
               </div>
             </div>
             <div class="action-box">
@@ -697,9 +715,6 @@
 
         <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
         <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
-          <div class="panel-heading compact">
-            <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
-          </div>
           <div class="content-toolbar" aria-label="內容篩選工具">
             <div class="field content-search-field">
               <label for="contentSearch" class="field-label">搜尋內容</label>
@@ -718,6 +733,7 @@
                 <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
               </div>
             </div>
+            <div class="content-toolbar-end">
             <details class="disclosure compact content-more-filters">
               <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
@@ -740,6 +756,8 @@
                 </div>
               </div>
             </details>
+            <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+            </div>
           </div>
           <form id="ideaCaptureForm" class="idea-capture-bar">
             <div class="field">
@@ -1150,13 +1168,15 @@
               <label for="helpSearch" class="field-label">搜尋說明</label>
               <input id="helpSearch" type="search" placeholder="貼錯誤原文，或輸入：排程、Token、審核、Queue…" autocomplete="off" />
             </div>
-            <div class="field">
-              <span id="helpKindLabel" class="field-label">類型</span>
-              <div class="radio-pill-group help-filter-pills" id="helpKindFilter" role="radiogroup" aria-labelledby="helpKindLabel"></div>
-            </div>
-            <div class="field">
-              <span id="helpTopicLabel" class="field-label">主題</span>
-              <div class="radio-pill-group help-filter-pills" id="helpTopicFilter" role="radiogroup" aria-labelledby="helpTopicLabel"></div>
+            <div class="help-filter-stack">
+              <div class="field help-kind-field">
+                <span id="helpKindLabel" class="field-label">類型</span>
+                <div class="radio-pill-group help-filter-pills help-kind-pills" id="helpKindFilter" role="radiogroup" aria-labelledby="helpKindLabel"></div>
+              </div>
+              <div class="field help-topic-field">
+                <span id="helpTopicLabel" class="field-label">主題</span>
+                <div class="radio-pill-group help-filter-pills help-topic-pills" id="helpTopicFilter" role="radiogroup" aria-labelledby="helpTopicLabel"></div>
+              </div>
             </div>
           </div>
           <p class="helper" id="helpStatus">載入說明中…</p>
@@ -1166,11 +1186,11 @@
     </main>
 
     <nav class="mobile-bottom-nav" aria-label="手機主要導覽">
-      <a href="#/overview" data-view-target="overview" data-route-target="overview"><span aria-hidden="true">⌂</span><small>總覽</small></a>
-      <a href="#/content" data-view-target="drafts" data-route-target="content"><span aria-hidden="true">▤</span><small>內容</small></a>
-      <a class="mobile-nav-create" href="#/content/new" data-view-target="create" data-route-target="content/new" aria-label="新增內容"><span aria-hidden="true">＋</span><small>新增</small></a>
-      <a href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span aria-hidden="true">▦</span><small>日曆</small></a>
-      <button id="mobileMoreToggle" type="button" aria-label="開啟更多導覽" aria-controls="appSidebar" aria-expanded="false"><span aria-hidden="true">⋯</span><small>更多</small></button>
+      <a href="#/overview" data-view-target="overview" data-route-target="overview"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span><small>總覽</small></a>
+      <a href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span><small>內容</small></a>
+      <a class="mobile-nav-create" href="#/content/new" data-view-target="create" data-route-target="content/new" aria-label="新增內容"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span><small>新增</small></a>
+      <a href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span><small>日曆</small></a>
+      <button id="mobileMoreToggle" type="button" aria-label="開啟更多導覽" aria-controls="appSidebar" aria-expanded="false"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-more" /></svg></span><small>更多</small></button>
     </nav>
 
     <dialog class="module-dialog media-picker-dialog" id="mediaPickerDialog" aria-labelledby="mediaPickerTitle">
@@ -1404,6 +1424,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.43" type="module"></script>
+    <script src="/app.js?v=0.6.50" type="module"></script>
   </body>
 </html>

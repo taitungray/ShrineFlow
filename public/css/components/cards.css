@@ -150,7 +150,14 @@ h4 {
 }
 
 .group-action-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
   color: var(--brand);
+  background: var(--bg-card);
   font-size: 0.76rem;
   font-weight: 700;
   text-decoration: none;
@@ -158,8 +165,8 @@ h4 {
 }
 
 .group-action-link:hover {
-  text-decoration: underline;
-  transform: translateX(1px);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }
 
 
@@ -280,8 +287,24 @@ h4 {
 
 /* Empty States */
 .list-empty { display: grid; place-items: center; min-height: 140px; }
-.empty-state { color: var(--text-tertiary); text-align: center; }
-.empty-icon { display: block; margin-bottom: 6px; font-size: 2rem; }
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.empty-state p {
+  margin: 0;
+  max-width: 28rem;
+  line-height: 1.55;
+}
+.empty-icon {
+  display: block;
+  margin: 0;
+  font-size: 2rem;
+}
 
 /* Record Cards */
 .record-list { display: grid; gap: 8px; }
@@ -326,6 +349,79 @@ h4 {
 
 .record-arrow { color: var(--accent); font-size: 1.2rem; }
 
+.list-pager {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.list-pager-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.list-pager-meta {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.list-pager-controls,
+.list-pager-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-pager-nav,
+.list-pager-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.list-pager-nav:hover:not(:disabled),
+.list-pager-page:hover:not(:disabled):not(.is-active) {
+  background: var(--brand-soft);
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
+}
+
+.list-pager-page.is-active {
+  color: #ffffff;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.list-pager-nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.list-pager-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 44px;
+  color: var(--text-tertiary);
+}
+
 .schedule-card em {
   margin-left: auto; padding: 3px 8px;
   border-radius: var(--r-full);
@@ -352,7 +448,7 @@ h4 {
 
 @media (max-width: 767px) {
   .panel {
-    padding: 16px 12px;
+    padding: 16px;
     min-height: 0;
     border-radius: var(--r-md);
     overflow-wrap: break-word;
@@ -365,9 +461,16 @@ h4 {
 
   .panel-heading {
     align-items: stretch;
+    flex-direction: column;
+    flex-wrap: nowrap;
     gap: 8px;
     margin-bottom: 10px;
     padding-bottom: 8px;
+  }
+
+  .panel-heading > .panel-lede {
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .panel-heading > .btn-secondary,
@@ -384,6 +487,16 @@ h4 {
   .record-card {
     padding: 10px;
     gap: 10px;
+  }
+
+  .list-pager-bar,
+  .list-pager-controls,
+  .list-pager-pages {
+    width: 100%;
+  }
+
+  .list-pager-nav {
+    flex: 1 1 auto;
   }
 }
 

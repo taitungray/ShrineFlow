@@ -56,18 +56,17 @@ export const HELP_ARTICLES = [
     kind: 'guide',
     topics: ['start'],
     title: '側邊每一頁是做什麼',
-    summary: '工作區管內容與發布；管理區管帳號、權限與設定。',
-    keywords: ['側邊', '導覽', '頁面', '總覽', '日曆', '幫助'],
+    summary: '工作區管內容與發布；管理區管看板與活動；系統區管連線、權限與設定。',
+    keywords: ['側邊', '導覽', '頁面', '總覽', '日曆', '幫助', '系統'],
     symptoms: '找不到排程、素材或連線設定。',
     cause: '功能依工作流程分頁，不是全塞在同一張表單。',
     steps: [
-      '總覽：目前品牌的數量與需要處理的項目。',
-      '新增內容／內容：寫母稿、編輯、複製、封存、隱藏、CSV、Idea。',
+      '工作區：內容、日曆、素材庫、審核佇列、發布紀錄、收件匣。',
+      '內容／新增內容：寫母稿、編輯、複製、封存、隱藏、CSV、Idea。',
       '日曆：月／週／列表看排程，改期、取消、隱藏、危機暫停、Queue。',
-      '素材庫、模板、活動：重用媒體與常用結構，把貼文掛到活動。',
-      '發布紀錄、成效、收件匣：發沒發成功、數字、私訊回覆。',
-      '審核佇列、團隊與權限：送審／核准與成員角色。',
-      '平台連線、設定、幫助：Token 狀態、Gemini、備份，以及本說明。系統 Owner 另有錯誤記錄頁。',
+      '審核佇列、發布紀錄、收件匣：送審／核准、發沒發成功、私訊回覆。',
+      '管理：總覽看板、模板、活動、成效數字。',
+      '系統：平台連線、設定、團隊與權限、幫助。系統 Owner 另有錯誤記錄頁。',
     ],
     related: [
       { label: '總覽', href: '#/overview' },
@@ -323,7 +322,7 @@ export const HELP_ARTICLES = [
       '設定 → 目前品牌的 Facebook。',
       'Graph Explorer 選你的 Meta App，勾粉專相關權限後產生存取權杖。',
       'GET me/accounts?fields=id,name,access_token&limit=100。左邊 JSON 才是粉專清單。',
-      '把該粉專的 id 與 access_token 貼進欄位 → 儲存此品牌 FB 連線 → 測試。成功要出現粉專名稱。',
+      '把該粉專的 id 與 access_token 貼進欄位 → 儲存此品牌 Facebook 連線 → 測試。成功要出現粉專名稱。',
     ],
     advancedSteps: [
       '到 Meta for Developers 建 Business 類型應用程式。你的 Facebook 必須是粉專管理員，並加入 App 角色。',
@@ -359,7 +358,7 @@ export const HELP_ARTICLES = [
     steps: [
       'Access Token Debugger 貼設定裡的 Token：Type 必須是 Page，不是 User。Expires 應為 Never。',
       'GET me/accounts?fields=id,name,access_token&limit=100。同一筆：id 貼粉專 ID，access_token 貼 Page token。不要用右側用戶權杖。',
-      '儲存此品牌 FB 連線後再測。成功要出現粉專名稱；若提示用戶權杖，Token 欄還是右側那串。',
+      '儲存此品牌 Facebook 連線後再測。成功要出現粉專名稱；若提示用戶權杖，Token 欄還是右側那串。',
       'Debugger 已是 Page 仍失敗：改看幫助「權限不足」，或該格式（Reel／限時）粉專不支援。',
     ],
     related: [
@@ -585,7 +584,7 @@ export const HELP_ARTICLES = [
     summary: 'IG 由 ShrineFlow 到點才打 API。服務關了就不會發。',
     keywords: ['本機排程', 'scheduler', 'container', '24h', '關機'],
     symptoms: '以為排程進了 IG 後台佇列；或電腦／雲端關掉後時間到了沒發出。',
-    cause: 'Instagram 沒有等同 FB 的原生排程。本機只記時間，到期才建立 container。Container 約 24 小時過期，所以不能提前建好放著。',
+    cause: 'Instagram 沒有等同 Facebook 的原生排程。本機只記時間，到期才建立 container。Container 約 24 小時過期，所以不能提前建好放著。',
     steps: [
       'IG 排程：確認雲端服務或本機程式在預計時間仍然運行。',
       '改期、取消只改 ShrineFlow，不會出現在 IG 專業後台的排程列表。',
@@ -640,7 +639,7 @@ export const HELP_ARTICLES = [
     summary: '日曆可月／週／列表。取消時 Facebook 會刪遠端；IG／Threads 只改本機。',
     keywords: ['排程', '改期', '取消', '拖曳', '日曆', '24小時', '24 小時制'],
     symptoms: '不知道改時間要去哪，或取消後粉專還留著。',
-    cause: '各平台排程實作不同。FB 同步 Graph；IG／Threads 沒有遠端排程物件。',
+    cause: '各平台排程實作不同。Facebook 同步 Graph；Instagram／Threads 沒有遠端排程物件。',
     steps: [
       '編輯完成後按「排程發布」，選時間與平台目標。時間是 24 小時制（例如 13:00），沒有上午／下午。',
       '到日曆查看。可拖曳改期（仍受各平台時間與格式規則約束）。',
@@ -833,7 +832,7 @@ export const HELP_ARTICLES = [
     summary: '預覽可以，真發不行。換已支援的格式。',
     keywords: ['尚未串接', 'canPublish', '僅預覽'],
     symptoms: '排程或發布說這個格式還沒串接。',
-    cause: '該平台／格式沒有 publisher。目前支援 FB 貼文／Reel／立刻 Story，IG Feed／Reel／Story，Threads 貼文。',
+    cause: '該平台／格式沒有 publisher。目前支援 Facebook 貼文／Reel／立刻 Story，Instagram Feed／Reel／Story，Threads 貼文。',
     steps: [
       '改選已支援格式，例如 Facebook 貼文或 Reel。',
       '仍只要看版型：用預覽即可，不要按發布。',
@@ -1065,7 +1064,7 @@ export const HELP_ARTICLES = [
     kind: 'guide',
     topics: ['settings'],
     title: '設定要先儲存再測試',
-    summary: 'Gemini／全站一個儲存。FB／IG／Threads 各有「儲存此品牌連線」。',
+    summary: 'Gemini／全站一個儲存。Facebook／Instagram／Threads 各有「儲存此品牌連線」。',
     keywords: ['儲存', '測試連線', '先存再測'],
     symptoms: '測試仍用舊 Token，或 Gemini Key 測過了重新整理又沒有。',
     cause: '測試讀的是已寫入伺服器的值，不是輸入框裡還沒存的字。',
@@ -1119,6 +1118,7 @@ export const HELP_ARTICLES = [
     cause: '發布與系統錯誤會另存記錄，最多保留一段時間與筆數。一般成員看不到這頁。',
     steps: [
       '側邊「錯誤記錄」打開獨立頁，篩未修正／已修正／全部。',
+      '點開一筆可看路徑、狀態碼、完整訊息與堆疊。',
       '複製英文或中文原文，到幫助頁搜尋框貼上。',
       '沒有這項連結：你不是系統 Owner，請找有系統權限的人。',
     ],

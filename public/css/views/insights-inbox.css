@@ -2,6 +2,10 @@
    View: Analytics Insights & Cross-Platform Inbox
    ========================================================================== */
 /* Honest data boundaries for Insights and Inbox */
+#insightsOperationalSummary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .insights-source-note,
 .inbox-source-note {
   display: grid;
@@ -431,15 +435,88 @@
   min-height: 240px;
 }
 
-.error-log-list .backup-row {
+.error-log-list .backup-row,
+.error-log-row {
   align-items: flex-start;
 }
 
-.error-log-list .backup-row small {
+.error-log-list .backup-row small,
+.error-log-summary small {
   display: block;
   overflow: visible;
   white-space: normal;
   text-overflow: unset;
+}
+
+.error-log-row .error-log-fold {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.error-log-fold > summary {
+  align-items: center;
+  gap: 10px;
+}
+
+.error-log-summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.error-log-summary strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error-log-summary small {
+  color: var(--text-secondary);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.error-log-detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.error-log-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.error-log-field dt {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.error-log-field dd {
+  margin: 0;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.error-log-field pre {
+  margin: 0;
+  max-height: 240px;
+  padding: 10px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: "Outfit", "Noto Sans TC", ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 .insights-external-stats[data-status="synced"] {
@@ -474,6 +551,10 @@
 }
 
 @media (max-width: 767px) {
+  #insightsOperationalSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .insights-platform-grid,
   .inbox-platform-grid,
   .insights-target-grid,
@@ -502,6 +583,15 @@
   .inbox-platform-card,
   .error-log-list {
     min-height: 0;
+  }
+
+  .error-log-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .error-log-row .btn-text {
+    width: 100%;
   }
 
   .saved-reply-row {

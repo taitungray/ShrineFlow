@@ -27,7 +27,7 @@ const VIEWPORTS = preset === 'phone'
     ? WEB_VIEWPORTS
     : [...PHONE_VIEWPORTS, ...WEB_VIEWPORTS];
 
-const PANELS = [
+const ALL_PANELS = [
   'overview',
   'composer',
   'settings',
@@ -45,6 +45,10 @@ const PANELS = [
   'errors',
   'help',
 ];
+const panelArg = process.argv.find((arg) => arg.startsWith('--panels='));
+const PANELS = panelArg
+  ? panelArg.slice('--panels='.length).split(',').map((name) => name.trim()).filter(Boolean)
+  : ALL_PANELS;
 
 const INNER = {
   settings: ['gemini', 'brand', 'facebook', 'instagram', 'threads', 'backup'],
@@ -154,6 +158,16 @@ function auditPage() {
 
       for (let index = 0; index < variants.length; index += 1) {
         variants[index]();
+        if (name === 'drafts') {
+          const host = document.getElementById('postsList');
+          if (host && !document.querySelector('.list-pager')) {
+            const nav = document.createElement('nav');
+            nav.className = 'list-pager';
+            nav.dataset.listPager = 'true';
+            nav.innerHTML = '<div class="list-pager-bar" role="navigation" aria-label="內容分頁"><p class="list-pager-meta">第 21–40 筆，共 87 筆</p><div class="list-pager-controls"><button type="button" class="list-pager-nav">上一頁</button><span class="list-pager-pages"><button type="button" class="list-pager-page">1</button><button type="button" class="list-pager-page is-active">2</button><button type="button" class="list-pager-page">3</button><span class="list-pager-ellipsis">…</span><button type="button" class="list-pager-page">8</button></span><button type="button" class="list-pager-nav">下一頁</button></div></div>';
+            host.after(nav);
+          }
+        }
         document.body.offsetHeight;
         const hits = overflowHits();
         const scrollOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth;

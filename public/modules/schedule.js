@@ -7,10 +7,12 @@ import { targetStatusLabel, targetStatusSummary } from './status.js';
 import { humanizePlatformError } from './platform-errors.js';
 import { previewMediaSrc } from './media-preview.js';
 import { loadPost, runPostAction } from './drafts.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 let reschedulingItem = null;
 let draggedTargetId = '';
 let calendarView = 'month';
+let schedulePage = 1;
 let calendarCursor = new Date();
 calendarCursor.setHours(0, 0, 0, 0);
 
@@ -65,9 +67,9 @@ function visibleCalendarDays() {
 }
 
 function scheduleListItems() {
-  if (calendarView === 'list') return state.schedule.slice(0, 40);
+  if (calendarView === 'list') return state.schedule;
   const keys = new Set(visibleCalendarDays().map(dateKey));
-  return state.schedule.filter((item) => keys.has(dateKey(new Date(item.scheduledAt)))).slice(0, 40);
+  return state.schedule.filter((item) => keys.has(dateKey(new Date(item.scheduledAt))));
 }
 
 function schedulePostTitle(post) {
@@ -220,14 +222,17 @@ export function renderSchedule() {
   renderCalendarTokenNotice();
   const items = scheduleListItems();
   if (!items.length) {
+    removeListPager(container);
     container.className = 'list-empty';
     container.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>'
       + (state.schedule.length ? '這個日期範圍沒有排程。' : '還沒有排程，產生並儲存草稿後即可排程發布。')
       + '</p></div>';
     return;
   }
+  const paged = paginate(items, { page: schedulePage, pageSize: LIST_PAGE_SIZE });
+  schedulePage = paged.page;
   container.className = 'record-list content-list';
-  container.innerHTML = items.map((item) => {
+  container.innerHTML = paged.items.map((item) => {
     const post = state.posts.find((record) => record.id === item.postId) || {};
     const firstMedia = previewMediaSrc(mediaPathsOf(post)[0] || item.mediaPaths?.[0]);
     const thumbnail = !firstMedia ? '<span aria-hidden="true">✦</span>'
@@ -267,6 +272,13 @@ export function renderSchedule() {
     event.stopPropagation();
     runPostAction(button.dataset.postAction, button.dataset.postId);
   }));
+  syncListPager(container, paged, {
+    label: '日曆列表分頁',
+    onPage: (page) => {
+      schedulePage = page;
+      renderSchedule();
+    },
+  });
 }
 
 export function initCalendarControls(refreshListsFn) {
@@ -287,6 +299,7 @@ export function initCalendarControls(refreshListsFn) {
   });
   document.querySelectorAll('input[name="calendarView"]').forEach((input) => input.addEventListener('change', () => {
     calendarView = input.value;
+    schedulePage = 1;
     renderSchedule();
   }));
   $('#calendarGrid')?.addEventListener('click', (event) => {

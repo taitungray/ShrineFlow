@@ -3,8 +3,10 @@ import { api } from './api.js';
 import { state, PLATFORM_NAMES, currentClient } from './state.js';
 import { setActiveView } from './tabs.js';
 import { renderTargetAccountControls } from './targets-ui.js';
+import { GRID_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const filters = { query: '' };
+let templatesPage = 1;
 
 function platformLabel(platformId) {
   return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
@@ -19,6 +21,7 @@ function postTypeLabel(postType) {
 }
 
 function renderEmpty(grid, filtered) {
+  removeListPager(grid);
   grid.className = 'list-empty module-empty';
   grid.innerHTML = filtered
     ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的模板。</p><button class="btn-text" type="button" data-clear-template-filter>清除搜尋</button></div>'
@@ -26,6 +29,7 @@ function renderEmpty(grid, filtered) {
   grid.querySelector('[data-clear-template-filter]')?.addEventListener('click', () => {
     filters.query = '';
     if ($('#templateSearch')) $('#templateSearch').value = '';
+    templatesPage = 1;
     renderTemplates();
   });
   grid.querySelector('[data-new-template]')?.addEventListener('click', () => openTemplateDialog());
@@ -43,8 +47,10 @@ export function renderTemplates() {
     renderEmpty(grid, Boolean(state.templates?.length));
     return;
   }
+  const paged = paginate(visible, { page: templatesPage, pageSize: GRID_PAGE_SIZE });
+  templatesPage = paged.page;
   grid.className = 'templates-grid';
-  grid.innerHTML = visible.map((template) => {
+  grid.innerHTML = paged.items.map((template) => {
     const platforms = templatePlatforms(template).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
     const hashtags = (template.hashtags || []).slice(0, 4).map((tag) => escapeHtml(tag)).join(' ');
     return '<article class="template-card">'
@@ -56,6 +62,13 @@ export function renderTemplates() {
       + '<div class="template-actions"><button class="btn-secondary" type="button" data-template-action="apply" data-template-id="' + escapeHtml(template.id) + '">套用模板</button><button class="btn-text" type="button" data-template-action="edit" data-template-id="' + escapeHtml(template.id) + '">編輯</button><button class="btn-text template-delete" type="button" data-template-action="delete" data-template-id="' + escapeHtml(template.id) + '">刪除</button></div>'
       + '</article>';
   }).join('');
+  syncListPager(grid, paged, {
+    label: '模板分頁',
+    onPage: (page) => {
+      templatesPage = page;
+      renderTemplates();
+    },
+  });
 }
 
 function setCheckedValues(name, values) {
@@ -119,6 +132,7 @@ export function initTemplateManager(onChanged) {
   $('#newTemplateButton')?.addEventListener('click', () => openTemplateDialog());
   $('#templateSearch')?.addEventListener('input', (event) => {
     filters.query = event.target.value.trim();
+    templatesPage = 1;
     renderTemplates();
   });
   $('#templatesGrid')?.addEventListener('click', async (event) => {

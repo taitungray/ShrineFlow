@@ -1,6 +1,11 @@
 import { $, escapeHtml } from './dom.js';
 import { HELP_ARTICLES } from './help-articles.js';
 import { filterHelpArticles, HELP_FEATURED_IDS, parseHelpLocation } from './help-search.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+
+let helpPage = 1;
+let lastHelpQueryKey = '';
+let helpArticlePageLock = '';
 
 const KIND_OPTIONS = [
   ['all', '全部'],
@@ -114,10 +119,31 @@ export function renderHelp() {
   if (!matches.length) {
     const featured = featuredArticles();
     status.textContent = '沒有符合的說明。改關鍵字，或先看這三則最常見的問題。';
+    removeListPager(list);
     list.innerHTML = featured.map((article) => articleCard(article, { open: article.id === openId })).join('');
   } else {
+    const queryKey = [query, filters.kind, filters.topic].join('|');
+    if (queryKey !== lastHelpQueryKey) {
+      helpPage = 1;
+      lastHelpQueryKey = queryKey;
+    }
+    if (openId && openId !== helpArticlePageLock) {
+      const index = matches.findIndex((article) => article.id === openId);
+      if (index >= 0) helpPage = Math.floor(index / LIST_PAGE_SIZE) + 1;
+      helpArticlePageLock = openId;
+    }
+    if (!openId) helpArticlePageLock = '';
+    const paged = paginate(matches, { page: helpPage, pageSize: LIST_PAGE_SIZE });
+    helpPage = paged.page;
     status.textContent = '共 ' + matches.length + ' 則說明。點標題展開。';
-    list.innerHTML = matches.map((article) => articleCard(article, { open: article.id === openId })).join('');
+    list.innerHTML = paged.items.map((article) => articleCard(article, { open: article.id === openId })).join('');
+    syncListPager(list, paged, {
+      label: '說明分頁',
+      onPage: (page) => {
+        helpPage = page;
+        renderHelp();
+      },
+    });
   }
 
   if (missingArticle) {

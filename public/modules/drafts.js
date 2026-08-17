@@ -2,12 +2,14 @@ import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage, showToast } 
 import { api } from './api.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
-import { renderGenerated } from './editor.js';
+import { markEditorDirty, renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
 import { setActiveView } from './tabs.js';
 import { contentStageLabel, postStatusLabel, targetStatusSummary } from './status.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 let refreshListsCallback = null;
 const selectedPostIds = new Set();
+let contentPage = 1;
 
 const filters = {
   query: '',
@@ -64,6 +66,7 @@ function platformLabel(platformId) {
 }
 
 function renderEmpty(container, isFiltered) {
+  removeListPager(container);
   container.className = 'list-empty content-list-empty';
   container.innerHTML = isFiltered
     ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的內容。</p><button class="btn-text" type="button" data-clear-content-filters>清除篩選</button></div>'
@@ -82,6 +85,7 @@ function renderEmpty(container, isFiltered) {
     if (allStatus) allStatus.checked = true;
     if (allPlatform) allPlatform.checked = true;
     if (allStage) allStage.checked = true;
+    contentPage = 1;
     renderPosts();
   });
 }
@@ -193,8 +197,10 @@ export function renderPosts() {
 
   updateBatchBar(visiblePosts);
 
+  const paged = paginate(visiblePosts, { page: contentPage, pageSize: LIST_PAGE_SIZE });
+  contentPage = paged.page;
   container.className = 'record-list content-list';
-  container.innerHTML = visiblePosts.slice(0, 40).map((post) => {
+  container.innerHTML = paged.items.map((post) => {
     const isSelected = selectedPostIds.has(post.id);
     const firstMedia = previewMediaSrc(mediaPathsOf(post)[0]);
     const thumbnail = !firstMedia ? '<span aria-hidden="true">✦</span>'
@@ -258,6 +264,13 @@ export function renderPosts() {
       renderPosts();
     });
   });
+  syncListPager(container, paged, {
+    label: '內容分頁',
+    onPage: (page) => {
+      contentPage = page;
+      renderPosts();
+    },
+  });
 }
 
 export function initContentFilters(refreshListsFn = null) {
@@ -265,18 +278,22 @@ export function initContentFilters(refreshListsFn = null) {
   const search = $('#contentSearch');
   search?.addEventListener('input', () => {
     filters.query = search.value.trim();
+    contentPage = 1;
     renderPosts();
   });
   document.querySelectorAll('input[name="contentStatus"]').forEach((input) => input.addEventListener('change', () => {
     filters.status = input.value;
+    contentPage = 1;
     renderPosts();
   }));
   document.querySelectorAll('input[name="contentPlatform"]').forEach((input) => input.addEventListener('change', () => {
     filters.platform = input.value;
+    contentPage = 1;
     renderPosts();
   }));
   document.querySelectorAll('input[name="contentStage"]').forEach((input) => input.addEventListener('change', () => {
     filters.stage = input.value;
+    contentPage = 1;
     renderPosts();
   }));
 
@@ -328,13 +345,16 @@ export function initContentFilters(refreshListsFn = null) {
 export async function loadPost(postId) {
   const post = state.posts.find((record) => record.id === postId);
   if (!post) return;
-  const restored = post.status === 'archived' ? false : restoreRecoverySnapshotForPost(post);
-  if (!restored) {
-    state.savedPost = post;
+  const recovered = post.status === 'archived' ? null : restoreRecoverySnapshotForPost(post);
+  state.savedPost = post;
+  if (recovered) {
+    renderGenerated(recovered);
+    markEditorDirty(true);
+  } else {
     renderGenerated(post);
   }
   setActiveView('review');
-  setPreviewMessage(restored
+  setPreviewMessage(recovered
     ? '已從本機復原未儲存修改，請確認後等待自動儲存。'
     : post.contentStage === 'idea'
       ? 'Idea 已載入；先轉成草稿，再開始產生文案與排程。'

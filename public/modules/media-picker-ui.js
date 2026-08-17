@@ -12,12 +12,14 @@ import {
   seedSelectedMedia,
 } from './media-picker.js';
 import { refreshSelectedMediaPreview } from './upload.js';
+import { PICKER_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const picker = {
   query: '',
   type: 'all',
   assets: [],
   selected: new Set(),
+  page: 1,
 };
 
 function fileOnlyCount() {
@@ -44,14 +46,17 @@ function renderPickerGrid() {
       : '還沒有可重用的素材。先上傳一次後就會出現在這裡。';
   }
   if (!visible.length) {
+    removeListPager(grid);
     grid.className = 'list-empty media-picker-empty';
     grid.innerHTML = picker.assets.length
       ? '<div class="empty-state"><span class="empty-icon">⌕</span><p>找不到符合條件的素材。</p></div>'
       : '<div class="empty-state"><span class="empty-icon">▧</span><p>還沒有素材可選。</p></div>';
     return;
   }
+  const paged = paginate(visible, { page: picker.page, pageSize: PICKER_PAGE_SIZE });
+  picker.page = paged.page;
   grid.className = 'media-picker-grid';
-  grid.innerHTML = visible.map((asset) => {
+  grid.innerHTML = paged.items.map((asset) => {
     const path = asset.mediaPath;
     const selected = picker.selected.has(path);
     const video = isVideoPath(path) || String(asset.mimeType || '').startsWith('video/');
@@ -67,6 +72,13 @@ function renderPickerGrid() {
       + '<span class="media-picker-preview" data-type="' + (video ? 'video' : 'image') + '">' + preview + '</span>'
       + '<strong>' + name + '</strong></button>';
   }).join('');
+  syncListPager(grid, paged, {
+    label: '素材選取分頁',
+    onPage: (page) => {
+      picker.page = page;
+      renderPickerGrid();
+    },
+  });
 }
 
 function syncPickerFiltersFromDom() {
@@ -79,6 +91,7 @@ async function openMediaPicker() {
   if (!dialog) return;
   picker.query = '';
   picker.type = 'all';
+  picker.page = 1;
   if ($('#mediaPickerSearch')) $('#mediaPickerSearch').value = '';
   const allType = document.querySelector('input[name="pickerMediaType"][value="all"]');
   if (allType) allType.checked = true;
@@ -130,11 +143,13 @@ export function initMediaPicker(renderSavedMediaFn) {
   });
   $('#mediaPickerSearch')?.addEventListener('input', () => {
     syncPickerFiltersFromDom();
+    picker.page = 1;
     renderPickerGrid();
   });
   document.querySelectorAll('input[name="pickerMediaType"]').forEach((input) => {
     input.addEventListener('change', () => {
       syncPickerFiltersFromDom();
+      picker.page = 1;
       renderPickerGrid();
     });
   });

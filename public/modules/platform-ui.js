@@ -96,7 +96,7 @@ export function renderContentSettings(platformId = fieldValue($('#scheduleChanne
       : isStory
       ? 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。'
       : (platformId === 'facebook'
-        ? '時間為 24 小時制。將交 Facebook 粉專排程佇列；關機仍會到點公開。'
+        ? '時間為 24 小時制。將交 Facebook 排程佇列；關機仍會到點公開。'
         : '時間為 24 小時制。本機到期真發，服務需開著。');
   }
   const submit = $('#scheduleSubmitButton');
@@ -270,7 +270,7 @@ export function updateTargetScheduleAvailability(contentTypeId = fieldValue($('#
       : contentType === 'story'
       ? 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。'
       : (platformId === 'facebook'
-        ? '選填。時間為 24 小時制。交 Facebook 粉專排程佇列；關機仍會到點公開。'
+        ? '選填。時間為 24 小時制。交 Facebook 排程佇列；關機仍會到點公開。'
         : '選填。時間為 24 小時制。本機到期真發，服務需開著。');
   }
 }

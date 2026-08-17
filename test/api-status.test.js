@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { buildConnectionStatus, facebookStatusLabel } from '../public/modules/connection-status.js';
 
-test('connection status omits the brand name from AI and FB chips', () => {
+test('connection status omits the brand name from AI and Facebook chips', () => {
   const view = buildConnectionStatus({
     client: { name: '神秘的神像模型彩繪', accounts: [] },
     config: { aiConfigured: true, provider: 'Gemini' },
@@ -12,8 +12,8 @@ test('connection status omits the brand name from AI and FB chips', () => {
 
   assert.equal(view.ai.label, 'Gemini');
   assert.equal(view.ai.text, 'Gemini 已連線');
-  assert.equal(view.fb.label, 'FB');
-  assert.equal(view.fb.text, 'FB 未設定');
+  assert.equal(view.fb.label, 'Facebook');
+  assert.equal(view.fb.text, 'Facebook 未設定');
   assert.equal(JSON.stringify(view).includes('神秘的神像模型彩繪'), false);
 });
 
@@ -27,7 +27,7 @@ test('AI chip is not ready when Gemini is disconnected', () => {
   assert.equal(view.ai.text, 'Gemini 未連線');
 });
 
-test('FB chip is not ready when the token is expired', () => {
+test('Facebook chip is not ready when the token is expired', () => {
   const client = {
     accounts: [{ platformId: 'facebook', configured: true }],
   };
@@ -37,10 +37,10 @@ test('FB chip is not ready when the token is expired', () => {
     error: 'Error validating access token: Session has expired',
   };
 
-  assert.equal(facebookStatusLabel(client, facebookStatus), 'FB Token 已過期');
+  assert.equal(facebookStatusLabel(client, facebookStatus), 'Facebook Token 已過期');
 
   const view = buildConnectionStatus({ client, config: { aiConfigured: true }, facebookStatus });
   assert.equal(view.fb.ready, false);
-  assert.equal(view.fb.text, 'FB Token 已過期');
+  assert.equal(view.fb.text, 'Facebook Token 已過期');
   assert.equal(view.ai.ready, true);
 });

@@ -41,7 +41,6 @@
 
 .content-toolbar .field,
 .module-toolbar .field,
-.help-toolbar .field,
 .insights-toolbar .field,
 .inline-field {
   flex-direction: row;
@@ -54,7 +53,6 @@
 
 .content-toolbar .field-label,
 .module-toolbar .field-label,
-.help-toolbar .field-label,
 .insights-toolbar .field-label,
 .inline-field > .field-label {
   margin: 0;
@@ -64,12 +62,10 @@
 
 .content-toolbar input,
 .module-toolbar input,
-.help-toolbar input,
 .insights-toolbar input,
 .inline-field > input,
 .content-toolbar .radio-pill-group,
 .module-toolbar .radio-pill-group,
-.help-toolbar .radio-pill-group,
 .insights-toolbar .radio-pill-group,
 .inline-field > .radio-pill-group {
   flex: 1 1 160px;
@@ -654,7 +650,6 @@ button.module-summary-card:focus-visible {
 
   .module-toolbar .field,
   .content-toolbar .field,
-  .help-toolbar .field,
   .insights-toolbar .field {
     flex-direction: column;
     align-items: stretch;
@@ -662,11 +657,9 @@ button.module-summary-card:focus-visible {
 
   .module-toolbar .radio-pill-group,
   .content-toolbar .radio-pill-group,
-  .help-toolbar .radio-pill-group,
   .insights-toolbar .radio-pill-group,
   .module-toolbar input,
   .content-toolbar input,
-  .help-toolbar input,
   .insights-toolbar input {
     flex: 0 1 auto;
     width: 100%;

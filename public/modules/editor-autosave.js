@@ -118,6 +118,13 @@ export function readRecoverySnapshot(postId) {
   }
 }
 
+export function restoreRecoverySnapshotForPost(post) {
+  if (!post || post.status === 'archived') return null;
+  const snapshot = readRecoverySnapshot(post.id);
+  if (!snapshot || typeof snapshot !== 'object') return null;
+  return { ...post, ...snapshot };
+}
+
 function draftValidationMessage(draft) {
   if (draft.contentStage === 'idea') return '';
   const type = fieldValue($('#targetContentType')) || draft.contentType || 'post';

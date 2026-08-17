@@ -1,5 +1,6 @@
 import { $, escapeHtml, formatDate } from './dom.js';
-import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
+import { state, mediaPathsOf, PLATFORM_NAMES, currentClient } from './state.js';
+import { buildConnectionStatus } from './connection-status.js';
 import { postStatusLabel } from './status.js';
 
 function recentTitle(post) {
@@ -43,6 +44,52 @@ function updateNavBadges({ draftsCount, scheduledCount, reviewCount, attentionCo
     inboxBadge.textContent = unreadInboxCount > 0 ? String(unreadInboxCount) : '';
     inboxBadge.hidden = unreadInboxCount <= 0;
   }
+}
+
+function healthHref(key) {
+  return key === 'ai' ? '#/settings/gemini' : '#/settings/facebook';
+}
+
+function renderOverviewHealth() {
+  const root = $('#overviewHealth');
+  if (!root) return;
+  const view = buildConnectionStatus({
+    client: currentClient(),
+    config: state.config || {},
+    facebookStatus: state.facebookStatus || {},
+  });
+  root.innerHTML = [view.ai, view.fb].map((item) => (
+    '<a class="overview-health-item" data-ready="' + (item.ready ? 'true' : 'false') + '" href="' + healthHref(item.key) + '">'
+    + '<span class="overview-health-name">' + escapeHtml(item.label) + '</span>'
+    + '<small>' + escapeHtml(item.text) + '</small>'
+    + '</a>'
+  )).join('');
+}
+
+function renderOverviewNext(scheduledItems, posts) {
+  const root = $('#overviewNextList');
+  if (!root) return;
+  const upcoming = scheduledItems
+    .filter((item) => item.scheduledAt && !Number.isNaN(new Date(item.scheduledAt).getTime()))
+    .filter((item) => new Date(item.scheduledAt).getTime() >= Date.now() - 60 * 1000)
+    .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
+    .slice(0, 3);
+  if (!upcoming.length) {
+    root.hidden = true;
+    root.innerHTML = '';
+    return;
+  }
+  root.hidden = false;
+  root.innerHTML = '<p class="overview-next-label">接下來</p>'
+    + upcoming.map((item) => {
+      const post = posts.find((record) => record.id === item.postId) || {};
+      const platform = PLATFORM_NAMES[item.channel] || item.channel || '';
+      return '<a class="overview-next-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar">'
+        + '<span class="platform-chip" data-platform="' + escapeHtml(item.channel || '') + '">' + escapeHtml(platform) + '</span>'
+        + '<strong>' + escapeHtml(recentTitle(post)) + '</strong>'
+        + '<time datetime="' + escapeHtml(item.scheduledAt) + '">' + escapeHtml(formatDate(item.scheduledAt)) + '</time>'
+        + '</a>';
+    }).join('');
 }
 
 export function renderOverview() {
@@ -92,6 +139,9 @@ export function renderOverview() {
     attentionCount: totalAttention,
     unreadInboxCount: notifications.length,
   });
+
+  renderOverviewHealth();
+  renderOverviewNext(scheduledItems, posts);
 
   // Render Action Items (待辦與警示)
   if (attentionList) {
@@ -152,7 +202,7 @@ export function renderOverview() {
     if (!actionItems.length) {
       attentionList.innerHTML = '<div class="overview-attention-all-good">'
         + '<span class="attention-good-icon" aria-hidden="true">✦</span>'
-        + '<div><strong>目前無待處理異常</strong><small>所有排程與平台狀態均運作良好</small></div>'
+        + '<div><strong>沒有需要處理的異常</strong><small>連線與發布狀態正常</small></div>'
         + '</div>';
     } else {
       attentionList.innerHTML = actionItems.join('');
@@ -182,7 +232,7 @@ export function renderOverview() {
     
     const platformChips = targets.map((target) => {
       const pId = target.platformId || 'facebook';
-      const label = pId === 'facebook' ? 'FB' : pId === 'instagram' ? 'IG' : pId === 'threads' ? 'Threads' : pId;
+      const label = PLATFORM_NAMES[pId] || pId;
       return '<span class="platform-chip" data-platform="' + escapeHtml(pId) + '">' + escapeHtml(label) + '</span>';
     }).join('');
 

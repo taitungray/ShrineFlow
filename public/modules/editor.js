@@ -32,6 +32,7 @@ export {
   scheduleRecoverySnapshot,
   clearRecoverySnapshot,
   readRecoverySnapshot,
+  restoreRecoverySnapshotForPost,
   saveDraft,
   scheduleAutosave,
   markEditorDirty,

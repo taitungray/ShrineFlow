@@ -44,7 +44,7 @@ export const state = {
 export const DEFAULT_HASHTAGS = [];
 
 export const PLATFORM_NAMES = {
-  facebook: 'Facebook 粉專',
+  facebook: 'Facebook',
   instagram: 'Instagram',
   threads: 'Threads',
 };

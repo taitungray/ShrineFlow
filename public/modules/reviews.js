@@ -2,6 +2,9 @@ import { escapeHtml, showToast } from './dom.js';
 import { api } from './api.js';
 import { hasPermission, state } from './state.js';
 import { loadPost } from './drafts.js';
+import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+
+let reviewPage = 1;
 
 const STATE_LABELS = Object.freeze({
   draft: '草稿',
@@ -20,13 +23,16 @@ export function renderReviewQueue() {
   const list = document.getElementById('reviewQueueList');
   if (!list) return;
   if (!state.reviewQueue.length) {
+    removeListPager(list);
     list.className = 'list-empty review-list-empty';
     list.innerHTML = '<div class=empty-state><p>目前沒有待處理的審核項目。</p></div>';
     return;
   }
+  const paged = paginate(state.reviewQueue, { page: reviewPage, pageSize: LIST_PAGE_SIZE });
+  reviewPage = paged.page;
   list.className = 'record-list review-list test';
   const canApprove = hasPermission('content.approve');
-  list.innerHTML = state.reviewQueue.map((post) => {
+  list.innerHTML = paged.items.map((post) => {
     const stateLabel = STATE_LABELS[post.approvalState] || post.approvalState || '草稿';
     const id = escapeHtml(post.id);
     const actions = post.approvalState === 'in_review' && canApprove
@@ -39,6 +45,13 @@ export function renderReviewQueue() {
   });
   list.querySelectorAll('[data-review-action]').forEach((button) => {
     button.addEventListener('click', () => runReviewAction(button.dataset.reviewAction, button.dataset.reviewId));
+  });
+  syncListPager(list, paged, {
+    label: '審核分頁',
+    onPage: (page) => {
+      reviewPage = page;
+      renderReviewQueue();
+    },
   });
 }
 

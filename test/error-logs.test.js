@@ -62,6 +62,33 @@ test('allowed list renders escaped error details and a resolve action', () => {
   assert.equal(html.includes('<script>'), false);
 });
 
+test('error log rows collapse to a summary and expand to full fields', () => {
+  const html = renderErrorLogListHtml([
+    {
+      id: 'err-2',
+      scope: 'client_js',
+      code: 'ReferenceError',
+      source: 'client',
+      path: '/modules/drafts.js',
+      message: 'restoreRecoverySnapshotForPost is not defined',
+      detail: 'file: /modules/drafts.js\nline: 348\n    at loadPost (drafts.js:348:64)',
+      count: 1,
+      createdAt: '2026-08-17T14:25:00.000Z',
+      lastSeenAt: '2026-08-17T14:25:00.000Z',
+      fingerprint: 'client_js|||ReferenceError|restoreRecoverySnapshotForPost is not defined',
+      resolutionStatus: 'open',
+    },
+  ], { allowed: true, formatDate: () => '2026年8月17日 22:25' });
+  assert.match(html, /<details/);
+  assert.match(html, /<summary/);
+  assert.match(html, /error-log-detail/);
+  assert.match(html, /2026年8月17日 22:25 · 1 次 · restoreRecoverySnapshotForPost is not defined/);
+  assert.match(html, /\/modules\/drafts\.js/);
+  assert.match(html, /at loadPost/);
+  assert.match(html, /ReferenceError/);
+  assert.match(html, /data-resolve-error="err-2"/);
+});
+
 test('error-log help article points to the dedicated errors page', () => {
   const article = HELP_ARTICLES.find((item) => item.id === 'error-log');
   assert.ok(article);
