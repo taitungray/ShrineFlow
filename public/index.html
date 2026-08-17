@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.32" />
+    <link rel="stylesheet" href="/style.css?v=0.6.33" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -125,7 +125,10 @@
               </fieldset>
             </div>
             <fieldset class="form-group-card overview-recent-card">
-              <legend class="group-title">最近內容動態</legend>
+              <div class="group-title-row">
+                <legend class="group-title">最近內容動態</legend>
+                <a href="#/content" data-view-target="drafts" class="group-action-link" title="前往內容管理查看全部">查看全部 ›</a>
+              </div>
               <div id="overviewRecentList" class="overview-recent-list"><p class="helper">載入最近內容中…</p></div>
             </fieldset>
           </div>
@@ -1399,6 +1402,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.32" type="module"></script>
+    <script src="/app.js?v=0.6.33" type="module"></script>
   </body>
 </html>

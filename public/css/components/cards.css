@@ -129,6 +129,32 @@ h4 {
   box-shadow: none;
 }
 
+.group-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.group-title-row .group-title {
+  margin-bottom: 0;
+}
+
+.group-action-link {
+  color: var(--brand);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.group-action-link:hover {
+  text-decoration: underline;
+  transform: translateX(1px);
+}
+
+
 .disclosure-body > .form-group-card {
   margin: 0;
   padding: 0;
