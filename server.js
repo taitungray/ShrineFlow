@@ -261,11 +261,19 @@ app.use((request, response, next) => {
   next();
 });
 
-const staticOptions = process.env.NODE_ENV === 'production' ? undefined : {
-  setHeaders: (response) => {
-    response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.setHeader('Pragma', 'no-cache');
-    response.setHeader('Expires', '0');
+const staticOptions = {
+  setHeaders: (response, filePath) => {
+    if (process.env.NODE_ENV !== 'production') {
+      response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.setHeader('Pragma', 'no-cache');
+      response.setHeader('Expires', '0');
+    } else {
+      if (filePath.endsWith('.html')) {
+        response.setHeader('Cache-Control', 'no-cache, must-revalidate');
+      } else {
+        response.setHeader('Cache-Control', 'public, max-age=86400');
+      }
+    }
   },
 };
 app.get('/favicon.ico', (_request, response) => {

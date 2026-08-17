@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 function firstRuleBody(css, selector) {
@@ -13,7 +15,7 @@ function firstRuleBody(css, selector) {
 }
 
 test('closed schedule dialog stays hidden after native close()', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const base = firstRuleBody(css, '.schedule-dialog');
   const open = firstRuleBody(css, '.schedule-dialog[open]');
   const closed = firstRuleBody(css, '.schedule-dialog:not([open])');

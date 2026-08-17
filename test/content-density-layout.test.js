@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 test('content list puts posts before CSV import and hides extra filters', async () => {
@@ -22,7 +24,7 @@ test('content list puts posts before CSV import and hides extra filters', async 
 
 test('calendar hides crisis pause and duplicate agenda in month view', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
 
   assert.match(html, /<details class="disclosure compact crisis-pause-card" id="crisisPauseCard"/, 'crisis pause starts collapsed');
   assert.match(html, /class="calendar-agenda"/, 'agenda list is wrapped so month/week can hide it');
@@ -30,7 +32,7 @@ test('calendar hides crisis pause and duplicate agenda in month view', async () 
 });
 
 test('nav badges stay hidden until they have a count', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   const insightsNav = html.match(/href="#\/insights"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
 
@@ -53,7 +55,7 @@ test('publishing logs reuse content-card density', async () => {
 
 test('group titles are room names instead of emoji pills', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const titles = [...html.matchAll(/class="group-title">([^<]+)</g)].map((match) => match[1]);
 
   assert.ok(titles.includes('素材') && titles.includes('母稿') && titles.includes('發去哪裡'));

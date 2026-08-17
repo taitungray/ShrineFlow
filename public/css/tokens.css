@@ -1,0 +1,68 @@
+/* ==========================================================================
+   ShrineFlow Design Tokens & Color Schemes
+   ========================================================================== */
+:root {
+  color-scheme: light dark;
+
+  /* Brand Palette */
+  --brand: #c25e40;
+  --brand-hover: #a84b30;
+  --brand-soft: #fbf0eb;
+  --accent: #d99a4e;
+  --accent-light: #fff8f0;
+
+  /* Hierarchy Colors */
+  --bg-app: #f7f1eb;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-subtle: #f3e9df;
+
+  /* Text Contrast Hierarchy */
+  --text-primary: #1e1917;    /* 1. Primary Headings & Labels */
+  --text-secondary: #5c504a;  /* 2. Secondary Body Copy */
+  --text-tertiary: #8c7b73;   /* 3. Subtext & Captions */
+  --text-muted: #ad9e96;      /* 4. Muted Text & Borders */
+
+  --border: #e6dad0;
+  --border-focus: #c25e40;
+  --danger: #d32f2f;
+  --danger-soft: #ffebeb;
+  --success: #2e7d32;
+  --success-soft: #e9f5ea;
+
+  --shadow-sm: 0 2px 8px rgba(91, 50, 28, 0.04);
+  --shadow-md: 0 8px 24px rgba(91, 50, 28, 0.08);
+  --shadow-lg: 0 20px 48px rgba(91, 50, 28, 0.12);
+
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-full: 9999px;
+
+  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #141211;
+    --bg-card: #1c1816;
+    --bg-input: #231e1c;
+    --bg-subtle: #292321;
+
+    --text-primary: #f5ece6;
+    --text-secondary: #c4b4ab;
+    --text-tertiary: #b8a89f; /* 說明／次要內文：暗底需更高對比 */
+    --text-muted: #a4948a;
+
+    --border: #38302c;
+    --border-focus: #e0785a;
+    --brand-soft: #38221c;
+    --accent-light: #2c221a;
+    --danger-soft: #3a1c1c;
+    --success-soft: #1e3521;
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 import { formatDate } from '../public/modules/dom.js';
 import {
   joinDateTimeLocal,
@@ -41,7 +43,7 @@ test('formatDate uses 24-hour clock without 上午/下午/中午', () => {
 });
 
 test('composer schedule widgets stay 24-hour and wrap without a native meridiem column', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const app = await fs.readFile(path.join(root, 'public', 'app.js'), 'utf8');
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   assert.match(css, /\.datetime-24h\s*\{[^}]*flex-wrap:\s*wrap/);

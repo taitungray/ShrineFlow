@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 function ruleBodies(css, selector) {
@@ -18,7 +20,7 @@ function pxValue(body, property) {
 
 test('composer gallery cards expose a 44px per-item remove control', async () => {
   const js = await fs.readFile(path.join(root, 'public', 'modules', 'upload.js'), 'utf8');
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
 
   assert.match(js, /data-media-remove/, 'each selected media card needs a remove action');
   assert.match(js, /export function removeSelectedMedia/, 'remove must splice one item instead of clearing the whole set');

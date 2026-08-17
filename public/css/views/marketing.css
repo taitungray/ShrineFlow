@@ -1,0 +1,341 @@
+/* ==========================================================================
+   View: Post Templates & Campaign Timelines
+   ========================================================================== */
+/* UI-5: Templates and campaigns */
+.templates-grid,
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.template-card,
+.campaign-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.template-card-heading,
+.campaign-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.template-icon,
+.campaign-icon {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.campaign-icon {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.template-card h3,
+.campaign-card h3 {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.94rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-type,
+.campaign-status {
+  display: inline-block;
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.campaign-status[data-status="active"] { color: var(--brand); }
+.campaign-status[data-status="completed"] { color: var(--success); }
+
+.template-purpose,
+.campaign-objective {
+  min-height: 42px;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.template-hashtags {
+  overflow: hidden;
+  color: var(--brand);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-meta,
+.campaign-stats,
+.campaign-date,
+.campaign-progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+.campaign-date {
+  justify-content: flex-start;
+  color: var(--text-secondary);
+}
+
+.campaign-progress-label strong {
+  color: var(--text-primary);
+}
+
+.campaign-progress {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+}
+
+.campaign-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width var(--transition);
+}
+
+.campaign-stats {
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.campaign-post-list {
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  align-content: start;
+}
+
+.campaign-post {
+  overflow: hidden;
+  min-height: 36px;
+  padding: 4px 6px;
+  border: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.campaign-post:hover,
+.campaign-post:focus-visible {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.campaign-more {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+.template-actions,
+.campaign-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.template-actions .btn-secondary,
+.campaign-actions .btn-secondary {
+  min-height: 40px;
+}
+
+.template-delete,
+.campaign-delete {
+  margin-left: auto;
+  color: var(--danger);
+}
+
+.module-dialog {
+  width: min(640px, calc(100% - 32px));
+  max-width: 100%;
+  max-height: min(88vh, 760px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.reauth-dialog {
+  width: min(420px, calc(100% - 32px));
+}
+
+.module-dialog::backdrop {
+  background: rgb(0 0 0 / 42%);
+  backdrop-filter: blur(3px);
+}
+
+.module-dialog form {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  max-height: min(88vh, 760px);
+  padding: 28px;
+  overflow-y: auto;
+}
+
+.module-dialog h3 {
+  color: var(--text-primary);
+  font-size: 1.12rem;
+  margin: 0;
+}
+
+.dialog-heading {
+  padding-right: 36px;
+}
+
+.dialog-lede {
+  color: var(--text-tertiary);
+  font-size: 0.74rem;
+}
+
+.module-dialog .form-group-card {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 44px;
+  padding-top: 4px;
+}
+
+.dialog-actions .btn-secondary,
+.dialog-actions .btn-dark {
+  flex: 0 0 auto;
+}
+
+.dialog-actions:not(.schedule-dialog-actions) .primary-button {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.selection-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  cursor: pointer;
+}
+
+.selection-check:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.selection-check input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+}
+
+.selection-check span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.selection-check strong {
+  overflow: hidden;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-check small {
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+  .campaign-post-selection {
+    display: grid;
+    max-height: 260px;
+    gap: 6px;
+    overflow-y: auto;
+  }
+
+@media (max-width: 1099px) {
+  .templates-grid,
+  .campaigns-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .templates-grid,
+  .campaigns-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .module-dialog,
+  .campaign-dialog {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+    margin: auto;
+    border-radius: var(--r-md);
+  }
+
+  .module-dialog form {
+    max-height: calc(100dvh - 20px);
+    padding: 22px 16px 16px;
+  }
+
+  .dialog-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 0 -16px -16px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bg-card);
+  }
+
+  .schedule-dialog .dialog-actions {
+    position: static;
+    margin: 0;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  }
+}

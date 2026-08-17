@@ -385,6 +385,14 @@ async function initApp() {
     });
   }
 
+  // Network connectivity status sensing
+  window.addEventListener('offline', () => {
+    showToast('⚠️ 網路連線已中斷，編輯內容已安全快照至瀏覽器本機。', 'error');
+  });
+  window.addEventListener('online', () => {
+    showToast('🟢 網路連線已恢復。', 'success');
+  });
+
   // Power-user keyboard shortcuts
   window.addEventListener('keydown', (event) => {
     // Ctrl+S / Cmd+S: Save Draft
@@ -395,6 +403,17 @@ async function initApp() {
         const saveBtn = $('#saveButton');
         if (saveBtn && !saveBtn.disabled) {
           saveBtn.click();
+        }
+      }
+    }
+    // Ctrl+Enter / Cmd+Enter: Open Schedule or Trigger Primary Action in Composer
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      const composer = $('#composerPanel');
+      if (composer && !composer.classList.contains('is-hidden')) {
+        event.preventDefault();
+        const scheduleBtn = $('#scheduleButton');
+        if (scheduleBtn && !scheduleBtn.disabled) {
+          scheduleBtn.click();
         }
       }
     }

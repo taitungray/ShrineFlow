@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-15（v0.5.67；雲端丟上去流程已補齊）
+更新日期：2026-08-17（v0.6.28；CSS 模組化、快取優化、鍵盤快捷鍵、離線感知與骨架屏）
 
 ## 專案定位
 
@@ -40,6 +40,11 @@
 - [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示。
 - [x] 桌機左右布局、平板單欄、手機單欄與 44px 觸控區域。
 - [x] 前端資源 `?v=`、`/api/config` 與 `package.json` 版號同步。
+- [x] CSS 模組化重構（`public/css/`）：將 5,800+ 行單一大檔拆分為 Tokens、Base、Layout、Components 與 8 個業務 View 模組，`public/style.css` 作為總入口帶版本快取查詢參數（`?v=0.6.28`），兼具零建置負擔（Zero-build）與高效維護性。
+- [x] 靜態資源生產快取標頭優化：`server.js` 在 production 模式下對 HTML 設 `no-cache`，對靜態資源設置 HTTP 86400 快取，開發模式維持 `no-store`。
+- [x] 鍵盤快捷鍵（Power-user Shortcuts）：支援 `Ctrl/Cmd + S` 快速儲存草稿、`Ctrl/Cmd + Enter` 開啟排程視窗、`Alt + N` 快速新建內容。
+- [x] 網路狀態即時感知（Network Resilience）：監聽 `online`/`offline` 事件，斷網時即時 Toast 提示本機快照防護。
+- [x] Skeleton Shimmer 骨架屏載入樣式：符合 `ui-ux-pro-max` 設計系統規範。
 
 ### 資料與發布
 
@@ -148,7 +153,9 @@ npm test         # 執行全部測試
 | `public/index.html` | 頁面結構與表單 |
 | `public/app.js` | 前端互動、路由、資料刷新、上傳、預覽與 API 呼叫 |
 | `public/modules/` | Composer、內容、日曆、素材庫、發布紀錄與平台連線模組 |
-| `public/style.css` | App Shell、元件樣式與桌機／平板／手機響應式布局 |
+| `public/style.css` | 主樣式表總入口（帶 `?v=` 快取字串引入子模組） |
+| `public/css/` | 模組化 CSS（Tokens、Base、Layout、Components 與 Views） |
+| `test/fixtures/load-css.js` | 遞迴解析 `@import` 之測試樣式加載器 |
 | `prompts/social.txt` | Gemini 系統提示詞 |
 | `prompts/social-schema.json` | Gemini JSON 輸出格式 |
 | `prompts/generation-context.json` | 產文上下文標籤與 fallback 文字 |

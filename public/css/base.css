@@ -1,0 +1,41 @@
+/* ==========================================================================
+   ShrineFlow Base & Reset Styles
+   ========================================================================== */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+body {
+  color: var(--text-secondary);
+  background-color: var(--bg-app);
+  font-family: "Noto Sans TC", system-ui, -apple-system, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  position: fixed; inset: 0; z-index: -2; content: "";
+  background:
+    radial-gradient(ellipse at 75% -5%, rgba(217, 154, 78, 0.12), transparent 45%),
+    radial-gradient(ellipse at 15% 95%, rgba(194, 94, 64, 0.08), transparent 45%);
+}
+
+.ambient { position: fixed; z-index: -1; border-radius: 50%; filter: blur(90px); opacity: 0.12; pointer-events: none; }
+.ambient-one { top: -8rem; left: -8rem; width: 28rem; height: 28rem; background: #e8c9b6; }
+.ambient-two { right: -10rem; bottom: -6rem; width: 26rem; height: 26rem; background: #d99a4e; }

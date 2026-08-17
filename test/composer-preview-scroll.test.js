@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 function ruleBodies(css, selector) {
@@ -12,7 +14,7 @@ function ruleBodies(css, selector) {
 }
 
 test('composer preview pane scrolls vertically instead of clipping', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const shared = ruleBodies(css, '.composer-editor-pane,\n.composer-preview-pane').join('\n');
   const preview = ruleBodies(css, '.composer-preview-pane').join('\n');
   const inner = ruleBodies(css, '.composer-preview-pane .review-preview').join('\n');
@@ -28,7 +30,7 @@ test('composer preview pane scrolls vertically instead of clipping', async () =>
 });
 
 test('composer live preview shows full-width media instead of 140px thumbs', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const gallery = ruleBodies(css, '.preview-media-gallery').join('\n');
   const media = ruleBodies(css, '.preview-media-gallery .media-item img,\n.preview-media-gallery .media-item video').join('\n');
 
@@ -45,7 +47,7 @@ test('composer live preview shows full-width media instead of 140px thumbs', asy
 });
 
 test('preview media and copy cards clip without becoming wheel traps', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const clippers = ruleBodies(css, '.composer-preview-pane .copy-card,\n.composer-preview-pane .preview-image-wrap,\n.composer-preview-pane .media-item').join('\n');
 
   assert.match(
@@ -56,7 +58,7 @@ test('preview media and copy cards clip without becoming wheel traps', async () 
 });
 
 test('live preview drops the empty media placeholder so photos can use the pane', async () => {
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   const wrap = ruleBodies(css, '.preview-image-wrap').join('\n');
   const hiddenEmpty = [

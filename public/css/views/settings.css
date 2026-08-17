@@ -1,0 +1,10 @@
+/* ==========================================================================
+   View: Settings & Configuration Subsections
+   ========================================================================== */
+/* Settings Subsections */
+.settings-section { margin-bottom: 8px; }
+.settings-section-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.settings-section-header h3 { color: var(--text-primary); font-weight: 700; }
+.settings-section-desc { color: var(--text-tertiary); font-size: 0.76rem; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.test-result { margin-left: 10px; font-size: 0.78rem; font-weight: 600; }

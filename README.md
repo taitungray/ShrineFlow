@@ -4,7 +4,7 @@
 
 給第一次接觸專案的讀者，請先看 [ShrineFlow 專案導覽](docs/PROJECT_GUIDE.md)；裡面以白話整理目前每一個功能、使用流程、平台限制與尚未支援的能力。
 
-目前版本為 **v0.5.67**。完整功能、使用流程與限制請看 [ShrineFlow 專案導覽](docs/PROJECT_GUIDE.md)；工程狀態與後續規劃請看 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
+目前版本為 **v0.6.28**。完整功能、使用流程與限制請看 [ShrineFlow 專案導覽](docs/PROJECT_GUIDE.md)；工程狀態與後續規劃請看 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
 貼文生命週期已提供封存、還原與複製為草稿；封存會阻止直接編輯、排程與發布，並在內容列表提供 archived 篩選。所有生命週期事件以有上限的 JSON 紀錄保存，封存／還原也會留下版本快照，不使用資料庫。 設定頁的部署檢查也會提示 Meta webhook、單一操作員登入與 HTTPS 媒體網址是否完整。 系統健康檢查在 JSON 或素材配額達 80% 時也會提示先整理、封存或清理。
 

@@ -4,6 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { loadCss } from './fixtures/load-css.js';
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 function ruleBodies(css, selector) {
@@ -13,7 +15,7 @@ function ruleBodies(css, selector) {
 
 test('composer dock keeps save/schedule/publish off the evergreen fieldset', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const dockAt = html.indexOf('class="composer-dock"');
   const actionsAt = html.indexOf('class="action-row composer-actions"');
   const evergreenAt = html.indexOf('class="form-group-card evergreen-card"');
@@ -32,7 +34,7 @@ test('composer dock keeps save/schedule/publish off the evergreen fieldset', asy
 
 test('save draft uses a high-contrast filled button instead of a ghost secondary', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-  const css = await fs.readFile(path.join(root, 'public', 'style.css'), 'utf8');
+  const css = await loadCss('public/style.css');
   const saveTag = html.match(/<button[^>]*id="saveButton"[^>]*>/);
 
   assert.ok(saveTag, 'save draft button exists');
