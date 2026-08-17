@@ -2,7 +2,7 @@ import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage, showToast } 
 import { api } from './api.js';
 import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
-import { renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
+import { renderGenerated } from './editor.js';
 import { setActiveView } from './tabs.js';
 import { contentStageLabel, postStatusLabel, targetStatusSummary } from './status.js';
 

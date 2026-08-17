@@ -270,36 +270,57 @@ function bindLegacyPasswordLogin(form) {
 }
 
 export async function initializeAuth() {
-  let status;
   try {
-    status = await api('/api/auth/status');
-  } catch (error) {
-    setGateVisible(true);
-    const form = showLegacyPasswordForm(error.message || '無法確認登入狀態，請稍後再試。');
-    if (form) bindLegacyPasswordLogin(form);
-    return false;
-  }
-  authMode = status.mode || (status.enabled ? 'legacy' : 'disabled');
-  if (!status.enabled || status.authenticated) {
-    const me = status.actor ? { actor: status.actor } : await api('/api/me');
-    state.actor = me.actor;
-    setLogoutVisible(Boolean(status.enabled));
-    renderUserIdentity();
-    if (status.enabled) setReauthHandler(ensureReauth);
-    setGateVisible(false);
-    return true;
-  }
+    let status;
+    try {
+      status = await api('/api/auth/status');
+    } catch (error) {
+      setGateVisible(true);
+      const form = showLegacyPasswordForm(error.message || '無法確認登入狀態，請檢查網路連線或稍後再試。');
+      if (form) bindLegacyPasswordLogin(form);
+      return false;
+    }
+    authMode = status.mode || (status.enabled ? 'legacy' : 'disabled');
+    if (!status.enabled || status.authenticated) {
+      try {
+        const me = status.actor ? { actor: status.actor } : await api('/api/me');
+        state.actor = me.actor;
+        setLogoutVisible(Boolean(status.enabled));
+        renderUserIdentity();
+        if (status.enabled) setReauthHandler(ensureReauth);
+        setGateVisible(false);
+        return true;
+      } catch (meError) {
+        console.warn('Failed to fetch /api/me:', meError);
+        status.authenticated = false;
+      }
+    }
 
-  setGateVisible(true);
-  if (status.mode === 'firebase') {
-    const config = await api('/api/auth/config');
-    await setupFirebaseLogin(config.firebase || {});
+    setGateVisible(true);
+    if (status.mode === 'firebase') {
+      try {
+        const config = await api('/api/auth/config');
+        await setupFirebaseLogin(config.firebase || {});
+      } catch (fbError) {
+        setGateVisible(true);
+        const description = $('#authDescription');
+        if (description) description.textContent = 'Firebase 連線異常，請重新整理頁面重試。';
+        setAuthMessage(fbError.message || '無法取得 Firebase 設定');
+      }
+      return false;
+    }
+    const form = showLegacyPasswordForm('請輸入操作員密碼；工作階段逾期或服務重啟後需重新登入。');
+    if (!form) return false;
+    bindLegacyPasswordLogin(form);
+    return false;
+  } catch (fatalError) {
+    console.error('Fatal auth initialization error:', fatalError);
+    setGateVisible(true);
+    const description = $('#authDescription');
+    if (description) description.textContent = '登入服務暫時無法連線，請重新整理重試。';
+    setAuthMessage(fatalError.message || '連線逾時');
     return false;
   }
-  const form = showLegacyPasswordForm('請輸入操作員密碼；工作階段逾期或服務重啟後需重新登入。');
-  if (!form) return false;
-  bindLegacyPasswordLogin(form);
-  return false;
 }
 
 export function initAuthListeners() {

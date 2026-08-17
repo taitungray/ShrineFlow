@@ -6,7 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
-const version = pkg.version || '0.6.28';
+const version = pkg.version;
+if (!version) {
+  throw new Error('package.json missing version field');
+}
 
 // 1. Update public/style.css entry point with new version
 const styleCss = `/**
@@ -36,7 +39,21 @@ const styleCss = `/**
 fs.writeFileSync(path.join(__dirname, '../public/style.css'), styleCss, 'utf8');
 console.log(`Updated: public/style.css (@import ?v=${version})`);
 
-// 2. Update public/index.html with new version
+// 2. Update public/css/components.css
+const componentsCss = `/* ==========================================================================
+   ShrineFlow Global UI Components - Aggregator
+   ========================================================================== */
+
+@import url('./components/buttons.css?v=${version}');
+@import url('./components/forms.css?v=${version}');
+@import url('./components/cards.css?v=${version}');
+@import url('./components/dialogs.css?v=${version}');
+@import url('./components/feedback.css?v=${version}');
+`;
+fs.writeFileSync(path.join(__dirname, '../public/css/components.css'), componentsCss, 'utf8');
+console.log(`Updated: public/css/components.css (@import ?v=${version})`);
+
+// 3. Update public/index.html with new version
 const htmlPath = path.join(__dirname, '../public/index.html');
 let html = fs.readFileSync(htmlPath, 'utf8');
 html = html.replace(/href="\/style\.css(\?v=[^"]+)?"/, `href="/style.css?v=${version}"`);
