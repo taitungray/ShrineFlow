@@ -9,6 +9,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "node --test",
+    "version:sync": "node scripts/update-version.js",
     "css:split": "node scripts/split-css.js",
     "migrate:firestore": "node scripts/migrate-json-to-firestore.js",
     "migrate:media:r2": "node scripts/migrate-uploads-to-r2.js"
