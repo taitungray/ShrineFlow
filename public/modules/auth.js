@@ -274,6 +274,9 @@ export async function initializeAuth() {
     let status;
     try {
       status = await api('/api/auth/status');
+      if (status?.version && $('#authAppVersion')) {
+        $('#authAppVersion').textContent = status.version.startsWith('v') ? status.version : `v${status.version}`;
+      }
     } catch (error) {
       setGateVisible(true);
       const form = showLegacyPasswordForm(error.message || '無法確認登入狀態，請檢查網路連線或稍後再試。');
