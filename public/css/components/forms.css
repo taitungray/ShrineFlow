@@ -117,6 +117,14 @@ option {
 select:focus, textarea:focus, input:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(194, 94, 64, 0.12);
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--bg-card) 60%, var(--bg-input));
+}
+
+.field:focus-within > .field-label,
+.field:focus-within > .field-label-group .field-label {
+  color: var(--brand);
+  transition: color var(--transition-fast, 0.12s ease);
 }
 
 .input-action {

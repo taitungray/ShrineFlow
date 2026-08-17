@@ -42,6 +42,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  transition-property: color, border-color, background, box-shadow, transform;
   white-space: nowrap;
 }
 
@@ -99,6 +100,11 @@
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
+  transition: box-shadow var(--transition-smooth, 0.28s ease);
+}
+
+.copy-card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .copy-card-header {
@@ -184,7 +190,8 @@
 }
 
 .topic-chip:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
+  transition-duration: 0.06s;
 }
 
 /* Field Header & Dynamic Character Counter */
@@ -273,6 +280,11 @@
   border-color: var(--brand);
   background: var(--brand-soft);
   transform: translateY(-1px);
+}
+
+.hashtag-chip:active {
+  transform: scale(0.92);
+  transition-duration: 0.06s;
 }
 
 /* Preview Header Actions */

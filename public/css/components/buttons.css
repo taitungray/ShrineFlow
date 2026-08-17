@@ -28,6 +28,12 @@
   box-shadow: 0 8px 22px rgba(194, 94, 64, 0.32);
 }
 
+.primary-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 4px 12px rgba(194, 94, 64, 0.18);
+  transition-duration: 0.06s;
+}
+
 .primary-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-secondary, .btn-dark, .btn-save {
@@ -53,7 +59,14 @@
   background: var(--bg-card);
 }
 
-.btn-secondary:hover:not(:disabled) { background: var(--brand-soft); }
+.btn-secondary:hover:not(:disabled) {
+  background: var(--brand-soft);
+  transform: translateY(-1px);
+}
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.06s;
+}
 .btn-secondary:disabled, .btn-dark:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .btn-dark { color: #ffffff; background: #26201e; }
@@ -68,6 +81,11 @@
 .btn-save:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 8px 22px rgba(217, 154, 78, 0.36);
+}
+.btn-save:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 3px 10px rgba(217, 154, 78, 0.2);
+  transition-duration: 0.06s;
 }
 .btn-save:disabled { opacity: 0.62; cursor: not-allowed; box-shadow: none; }
 

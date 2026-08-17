@@ -278,11 +278,18 @@
 .content-card.is-selected {
   border-color: var(--brand);
   background: var(--brand-soft);
+  transition: border-color var(--transition-fast, 0.12s ease), background var(--transition-fast, 0.12s ease);
 }
 
 .content-card {
   min-height: 76px;
   padding: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color var(--transition-fast, 0.12s ease), transform var(--transition-fast, 0.12s ease), background var(--transition-fast, 0.12s ease);
+}
+
+.content-card:hover {
+  border-left-color: var(--brand);
 }
 
 .content-card .record-thumb {
@@ -347,6 +354,12 @@
   font-style: normal;
   font-weight: 700;
   white-space: nowrap;
+  animation: statusAppear 0.2s ease-out both;
+}
+
+@keyframes statusAppear {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .content-status[data-status="published"] { color: var(--success); background: var(--success-soft); }
@@ -373,7 +386,11 @@
   font-weight: 700;
   cursor: pointer;
 }
-.content-card-action:hover { background: var(--brand-soft); }
+.content-card-action:hover {
+  background: var(--brand-soft);
+  transform: scale(1.04);
+  transition: transform var(--transition-fast, 0.12s ease), background var(--transition);
+}
 a.content-card-action {
   display: inline-flex;
   align-items: center;

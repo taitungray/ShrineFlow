@@ -18,8 +18,8 @@
 }
 
 @keyframes panelFadeIn {
-  from { opacity: 0; transform: translateY(3px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(3px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .panel-heading {
@@ -111,6 +111,12 @@ h4 {
   border-left: 3px solid color-mix(in srgb, var(--brand) 58%, var(--border));
   border-radius: var(--r-md);
   background: var(--bg-card);
+  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+}
+
+.form-group-card:focus-within {
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
+  box-shadow: 0 0 0 3px rgba(194, 94, 64, 0.06);
 }
 
 .group-title {
@@ -289,6 +295,12 @@ h4 {
   background: var(--bg-input);
   text-align: left;
   transition: var(--transition);
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+  box-shadow: 0 6px 18px rgba(91, 50, 28, 0.08);
 }
 .record-card { cursor: default; }
 .record-card-main { display: flex; flex: 1; min-width: 0; align-items: center; gap: 12px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }

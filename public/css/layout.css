@@ -238,6 +238,7 @@
   font-weight: 700;
   text-decoration: none;
   transition: var(--transition);
+  transition-property: color, border-color, background, box-shadow, transform;
 }
 
 .app-nav-item > span:first-child {
@@ -248,6 +249,12 @@
   color: var(--text-tertiary);
   font-size: 1.05rem;
   flex: 0 0 auto;
+  transition: transform var(--transition-fast, 0.12s ease), color var(--transition);
+}
+
+.app-nav-item:hover > span:first-child {
+  transform: scale(1.15);
+  color: var(--brand);
 }
 
 .nav-badge {
@@ -265,6 +272,12 @@
   font-size: 0.72rem !important;
   font-weight: 800;
   line-height: 1;
+  animation: badgeAppear 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes badgeAppear {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .nav-badge[hidden] {
@@ -753,6 +766,12 @@
 .scaffold-message > span {
   color: var(--accent);
   font-size: 2rem;
+  animation: emptyPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes emptyPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.08); }
 }
 
 .overview-empty p,

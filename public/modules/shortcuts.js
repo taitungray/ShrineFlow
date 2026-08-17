@@ -32,6 +32,38 @@ export function initKeyboardShortcuts() {
       location.hash = '#/content/new';
     }
 
+    // Escape: Close Composer and return to previous view
+    if (event.key === 'Escape') {
+      // Don't interfere with open dialogs
+      if (document.querySelector('dialog[open]')) return;
+      const composer = $('#composerPanel');
+      if (composer && !composer.classList.contains('is-hidden')) {
+        event.preventDefault();
+        location.hash = '#/content';
+      }
+    }
+
+    // Ctrl+Shift+P: Toggle Composer Edit/Preview mode
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'p' || event.key === 'P')) {
+      const composer = $('#composerPanel');
+      if (composer && !composer.classList.contains('is-hidden')) {
+        event.preventDefault();
+        const currentMode = composer.dataset.composerMode || 'edit';
+        const nextMode = currentMode === 'edit' ? 'preview' : 'edit';
+        const modeBtn = composer.querySelector(`.composer-mode-button[data-composer-mode="${nextMode}"]`);
+        if (modeBtn) modeBtn.click();
+      }
+    }
+
+    // Alt+1-5: Quick navigate to main sidebar views
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      const viewMap = { '1': '#/overview', '2': '#/content', '3': '#/calendar', '4': '#/media', '5': '#/settings' };
+      if (viewMap[event.key]) {
+        event.preventDefault();
+        location.hash = viewMap[event.key];
+      }
+    }
+
     // ?: Keyboard shortcuts dialog (when not typing in an input/textarea)
     if (event.key === '?' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
       event.preventDefault();
