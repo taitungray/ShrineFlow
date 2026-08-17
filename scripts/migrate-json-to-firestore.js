@@ -1,34 +1,212 @@
 import 'dotenv/config';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import { createFirestoreRepositories, createLocalRepositories } from '../lib/repositories.js';
+import {
+  MIGRATION_COLLECTIONS,
+  SINGLETON_COLLECTIONS,
+  applyMergePlan,
+  createEmptyPlanDocument,
+  loadLocalHistoryCollection,
+  mergeCollections,
+  mergeSingletons,
+  prepareClientsForMigration,
+  summarizePlan,
+} from '../lib/firestore-migration.js';
+import { applyMediaMappingToRecords as rewriteRecords } from '../lib/media-migration.js';
+import { getSecretMasterKey } from '../lib/secret-storage.js';
 
-const source = createLocalRepositories();
-const target = createFirestoreRepositories();
-const collectionNames = [
-  'gods',
-  'posts',
-  'schedule',
-  'clients',
-  'templates',
-  'campaigns',
-  'inboxMetadata',
-  'notifications',
-  'errorLog',
-  'mediaAssets',
-  'users',
-  'memberships',
-  'invitations',
-  'postVersions',
-  'publishAttempts',
-  'insightsSnapshots',
-  'auditEvents',
-];
-
-for (const name of collectionNames) {
-  const value = await source[name]?.list();
-  if (value === undefined) continue;
-  await target[name].replace(value);
-  const count = Array.isArray(value) ? value.length : Object.keys(value || {}).length;
-  console.log('Migrated ' + name + ': ' + count);
+function parseArgs(argv = process.argv.slice(2)) {
+  const args = {
+    plan: true,
+    apply: false,
+    planFile: '',
+    out: path.join('data', 'backups', `merge-plan-${new Date().toISOString().replace(/[:.]/g, '-')}.json`),
+    mediaMappingFile: '',
+    remoteEmpty: false,
+  };
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (token === '--apply') {
+      args.apply = true;
+      args.plan = false;
+    } else if (token === '--plan') {
+      args.plan = true;
+      args.apply = false;
+    } else if (token === '--plan-file') {
+      args.planFile = argv[++index] || '';
+    } else if (token === '--out') {
+      args.out = argv[++index] || args.out;
+    } else if (token === '--media-mapping') {
+      args.mediaMappingFile = argv[++index] || '';
+    } else if (token === '--remote-empty') {
+      args.remoteEmpty = true;
+    }
+  }
+  return args;
 }
 
-console.log('Migration completed for ' + target.firestore.projectId + '/' + target.firestore.databaseId + '.');
+function collectReferencedUploads(records = []) {
+  const paths = new Set();
+  const visit = (value) => {
+    if (!value) return;
+    if (typeof value === 'string' && value.startsWith('/uploads/')) paths.add(value);
+    if (Array.isArray(value)) value.forEach(visit);
+    else if (value && typeof value === 'object') Object.values(value).forEach(visit);
+  };
+  records.forEach(visit);
+  return [...paths];
+}
+
+async function loadLocalValue(source, name) {
+  if (HISTORY_NAMES.has(name)) return loadLocalHistoryCollection(name);
+  if (!source[name]) return SINGLETON_COLLECTIONS[name] ? {} : [];
+  return source[name].list();
+}
+
+const HISTORY_NAMES = new Set(['postVersions', 'publishAttempts', 'insightsSnapshots']);
+
+async function buildPlan({ source, target, mediaMapping = {}, sourceKey, targetKey, remoteEmpty = false }) {
+  const document = createEmptyPlanDocument();
+  document.mediaMapping = mediaMapping;
+
+  for (const name of MIGRATION_COLLECTIONS) {
+    let local = await loadLocalValue(source, name);
+    let remote;
+    if (remoteEmpty) {
+      remote = SINGLETON_COLLECTIONS[name] ? {} : [];
+    } else {
+      remote = target[name] ? await target[name].list() : (SINGLETON_COLLECTIONS[name] ? {} : []);
+    }
+
+    if (name === 'clients' && Array.isArray(local)) {
+      const prepared = prepareClientsForMigration(local, { sourceKey, targetKey });
+      local = prepared.clients;
+      document.secretConflicts.push(...prepared.errors);
+    }
+
+    if (Array.isArray(local) && Object.keys(mediaMapping).length) {
+      const rewritten = rewriteRecords(local, mediaMapping);
+      local = rewritten.records;
+      for (const missing of rewritten.missing) {
+        document.mediaConflicts.push({
+          action: 'conflict',
+          collection: name,
+          path: missing,
+          reason: 'missing_upload_mapping',
+        });
+      }
+    }
+
+    if (SINGLETON_COLLECTIONS[name]) {
+      const plan = mergeSingletons({ name, local, remote });
+      document.collections.push(plan);
+      document.remoteFingerprints[name] = plan.remoteFingerprint;
+      continue;
+    }
+
+    const plan = mergeCollections({ name, local, remote });
+    document.collections.push(plan);
+    document.remoteFingerprints[name] = plan.remoteFingerprint;
+  }
+
+  document.summary = summarizePlan(document);
+  return document;
+}
+
+function printSummary(document) {
+  console.log('Merge summary:');
+  console.log(JSON.stringify(document.summary || summarizePlan(document), null, 2));
+  for (const collection of document.collections || []) {
+    const s = collection.summary || {};
+    console.log(
+      `- ${collection.name}: create=${s.create || 0} update=${s.update || 0} keep=${s.keep || 0} conflict=${s.conflict || 0}`,
+    );
+  }
+  if ((document.mediaConflicts || []).length) {
+    console.log(`Media conflicts: ${document.mediaConflicts.length}`);
+  }
+  if ((document.secretConflicts || []).length) {
+    console.log(`Secret conflicts: ${document.secretConflicts.length}`);
+  }
+}
+
+async function main() {
+  const args = parseArgs();
+  const source = createLocalRepositories();
+  const target = args.remoteEmpty && !args.apply ? null : createFirestoreRepositories();
+  const sourceKey = process.env.SHRINEFLOW_SOURCE_MASTER_KEY || getSecretMasterKey();
+  const targetKey = process.env.SHRINEFLOW_TARGET_MASTER_KEY || getSecretMasterKey();
+
+  if (args.apply) {
+    if (!args.planFile) {
+      throw new Error('Apply requires --plan-file <path> generated by a previous --plan run.');
+    }
+    if (!target) throw new Error('Firestore target is required for --apply.');
+    const document = JSON.parse(await fs.readFile(args.planFile, 'utf8'));
+    printSummary(document);
+    await applyMergePlan({
+      plan: document,
+      loadRemote: async (name) => {
+        if (!target[name]) throw new Error(`Missing remote repository: ${name}`);
+        return target[name].list();
+      },
+      replaceRemote: async (name, value) => {
+        if (!target[name]) throw new Error(`Missing remote repository: ${name}`);
+        await target[name].replace(value);
+        const count = Array.isArray(value) ? value.length : Object.keys(value || {}).length;
+        console.log(`Applied ${name}: ${count}`);
+      },
+    });
+    console.log('Merge apply completed for ' + target.firestore.projectId + '/' + target.firestore.databaseId + '.');
+    return;
+  }
+
+  let mediaMapping = {};
+  if (args.mediaMappingFile) {
+    const mediaPlan = JSON.parse(await fs.readFile(args.mediaMappingFile, 'utf8'));
+    mediaMapping = mediaPlan.mapping || mediaPlan.mediaMapping || {};
+  }
+
+  const document = await buildPlan({
+    source,
+    target,
+    mediaMapping,
+    sourceKey,
+    targetKey,
+    remoteEmpty: args.remoteEmpty,
+  });
+
+  // Surface referenced uploads missing from mapping for operator review.
+  const posts = await loadLocalValue(source, 'posts');
+  const schedule = await loadLocalValue(source, 'schedule');
+  for (const referenced of collectReferencedUploads([...(posts || []), ...(schedule || [])])) {
+    if (referenced.startsWith('/uploads/') && !mediaMapping[referenced]) {
+      if (!document.mediaConflicts.some((item) => item.path === referenced)) {
+        document.mediaConflicts.push({
+          action: 'conflict',
+          path: referenced,
+          reason: 'missing_upload_mapping',
+        });
+      }
+    }
+  }
+  document.summary = summarizePlan(document);
+
+  await fs.mkdir(path.dirname(args.out), { recursive: true });
+  await fs.writeFile(args.out, JSON.stringify(document, null, 2), 'utf8');
+  printSummary(document);
+  console.log(`Wrote merge plan: ${args.out}`);
+  if (document.summary.blockingConflicts > 0) {
+    console.log('Blocking conflicts remain. Resolve them before --apply.');
+    process.exitCode = 2;
+  } else {
+    console.log('Plan is clean. Apply with: npm run migrate:firestore -- --apply --plan-file ' + args.out);
+  }
+}
+
+main().catch((error) => {
+  console.error(error.message || error);
+  process.exitCode = 1;
+});

@@ -66,17 +66,63 @@ Gemini Key 可以現在做成 `shrineflow-gemini-key`，也可以部署後在後
 
 `publish-due-targets` 只發 Instagram／Threads 的 ShrineFlow 排程。Facebook 原生排程仍由 Facebook 管理。
 
-## 本機資料搬上雲
+## 本機資料搬上雲（合併，非覆蓋）
+
+Google 登入只驗證身分，不搬品牌／排程／發布日誌。跨裝置同步必須把本機 JSON／uploads 合併進 Firestore／R2，之後 PC、手機都固定使用同一個 Cloud Run URL。
+
+### 原則
+
+- 只新增或更新，不會因本機缺少紀錄而刪除 Firestore 資料。
+- 同 ID 且內容不同：先比 `updatedAt`，再比 `createdAt`／`occurredAt`；時間戳相同、缺失或無法解析 → blocking conflict，不自動寫入。
+- 預設只產生 plan；`--apply` 前會再驗 Firestore fingerprint，掃描後若雲端已變會拒絕套用。
+- 品牌 Token：用 `SHRINEFLOW_SOURCE_MASTER_KEY`（本機）解密，再用 `SHRINEFLOW_TARGET_MASTER_KEY`（Cloud Run 的 `SHRINEFLOW_MASTER_KEY`）重加密。兩者可不同。
+
+### 步驟
+
+1. 停止本機與雲端編輯；備份整個 `data/`、`uploads/`。
+2. 若雲端已有資料，先觸發一次 Firestore→R2 backup（Scheduler `export-firestore-backup` 或手動打內部端點）。
+3. 產生媒體 plan（不寫入）：
 
 ```powershell
 $env:SHRINEFLOW_STORAGE_BACKEND='firestore'
 $env:FIRESTORE_PROJECT_ID='YOUR_PROJECT_ID'
 $env:GOOGLE_APPLICATION_CREDENTIALS='C:\secure\shrineflow-migration.json'
-npm run migrate:firestore
-npm run migrate:media:r2
+# 另設 R2_* 與 PUBLIC_MEDIA_BASE_URL
+npm run migrate:media:plan
 ```
 
-舊 `data/` 與 `uploads/` 先離線備份，確認 Firestore 與 R2 可讀再封存。
+4. 產生資料 merge plan（可帶媒體 mapping）：
+
+```powershell
+$env:SHRINEFLOW_SOURCE_MASTER_KEY='(本機 master key，可省略則用 SHRINEFLOW_MASTER_KEY)'
+$env:SHRINEFLOW_TARGET_MASTER_KEY='(Cloud Run master key)'
+npm run migrate:firestore:plan -- --media-mapping data\backups\media-plan-XXXX.json
+```
+
+若暫時無法連 Firestore，可先用本機對空雲端演練：
+
+```powershell
+npm run migrate:firestore:plan -- --remote-empty
+```
+
+5. 打開 plan JSON：確認每集合 `create/update/keep/conflict`，**blocking conflict 必須為 0**。
+6. Apply 順序：
+
+```powershell
+npm run migrate:media:r2 -- --apply --plan-file data\backups\media-plan-XXXX.json
+npm run migrate:firestore -- --apply --plan-file data\backups\merge-plan-XXXX.json
+```
+
+7. 再跑一次 `--plan`；理想狀態只剩 `keep`。
+8. PC、手機都改開同一個 Cloud Run URL，用同一 Google 帳號驗收品牌、草稿、排程、發布日誌、媒體。
+
+舊 `data/` 與 `uploads/` 確認雲端可讀後再封存，不要刪到無法回滾。
+
+### 回滾
+
+- Cloud Run revision 回滾 ≠ 資料回滾。
+- 資料回復：用遷移前 R2 內 Firestore backup manifest。
+- R2 新增物件：依 media plan 的 `objectKey` 清單清理。
 
 ## 驗證
 

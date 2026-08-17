@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -7,113 +6,110 @@ import { directories } from '../lib/store.js';
 import { createFirestoreRepositories } from '../lib/repositories.js';
 import { createR2MediaStorage } from '../lib/r2-storage.js';
 import { createPendingMediaAsset, finalizeMediaAsset } from '../lib/media-assets.js';
+import {
+  applyMediaMappingToRecords,
+  applyMediaMigrationPlan,
+  buildMediaMigrationPlan,
+} from '../lib/media-migration.js';
 
-const dryRun = process.argv.includes('--dry-run');
-
-const MIME_TYPES = Object.freeze({
-  '.avif': 'image/avif',
-  '.gif': 'image/gif',
-  '.jpeg': 'image/jpeg',
-  '.jpg': 'image/jpeg',
-  '.mov': 'video/quicktime',
-  '.mp4': 'video/mp4',
-  '.mpeg': 'video/mpeg',
-  '.mpg': 'video/mpeg',
-  '.png': 'image/png',
-  '.webm': 'video/webm',
-  '.webp': 'image/webp',
-});
-
-async function listFiles(directory) {
-  const entries = await fs.readdir(directory, { withFileTypes: true }).catch(() => []);
-  const files = [];
-  for (const entry of entries) {
-    const filePath = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...await listFiles(filePath));
-    else if (entry.isFile() && entry.name !== '.gitkeep') files.push(filePath);
-  }
-  return files;
-}
-
-function safeName(value) {
-  return String(value || 'upload').replace(/[^\w.\-\u00C0-\uFFFF]+/g, '_').slice(0, 180) || 'upload';
-}
-
-function contentType(filePath) {
-  return MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
-}
-
-function mediaIdFor(relativeName, buffer) {
-  return 'legacy-' + crypto.createHash('sha256').update(relativeName).update(buffer).digest('hex').slice(0, 32);
-}
-
-function rewriteRecord(record, mapping) {
-  let changed = false;
-  const rewrite = (value) => {
-    const next = mapping.get(String(value || '')) || value;
-    if (next !== value) changed = true;
-    return next;
+function parseArgs(argv = process.argv.slice(2)) {
+  const args = {
+    plan: !argv.includes('--apply'),
+    apply: argv.includes('--apply'),
+    dryRun: argv.includes('--dry-run'),
+    planFile: '',
+    out: path.join('data', 'backups', `media-plan-${new Date().toISOString().replace(/[:.]/g, '-')}.json`),
   };
-  if (record.imagePath) record.imagePath = rewrite(record.imagePath);
-  if (Array.isArray(record.mediaPaths)) record.mediaPaths = record.mediaPaths.map(rewrite);
-  if (Array.isArray(record.targets)) {
-    record.targets = record.targets.map((target) => ({
-      ...target,
-      mediaPaths: Array.isArray(target.mediaPaths) ? target.mediaPaths.map(rewrite) : target.mediaPaths,
-    }));
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (token === '--plan-file') args.planFile = argv[++index] || '';
+    if (token === '--out') args.out = argv[++index] || args.out;
   }
-  return changed;
+  if (args.dryRun) args.plan = true;
+  return args;
 }
 
-async function rewriteCollection(repositories, name, mapping) {
-  const repository = repositories[name];
-  if (!repository) return 0;
-  const records = await repository.list();
-  if (!Array.isArray(records)) return 0;
-  let changed = 0;
-  for (const record of records) if (rewriteRecord(record, mapping)) changed += 1;
-  if (changed && !dryRun) await repository.replace(records);
-  return changed;
+function collectReferencedUploads(records = []) {
+  const paths = new Set();
+  const visit = (value) => {
+    if (!value) return;
+    if (typeof value === 'string' && value.startsWith('/uploads/')) paths.add(value);
+    if (Array.isArray(value)) value.forEach(visit);
+    else if (value && typeof value === 'object') Object.values(value).forEach(visit);
+  };
+  records.forEach(visit);
+  return [...paths];
 }
 
-const repositories = createFirestoreRepositories();
-const mediaStorage = createR2MediaStorage();
-const mapping = new Map();
-const files = await listFiles(directories.uploads);
+async function main() {
+  const args = parseArgs();
+  const mediaStorage = createR2MediaStorage();
 
-for (const filePath of files) {
-  const relativeName = path.relative(directories.uploads, filePath).split(path.sep).join('/');
-  const buffer = await fs.readFile(filePath);
-  const mediaId = mediaIdFor(relativeName, buffer);
-  const objectKey = 'legacy/' + mediaId + '/' + safeName(path.basename(relativeName));
-  const mediaPath = mediaStorage.getMediaPath(objectKey);
-  const oldPath = '/uploads/' + relativeName;
-  mapping.set(oldPath, mediaPath);
-  if (relativeName === path.basename(relativeName)) mapping.set('/uploads/' + path.basename(relativeName), mediaPath);
-  if (dryRun) {
-    console.log('Would migrate ' + oldPath + ' -> ' + mediaPath);
-    continue;
+  if (args.apply) {
+    const repositories = createFirestoreRepositories();
+    if (!args.planFile) throw new Error('Apply requires --plan-file <path>.');
+    const plan = JSON.parse(await fs.readFile(args.planFile, 'utf8'));
+    if ((plan.conflicts || []).length) {
+      throw new Error(`Media plan still has ${plan.conflicts.length} blocking conflict(s).`);
+    }
+    const result = await applyMediaMigrationPlan({
+      plan,
+      mediaStorage,
+      upsertAsset: async (asset) => {
+        await createPendingMediaAsset(asset, repositories);
+        return finalizeMediaAsset(asset.id, { status: 'ready', checksumSha256: asset.checksumSha256 }, repositories);
+      },
+    });
+
+    const posts = await repositories.posts.list();
+    const schedule = await repositories.schedule.list();
+    const postRewrite = applyMediaMappingToRecords(posts, result.mapping);
+    const scheduleRewrite = applyMediaMappingToRecords(schedule, result.mapping);
+    if (postRewrite.missing.length || scheduleRewrite.missing.length) {
+      throw new Error('Missing media mapping for: ' + [...postRewrite.missing, ...scheduleRewrite.missing].join(', '));
+    }
+    if (postRewrite.changed) await repositories.posts.replace(postRewrite.records);
+    if (scheduleRewrite.changed) await repositories.schedule.replace(scheduleRewrite.records);
+    console.log(`Uploaded/reused ${result.uploaded.length} media objects.`);
+    console.log(`Rewrote media references: posts=${postRewrite.changed}, schedule=${scheduleRewrite.changed}`);
+    console.log('Media migration apply completed.');
+    return;
   }
-  const type = contentType(filePath);
-  await mediaStorage.putBuffer(objectKey, buffer, { contentType: type });
-  await createPendingMediaAsset({
-    id: mediaId,
-    storageProvider: 'r2',
-    bucket: mediaStorage.bucket,
-    objectKey,
-    mediaPath,
-    originalName: path.basename(relativeName),
-    mimeType: type,
-    sizeBytes: buffer.byteLength,
-  }, repositories);
-  await finalizeMediaAsset(mediaId, { status: 'ready' }, repositories);
-  console.log('Migrated ' + oldPath + ' -> ' + mediaPath);
+
+  const localPosts = await fs.readFile(path.join(directories.data, 'posts.json'), 'utf8')
+    .then((raw) => JSON.parse(raw))
+    .catch(() => []);
+  const localSchedule = await fs.readFile(path.join(directories.data, 'schedule.json'), 'utf8')
+    .then((raw) => JSON.parse(raw))
+    .catch(() => []);
+  const referencedPaths = collectReferencedUploads([
+    ...(Array.isArray(localPosts) ? localPosts : []),
+    ...(Array.isArray(localSchedule) ? localSchedule : []),
+  ]);
+
+  const plan = await buildMediaMigrationPlan({
+    uploadsDirectory: directories.uploads,
+    mediaStorage,
+    referencedPaths,
+  });
+
+  await fs.mkdir(path.dirname(args.out), { recursive: true });
+  await fs.writeFile(args.out, JSON.stringify(plan, null, 2), 'utf8');
+  console.log(`Planned ${plan.files.length} upload files.`);
+  console.log(`Conflicts: ${plan.conflicts.length}`);
+  console.log(`Wrote media plan: ${args.out}`);
+  if (args.dryRun || args.plan) {
+    console.log('Dry run / plan only: no R2 objects or Firestore records were changed.');
+  }
+  if (plan.conflicts.length) {
+    process.exitCode = 2;
+    console.log('Resolve media conflicts before --apply.');
+  } else {
+    console.log('Plan is clean. Apply with: npm run migrate:media:r2 -- --apply --plan-file ' + args.out);
+  }
 }
 
-if (!dryRun) {
-  const postChanges = await rewriteCollection(repositories, 'posts', mapping);
-  const scheduleChanges = await rewriteCollection(repositories, 'schedule', mapping);
-  console.log('Rewrote media references: posts=' + postChanges + ', schedule=' + scheduleChanges);
-} else {
-  console.log('Dry run: no R2 objects or Firestore records were changed.');
-}
+main().catch((error) => {
+  console.error(error.message || error);
+  process.exitCode = 1;
+});

@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-17（v0.6.34；全站 UI/UX 微動效、表單聚焦引導與快捷鍵升級）
+更新日期：2026-08-17（v0.6.38；跨裝置 Firestore／R2 合併遷移 plan/apply）
 
 ## 專案定位
 
@@ -116,6 +116,7 @@
 - [x] 部署前置檢查與手冊：`/api/system/readiness` 驗證主密鑰、HTTPS 媒體網址、production 模式、資料目錄可寫入與備份存在；詳細步驟記錄於 `docs/superpowers/specs/2026-08-14-local-deployment-runbook.md`。這不取代登入、HTTPS 反向代理或 App Review。
 - [x] 主要 JSON 集合與檔案容量邊界：品牌 100 筆／單品牌 20 個平台連線、內容 5,000 筆、模板／活動各 500 筆，主要 JSON 依檔案設有 bytes 上限；達上限時拒絕新增，不自動刪除內容，系統健康檢查回報筆數與容量使用量。
 - [x] 正式部署流程：Cloud Run 單一入口 + Firestore + R2 + Cloud Scheduler；後台 Gemini／平台 Token 可跨重啟保存。HTTPS 媒體網域、R2 Secret 與 Meta App Review 仍屬外部帳號條件。
+- [x] 跨裝置資料合併（plan/apply）：本機 JSON／uploads 以 newest-wins、零刪除、fingerprint 保護合併進 Firestore／R2；見 `docs/superpowers/specs/2026-08-14-cloud-deployment-runbook.md`、`docs/superpowers/specs/2026-08-17-cross-device-merge-cutover.md`。
 
 ## 重要資料結構
 

@@ -1,6 +1,6 @@
 {
   "name": "shrineflow",
-  "version": "0.6.37",
+  "version": "0.6.38",
   "private": true,
   "description": "本機 JSON 版多平台社群發布工作台：建立內容、平台預覽與排程資料。",
   "type": "module",
@@ -13,7 +13,9 @@
     "version:bump": "node scripts/bump-version.js",
     "css:split": "node scripts/split-css.js",
     "migrate:firestore": "node scripts/migrate-json-to-firestore.js",
-    "migrate:media:r2": "node scripts/migrate-uploads-to-r2.js"
+    "migrate:firestore:plan": "node scripts/migrate-json-to-firestore.js --plan",
+    "migrate:media:r2": "node scripts/migrate-uploads-to-r2.js",
+    "migrate:media:plan": "node scripts/migrate-uploads-to-r2.js --plan"
   },
   "dependencies": {
     "@google/genai": "^2.16.0",
