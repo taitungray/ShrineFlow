@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.28" />
+    <link rel="stylesheet" href="/style.css?v=0.6.30" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -187,6 +187,13 @@
                   <span class="field-label">內容主題或對象 <span class="field-required">*</span></span>
                 </label>
                 <input id="contentTopic" name="contentTopic" type="text" placeholder="例：新品上市、週末活動、品牌故事" autocomplete="off" required />
+                <div class="topic-chips" id="topicChips" aria-label="常見主題快捷">
+                  <button type="button" class="topic-chip" data-topic="✨ 新品上市：工藝細節與設計亮點">✨ 新品上市</button>
+                  <button type="button" class="topic-chip" data-topic="🎉 週末活動：限時體驗與預約邀請">🎉 週末活動</button>
+                  <button type="button" class="topic-chip" data-topic="📢 重要公告：最新營業時間與服務升級">📢 重要公告</button>
+                  <button type="button" class="topic-chip" data-topic="💡 品牌日常：工坊幕後與職人堅持">💡 品牌日常</button>
+                  <button type="button" class="topic-chip" data-topic="🌸 節慶祝福：願平安順心，福澤常在">🌸 節慶祝福</button>
+                </div>
               </div>
               <div class="field">
                 <span id="postTypeLabel" class="field-label">內容方向</span>
@@ -216,11 +223,17 @@
             </details>
 
             <div class="field" id="platformCopyField">
-              <label for="facebookText" class="field-label" id="accountCopyLabel">文案</label>
+              <div class="field-header-row">
+                <label for="facebookText" class="field-label" id="accountCopyLabel">文案</label>
+                <span class="char-count-badge" id="facebookCharCount">0 字</span>
+              </div>
               <textarea id="facebookText" rows="7" placeholder="直接寫，或按下方 AI 產生"></textarea>
             </div>
             <div class="field is-hidden" id="reelTextField">
-              <label for="reelText" class="field-label">短影音文案</label>
+              <div class="field-header-row">
+                <label for="reelText" class="field-label">短影音文案</label>
+                <span class="char-count-badge" id="reelCharCount">0 字</span>
+              </div>
               <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
             </div>
             <div class="action-box platform-copy-actions">
@@ -335,7 +348,10 @@
                 <div id="previewMediaGallery" class="media-gallery preview-media-gallery" aria-label="作品預覽"></div>
               </div>
               <article class="copy-card">
-                <h4>貼文預覽</h4>
+                <div class="copy-card-header">
+                  <h4>貼文預覽</h4>
+                  <button type="button" class="btn-text copy-preview-btn" id="btnCopyPreviewText" title="複製貼文文案到剪貼簿">📋 複製文案</button>
+                </div>
                 <div id="facebookPreview" class="copy-text">尚未產生文案</div>
                 <p id="hashtagsPreview" class="hashtags"></p>
                 <p id="storyPreviewNotice" class="story-preview-notice" hidden></p>
@@ -1352,7 +1368,27 @@
         </div>
       </form>
     </dialog>
+    <dialog class="module-dialog shortcuts-dialog" id="shortcutsDialog" aria-labelledby="shortcutsTitle">
+      <form method="dialog">
+        <button class="close-button" type="button" value="cancel" aria-label="關閉">×</button>
+        <div class="dialog-heading">
+          <p class="section-tag">SHORTCUTS</p>
+          <h3 id="shortcutsTitle">鍵盤快捷鍵</h3>
+          <p class="dialog-lede">隨時使用快捷鍵提高社群排程與發布效率。</p>
+        </div>
+        <div class="shortcuts-list">
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>S</kbd></div><span class="shortcut-desc">快速儲存草稿</span></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>Enter</kbd></div><span class="shortcut-desc">開啟排程發布視窗</span></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Alt</kbd> + <kbd>N</kbd></div><span class="shortcut-desc">快速新增內容</span></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>?</kbd></div><span class="shortcut-desc">開啟此快捷鍵說明</span></div>
+          <div class="shortcut-item"><div class="shortcut-keys"><kbd>Esc</kbd></div><span class="shortcut-desc">關閉開啟中的彈窗視窗</span></div>
+        </div>
+        <div class="dialog-actions">
+          <button class="primary-button" value="cancel" type="submit">知道了</button>
+        </div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.28" type="module"></script>
+    <script src="/app.js?v=0.6.30" type="module"></script>
   </body>
 </html>

@@ -1,0 +1,192 @@
+/* ==========================================================================
+   Component: Dialogs, Modals & Keyboard Helpers
+   ========================================================================== */
+
+/* Dialog Base Structure */
+.schedule-dialog {
+  width: min(400px, calc(100% - 32px));
+  max-height: min(88dvh, 760px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg);
+}
+
+.schedule-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog:not([open]) {
+  display: none !important;
+}
+
+.schedule-dialog:not([open]) {
+  display: none !important;
+}
+
+.schedule-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+}
+
+.schedule-dialog form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(88dvh, 760px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.schedule-dialog-body {
+  position: relative;
+  z-index: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 28px 28px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.schedule-dialog .dialog-heading { margin-bottom: 10px; }
+.schedule-dialog h3 { margin: 0; }
+
+.schedule-dialog-actions {
+  flex: 0 0 auto;
+  position: static;
+  justify-content: stretch;
+  margin: 0;
+  padding: 12px 28px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.schedule-dialog-actions .primary-button { width: 100%; }
+
+#scheduleFormMessage { min-height: 1.4em; margin: 0 0 4px; }
+#scheduleFormMessage[data-type="error"] { color: var(--danger); font-weight: 700; }
+#scheduleFormMessage[data-type="success"] { color: #2e7d32; font-weight: 600; }
+
+.dialog-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.dialog-heading .section-tag {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.dialog-heading h3 {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.dialog-heading .dialog-lede {
+  margin: 0;
+  max-width: none;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+/* Module Dialogs (Generic) */
+.module-dialog {
+  width: min(400px, calc(100% - 32px));
+  max-height: min(88dvh, 760px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg);
+}
+
+.module-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.module-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  position: static;
+  margin: 0;
+  padding: 12px 28px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+/* Shortcuts Dialog & Keyboard Badges */
+.shortcuts-dialog {
+  width: min(100% - 24px, 480px);
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 20px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  gap: 12px;
+}
+
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+}
+
+.shortcut-desc {
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: "Outfit", ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, black);
+  border-bottom: 2px solid color-mix(in srgb, var(--border) 60%, black);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+}

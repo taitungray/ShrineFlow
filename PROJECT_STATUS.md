@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-17（v0.6.28；CSS 模組化、快取優化、鍵盤快捷鍵、離線感知與骨架屏）
+更新日期：2026-08-17（v0.6.30；CSS 組件細粒度拆分、JS 編輯器子模組解耦、快捷鍵模組抽離、遞迴樣式載入測試）
 
 ## 專案定位
 
@@ -26,6 +26,7 @@
 - [x] 產文時將媒體順序保存到 `mediaPaths`。
 - [x] 預設 Hashtag 可在產文前修改，預設為 `#品牌內容 #社群經營 #內容行銷`。
 - [x] Facebook 文案與 Reel 文案自動分段。
+- [x] 主題靈感快捷標籤（Topic Quick Chips）：提供新品、活動、公告、日常、祝福等一鍵帶入主題。
 - [x] Gemini 503／429 等暫時性錯誤會自動退避重試並切換備援模型。
 
 ### 使用介面與響應式規劃
@@ -33,16 +34,19 @@
 - [x] UI-0：桌機 sidebar、平板 drawer、手機 bottom navigation 與 hash route。
 - [x] UI-1：內容列表、搜尋、狀態與平台篩選。
 - [x] UI-2：單頁 Composer、母稿、平台策略提示與即時預覽。
-- [x] UI-3：月／週／列表日曆與手機行程列表。
+- [x] UI-3：月／週／列表日曆與手機行程列表，支援空白日期格快速排程。
 - [x] UI-4：素材庫、發布紀錄、平台連線與設定入口。
 - [x] UI-5：模板建立／編輯／套用、Campaign 內容關聯與發布進度，以及不虛構數據的 Insights／Inbox 狀態頁。
 - [x] 編輯與即時預覽在同一個畫面，避免反覆切換。
-- [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示。
+- [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示，提供一鍵複製貼文文案按鈕。
+- [x] 即時動態字數統計徽章（Real-Time Character Counter）：針對 FB (120-250字)、Reel (50-90字)、Threads (500字)、IG (2200字) 動態提示字數與警戒色。
+- [x] Target 平台標籤狀態指示圓點（🟢 沿用母稿 / 🟠 已客製覆寫）。
 - [x] 桌機左右布局、平板單欄、手機單欄與 44px 觸控區域。
 - [x] 前端資源 `?v=`、`/api/config` 與 `package.json` 版號同步。
-- [x] CSS 模組化重構（`public/css/`）：將 5,800+ 行單一大檔拆分為 Tokens、Base、Layout、Components 與 8 個業務 View 模組，`public/style.css` 作為總入口帶版本快取查詢參數（`?v=0.6.28`），兼具零建置負擔（Zero-build）與高效維護性。
+- [x] CSS 模組化與細粒度拆分（`public/css/`）：將龐大樣式檔細拆為 Tokens、Base、Layout、Components（按鈕 buttons、表單 forms、卡片 cards、彈窗 dialogs、反饋 feedback）與 8 個業務 View 模組，兼具零建置負擔（Zero-build）與極致清晰的維護性。
+- [x] 前端 JS 核心模組細粒度解耦（`public/modules/`）：將 1,000+ 行編輯器解耦拆分為 `editor-autosave.js`（自動儲存與快照）、`editor-versions.js`（版本歷史）、`editor-preview.js`（預覽與字數計算）與 `shortcuts.js`（快捷鍵監聽）。
 - [x] 靜態資源生產快取標頭優化：`server.js` 在 production 模式下對 HTML 設 `no-cache`，對靜態資源設置 HTTP 86400 快取，開發模式維持 `no-store`。
-- [x] 鍵盤快捷鍵（Power-user Shortcuts）：支援 `Ctrl/Cmd + S` 快速儲存草稿、`Ctrl/Cmd + Enter` 開啟排程視窗、`Alt + N` 快速新建內容。
+- [x] 鍵盤快捷鍵（Power-user Shortcuts）：支援 `Ctrl/Cmd + S` 快速儲存草稿、`Ctrl/Cmd + Enter` 開啟排程視窗、`Alt + N` 快速新建內容、`?` 開啟快捷鍵手冊彈窗。
 - [x] 網路狀態即時感知（Network Resilience）：監聽 `online`/`offline` 事件，斷網時即時 Toast 提示本機快照防護。
 - [x] Skeleton Shimmer 骨架屏載入樣式：符合 `ui-ux-pro-max` 設計系統規範。
 

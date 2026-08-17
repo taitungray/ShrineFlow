@@ -43,6 +43,7 @@ import { initClientErrorReporter } from './modules/client-error-reporter.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
 import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
+import { initKeyboardShortcuts } from './modules/shortcuts.js';
 import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
 import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
 import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
@@ -394,35 +395,7 @@ async function initApp() {
   });
 
   // Power-user keyboard shortcuts
-  window.addEventListener('keydown', (event) => {
-    // Ctrl+S / Cmd+S: Save Draft
-    if ((event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')) {
-      const composer = $('#composerPanel');
-      if (composer && !composer.classList.contains('is-hidden')) {
-        event.preventDefault();
-        const saveBtn = $('#saveButton');
-        if (saveBtn && !saveBtn.disabled) {
-          saveBtn.click();
-        }
-      }
-    }
-    // Ctrl+Enter / Cmd+Enter: Open Schedule or Trigger Primary Action in Composer
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      const composer = $('#composerPanel');
-      if (composer && !composer.classList.contains('is-hidden')) {
-        event.preventDefault();
-        const scheduleBtn = $('#scheduleButton');
-        if (scheduleBtn && !scheduleBtn.disabled) {
-          scheduleBtn.click();
-        }
-      }
-    }
-    // Alt+N: New Content
-    if (event.altKey && (event.key === 'n' || event.key === 'N')) {
-      event.preventDefault();
-      location.hash = '#/content/new';
-    }
-  });
+  initKeyboardShortcuts();
 
   loadData().catch((error) => showToast(error.message, 'error'));
   loadSettings().catch((error) => showToast(error.message, 'error'));

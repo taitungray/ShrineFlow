@@ -10,8 +10,8 @@ data/clients.json.rotation-backup
 data/inbox-metadata.json
 data/media-assets.json
 data/saved-replies.json
-data/publish-attempts/*.json
-data/insights/*.json
+data/publish-attempts/*
+data/insights/*
 data/backups/*
 !data/backups/.gitkeep
 data/*.json.bak

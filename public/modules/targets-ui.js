@@ -129,12 +129,18 @@ export function renderTargetAccountControls() {
     activeField.classList.toggle('is-hidden', activeAccounts.length <= 1);
   }
 
+  const post = state.savedPost || state.generated || {};
+  const targets = Array.isArray(post.targets) ? post.targets : [];
+
   tabs.innerHTML = activeAccounts.map((account) => {
+    const target = targets.find((item) => item.accountId === account.id || item.id === account.id);
+    const overridden = target?.copyOverride != null && String(target.copyOverride).trim() !== '';
+    const dot = '<span class="target-status-dot ' + (overridden ? 'is-overridden' : 'is-inherited') + '" title="' + (overridden ? '已客製覆寫此平台文案' : '沿用母稿') + '"></span>';
     return '<label class="radio-pill">'
     + '<input type="radio" name="activeTargetAccount" value="' + escapeHtml(account.id) + '"'
     + (account.id === state.activeTargetId ? ' checked' : '')
     + ' />'
-    + '<span>' + escapeHtml(accountPickerLabel(account)) + '</span>'
+    + '<span>' + dot + escapeHtml(accountPickerLabel(account)) + '</span>'
     + '</label>';
   }).join('');
 

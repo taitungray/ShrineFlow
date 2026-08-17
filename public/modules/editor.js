@@ -1,6 +1,5 @@
-import { $, escapeHtml, isVideoPath, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, formatDate, bindDialogDismiss } from './dom.js';
+import { $, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss } from './dom.js';
 import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
-import { previewMediaSrc } from './media-preview.js';
 import {
   renderCreatePublishSpec,
   renderCreateContentSettings,
@@ -16,430 +15,70 @@ import {
   renderTargetAccountControls,
   applyActiveTargetToEditor,
 } from './targets-ui.js';
-import { renderPlatformStrategy } from './platform-strategy.js';
-import { postStatusLabel, targetStatusLabel } from './status.js';
-const AUTOSAVE_DELAY_MS = 800;
-const RECOVERY_SNAPSHOT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const RECOVERY_SNAPSHOT_LIMIT = 20;
-const RECOVERY_KEY_PREFIX = 'shrineflow.autosave.snapshot.v1';
-const RECOVERY_INDEX_KEY = 'shrineflow.autosave.index.v1';
+import { postStatusLabel } from './status.js';
+
+// Re-export autosave & snapshot utilities
+export {
+  AUTOSAVE_DELAY_MS,
+  RECOVERY_SNAPSHOT_TTL_MS,
+  RECOVERY_SNAPSHOT_LIMIT,
+  RECOVERY_KEY_PREFIX,
+  RECOVERY_INDEX_KEY,
+  recoveryKey,
+  setAutosaveStatus,
+  clearAutosaveTimer,
+  readRecoveryIndex,
+  writeRecoverySnapshot,
+  scheduleRecoverySnapshot,
+  clearRecoverySnapshot,
+  readRecoverySnapshot,
+  saveDraft,
+  scheduleAutosave,
+  markEditorDirty,
+} from './editor-autosave.js';
+
+// Re-export version management utilities
+export {
+  VERSION_SOURCE_LABELS,
+  renderVersionHistory,
+  refreshVersionHistory,
+  createManualVersion,
+  restoreVersion,
+} from './editor-versions.js';
+
+// Re-export preview & character count utilities
+export {
+  updateCharacterCounts,
+  updateLivePreview,
+  renderPreviewPlatformTabs,
+  renderSavedMedia,
+  confirmImmediatePublish,
+} from './editor-preview.js';
+
+import {
+  setAutosaveDependencies,
+  clearAutosaveTimer,
+  clearRecoverySnapshot,
+  setAutosaveStatus,
+  saveDraft,
+  markEditorDirty,
+} from './editor-autosave.js';
+
+import {
+  setVersionDependencies,
+  refreshVersionHistory,
+  createManualVersion,
+  restoreVersion,
+} from './editor-versions.js';
+
+import {
+  updateLivePreview,
+  renderPreviewPlatformTabs,
+  renderSavedMedia,
+  confirmImmediatePublish,
+} from './editor-preview.js';
+
 let refreshListsCallback = null;
-
-function recoveryKey(postId = state.savedPost?.id || 'new') {
-  return `${RECOVERY_KEY_PREFIX}:${state.currentClientId || 'default'}:${postId}`;
-}
-
-function setAutosaveStatus(message = '', status = 'idle') {
-  state.autosaveState = status;
-  const element = $('#autosaveStatus');
-  if (element) {
-    element.textContent = message;
-    element.dataset.state = status;
-    element.hidden = !message;
-  }
-  const retryButton = $('#autosaveRetryButton');
-  if (retryButton) {
-    retryButton.hidden = !['error', 'conflict', 'blocked'].includes(status);
-    retryButton.disabled = state.autosaveInFlight;
-  }
-}
-
-function clearAutosaveTimer() {
-  if (state.autosaveTimer) window.clearTimeout(state.autosaveTimer);
-  state.autosaveTimer = null;
-}
-
-function readRecoveryIndex() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(RECOVERY_INDEX_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed.filter((item) => item && item.key && item.savedAt) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeRecoverySnapshot(draft = currentDraft()) {
-  if (!state.editorDirty || !draft) return;
-  const fields = [
-    'clientId', 'contentStage', 'contentTopic', 'godName', 'postType', 'extraNotes', 'defaultHashtags',
-    'channel', 'accountId', 'contentType', 'contentSettings', 'facebook', 'reel',
-    'hashtags', 'imagePath', 'mediaPaths', 'targets',
-  ];
-  const safeDraft = Object.fromEntries(fields
-    .filter((field) => draft[field] !== undefined)
-    .map((field) => [field, draft[field]]));
-  const key = recoveryKey();
-  const snapshot = {
-    key,
-    postId: state.savedPost?.id || 'new',
-    savedAt: new Date().toISOString(),
-    baseVersion: Number(state.savedPost?.version || 1),
-    draft: safeDraft,
-  };
-  try {
-    localStorage.setItem(key, JSON.stringify(snapshot));
-    const index = readRecoveryIndex().filter((item) => item.key !== key);
-    index.push({ key, savedAt: snapshot.savedAt });
-    index.sort((left, right) => new Date(left.savedAt) - new Date(right.savedAt));
-    while (index.length > RECOVERY_SNAPSHOT_LIMIT) {
-      const removed = index.shift();
-      if (removed?.key) localStorage.removeItem(removed.key);
-    }
-    localStorage.setItem(RECOVERY_INDEX_KEY, JSON.stringify(index));
-  } catch {
-    // Local recovery is best effort and must never block editing.
-  }
-}
-
-function scheduleRecoverySnapshot() {
-  if (state.autosaveRetryTimer) window.clearTimeout(state.autosaveRetryTimer);
-  state.autosaveRetryTimer = window.setTimeout(() => {
-    state.autosaveRetryTimer = null;
-    writeRecoverySnapshot();
-  }, 350);
-}
-
-function clearRecoverySnapshot(postId = state.savedPost?.id || 'new') {
-  const key = recoveryKey(postId);
-  try {
-    localStorage.removeItem(key);
-    const index = readRecoveryIndex().filter((item) => item.key !== key);
-    localStorage.setItem(RECOVERY_INDEX_KEY, JSON.stringify(index));
-  } catch {
-    // Ignore storage quota and privacy-mode errors.
-  }
-}
-
-function readRecoverySnapshot(postId) {
-  const key = recoveryKey(postId);
-  try {
-    const snapshot = JSON.parse(localStorage.getItem(key) || 'null');
-    const savedAt = new Date(snapshot?.savedAt || '').getTime();
-    if (!snapshot || !Number.isFinite(savedAt) || Date.now() - savedAt > RECOVERY_SNAPSHOT_TTL_MS) {
-      clearRecoverySnapshot(postId);
-      return null;
-    }
-    return snapshot;
-  } catch {
-    clearRecoverySnapshot(postId);
-    return null;
-  }
-}
-export function restoreRecoverySnapshotForPost(post) {
-  if (!post?.id) return false;
-  const snapshot = readRecoverySnapshot(post.id);
-  if (!snapshot?.draft) return false;
-  const snapshotAt = new Date(snapshot.savedAt).getTime();
-  const serverAt = new Date(post.updatedAt || post.createdAt || 0).getTime();
-  if (Number.isFinite(serverAt) && Number.isFinite(snapshotAt) && snapshotAt <= serverAt) {
-    clearRecoverySnapshot(post.id);
-    return false;
-  }
-  state.savedPost = {
-    ...post,
-    ...snapshot.draft,
-    id: post.id,
-    version: post.version,
-    status: post.status,
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt,
-  };
-  renderGenerated(state.savedPost);
-  markEditorDirty(true);
-  setAutosaveStatus('已從本機復原未儲存修改，等待自動儲存', 'recovery');
-  return true;
-}
-
-function draftValidationMessage(draft) {
-  if (draft.contentStage === 'idea') return '';
-  const type = fieldValue($('#targetContentType')) || draft.contentType || 'post';
-  if (type === 'reel' && !String(draft.reel || '').trim()) return 'Reel 文案尚未完成。';
-  if (type !== 'reel' && !String(draft.facebook || '').trim()) return '貼文文案尚未完成。';
-  return '';
-}
-
-async function saveDraft({ mode = 'manual', intent = state.autosaveIntent } = {}) {
-  if (state.savedPost?.status === 'archived') {
-    setAutosaveStatus('封存中的貼文不可編輯，請先還原。', 'blocked');
-    return null;
-  }
-  if (state.autosavePromise) {
-    await state.autosavePromise;
-    if (mode === 'autosave' && !state.editorDirty) return state.savedPost;
-  }
-
-  const draft = currentDraft();
-  const validationMessage = draftValidationMessage(draft);
-  if (validationMessage) {
-    writeRecoverySnapshot(draft);
-    setAutosaveStatus(`${validationMessage} 已保留本機草稿`, 'blocked');
-    return null;
-  }
-
-  const postBeforeSave = state.savedPost;
-  const payload = { ...draft, versionSource: mode };
-  if (postBeforeSave) payload.baseVersion = Number(postBeforeSave.version || 1);
-  const saveKey = postBeforeSave?.id || 'new';
-  state.autosaveInFlight = true;
-  setAutosaveStatus(mode === 'autosave' ? '自動儲存中…' : '儲存中…', 'saving');
-  syncEditorActions();
-
-  const request = (async () => {
-    try {
-      const saved = postBeforeSave
-        ? await api('/api/posts/' + postBeforeSave.id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-        : await api('/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      state.savedPost = saved;
-      if (intent === state.autosaveIntent || mode === 'manual') {
-        state.generated = saved;
-        state.editorDirty = false;
-        clearRecoverySnapshot(saveKey);
-        if (!postBeforeSave) clearRecoverySnapshot('new');
-        setAutosaveStatus(mode === 'autosave' ? '已自動儲存' : '已儲存', 'saved');
-        setPreviewMessage(mode === 'autosave' ? '草稿已自動儲存。' : '貼文已儲存。', 'success');
-        if (mode === 'manual') showToast('貼文已儲存', 'success');
-      } else {
-        setAutosaveStatus('上一版已儲存，正在繼續儲存最新修改…', 'pending');
-      }
-      if (typeof refreshListsCallback === 'function') await refreshListsCallback();
-      return saved;
-    } catch (error) {
-      if (error.code === 'POST_VERSION_CONFLICT' && error.data?.current) {
-        state.savedPost = error.data.current;
-      }
-      writeRecoverySnapshot(draft);
-      setAutosaveStatus(
-        error.code === 'POST_VERSION_CONFLICT'
-          ? '版本已變更，已保留本機修改；請重試儲存。'
-          : '尚未儲存，已保留本機草稿；請重試。',
-        error.code === 'POST_VERSION_CONFLICT' ? 'conflict' : 'error',
-      );
-      throw error;
-    } finally {
-      state.autosaveInFlight = false;
-      state.autosavePromise = null;
-      syncEditorActions();
-      if (state.editorDirty && intent !== state.autosaveIntent && mode === 'autosave') scheduleAutosave(0);
-    }
-  })();
-  state.autosavePromise = request;
-  return request;
-}
-
-function scheduleAutosave(delay = AUTOSAVE_DELAY_MS) {
-  clearAutosaveTimer();
-  if (!state.editorDirty) return;
-  scheduleRecoverySnapshot();
-  if (!state.savedPost) {
-    setAutosaveStatus('尚未儲存，已暫存於本機', 'local');
-    return;
-  }
-  state.autosaveIntent += 1;
-  const intent = state.autosaveIntent;
-  setAutosaveStatus('等待自動儲存…', 'pending');
-  state.autosaveTimer = window.setTimeout(() => {
-    state.autosaveTimer = null;
-    if (intent !== state.autosaveIntent || !state.editorDirty) return;
-    saveDraft({ mode: 'autosave', intent }).catch(() => {});
-  }, delay);
-}
-const VERSION_SOURCE_LABELS = {
-  created: '建立貼文',
-  manual: '手動儲存',
-  autosave: '自動儲存',
-  schedule: '排程前',
-  publish: '發布前',
-  restore: '還原版本',
-  archive: '封存',
-  duplicate: '複製',
-};
-
-function renderVersionHistory(versions = []) {
-  const list = $('#versionHistoryList');
-  if (!list) return;
-  if (!versions.length) {
-    list.innerHTML = '<p class="version-history-empty">尚未建立版本歷史。</p>';
-    return;
-  }
-  list.innerHTML = versions.map((version) => {
-    const summary = version.summary || {};
-    const platforms = Array.isArray(summary.platforms) && summary.platforms.length
-      ? summary.platforms.join('、')
-      : '尚未選擇平台';
-    const source = VERSION_SOURCE_LABELS[version.source] || version.source || '內容變更';
-    const archived = version.archived === true;
-    return '<article class="version-history-item">'
-      + '<div><strong>v' + escapeHtml(version.version || '?') + ' · ' + escapeHtml(source) + '</strong>'
-      + '<small>' + escapeHtml(formatDate(version.createdAt)) + ' · ' + escapeHtml(platforms)
-      + ' · ' + escapeHtml(String(summary.mediaCount || 0)) + ' 個素材</small></div>'
-      + '<button class="btn-text" type="button" data-restore-version="' + escapeHtml(version.versionId) + '"'
-      + (archived ? ' disabled' : '') + '>' + (archived ? '已封存' : '還原') + '</button>'
-      + '</article>';
-  }).join('');
-}
-
-export async function refreshVersionHistory() {
-  const panel = $('#versionHistory');
-  const list = $('#versionHistoryList');
-  if (!panel || !list) return;
-  if (!state.savedPost?.id) {
-    panel.hidden = true;
-    return;
-  }
-  panel.hidden = false;
-  list.innerHTML = '<p class="version-history-empty">讀取版本歷史中…</p>';
-  try {
-    const result = await api('/api/posts/' + state.savedPost.id + '/versions');
-    renderVersionHistory(result.versions || []);
-  } catch (error) {
-    list.innerHTML = '<p class="version-history-empty">版本歷史暫時無法載入：' + escapeHtml(error.message) + '</p>';
-  }
-}
-
-async function createManualVersion() {
-  if (!state.savedPost?.id) return;
-  if (state.editorDirty) {
-    setPreviewMessage('請先完成儲存，再建立版本。', 'error');
-    return;
-  }
-  try {
-    await api('/api/posts/' + state.savedPost.id + '/versions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source: 'manual' }),
-    });
-    await refreshVersionHistory();
-    showToast('版本已建立', 'success');
-  } catch (error) {
-    setPreviewMessage(error.message, 'error');
-  }
-}
-
-async function restoreVersion(versionId) {
-  if (!state.savedPost?.id || !versionId) return;
-  if (!window.confirm('還原後會建立新的草稿版本，不會自動重新發布，是否繼續？')) return;
-  try {
-    const restored = await api('/api/posts/' + state.savedPost.id + '/versions/' + versionId + '/restore', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ baseVersion: Number(state.savedPost.version || 1) }),
-    });
-    state.savedPost = restored;
-    state.generated = restored;
-    state.editorDirty = false;
-    renderGenerated(restored);
-    if (typeof refreshListsCallback === 'function') await refreshListsCallback();
-    setPreviewMessage('版本已還原為新的草稿，請確認後再排程或發布。', 'success');
-    showToast('版本已還原', 'success');
-  } catch (error) {
-    setPreviewMessage(error.message, 'error');
-  }
-}
-
-export function updateLivePreview() {
-  const contentType = fieldValue($('#targetContentType')) || 'post';
-  const text = contentType === 'reel'
-    ? ($('#reelText')?.value?.trim() || $('#facebookText')?.value?.trim() || '')
-    : ($('#facebookText')?.value?.trim() || '');
-  const preview = $('#facebookPreview');
-  if (preview) {
-    preview.innerHTML = text
-      ? text.split(/\n{2,}/).map((paragraph) => '<p>' + escapeHtml(paragraph).replace(/\n/g, '<br>') + '</p>').join('')
-      : '尚未產生文案。';
-  }
-  const hashtagsPreview = $('#hashtagsPreview');
-  if (hashtagsPreview) hashtagsPreview.textContent = $('#hashtagsText')?.value?.trim() || '';
-  const storyNotice = $('#storyPreviewNotice');
-  if (storyNotice) {
-    const isStory = contentType === 'story';
-    storyNotice.hidden = !isStory;
-    storyNotice.textContent = isStory
-      ? (state.selectedPlatform === 'facebook'
-        ? 'Facebook Story 目前只能立即發布；發布後約 24 小時到期。'
-        : 'Instagram Story 使用本機到點發布；發布後約 24 小時到期。')
-      : '';
-  }
-  const previewCard = document.querySelector('.copy-card');
-  if (previewCard) {
-    previewCard.dataset.platform = state.selectedPlatform;
-    const title = previewCard.querySelector('h4');
-    if (title) {
-      title.textContent = contentType === 'reel'
-        ? 'Reel 預覽'
-        : contentType === 'story'
-          ? '限時預覽'
-          : '貼文預覽';
-    }
-  }
-  const mediaWrap = $('#previewImageWrap');
-  if (mediaWrap) mediaWrap.dataset.platform = state.selectedPlatform;
-}
-
-export function renderPreviewPlatformTabs() {
-  const status = $('#previewPlatformStatus');
-  if (!status) return;
-
-  const platforms = state.platforms.length
-    ? state.platforms
-    : Object.keys(PLATFORM_NAMES).map((id) => ({ id, name: PLATFORM_NAMES[id], shortName: PLATFORM_NAMES[id], canPublish: id === 'facebook' }));
-
-  const accounts = currentClient()?.accounts || state.accounts || [];
-  const activeAccount = accounts.find((account) => account.id === state.activeTargetId);
-  if (activeAccount?.platformId) state.selectedPlatform = activeAccount.platformId;
-  if (!platforms.some((platform) => platform.id === state.selectedPlatform)) {
-    state.selectedPlatform = platforms[0]?.id || 'facebook';
-  }
-
-  const selected = platforms.find((platform) => platform.id === state.selectedPlatform);
-  renderPlatformStrategy(state.selectedPlatform);
-  if (!selected) {
-    status.hidden = false;
-    status.textContent = '請先勾選要發的平台。';
-    status.dataset.ready = 'false';
-    return;
-  }
-
-  // 平台名已在上方「目標平台」顯示，此處只補非重複提示
-  const activeTarget = (state.savedPost?.targets || []).find((target) => target.id === state.activeTargetId || target.accountId === state.activeTargetId);
-  const targetHint = activeTarget
-    ? [selected.name || PLATFORM_NAMES[selected.id] || selected.id, targetStatusLabel(activeTarget.status)].join('：')
-    : '';
-  const publishHint = selected.canPublish ? targetHint : '目前僅預覽版型，尚未串接真發';
-  status.textContent = publishHint;
-  status.hidden = !publishHint;
-  status.dataset.ready = String(Boolean(selected.canPublish));
-}
-
-export function renderSavedMedia(items = []) {
-  const gallery = $('#previewMediaGallery');
-  if (!gallery) return;
-  const normalized = items.map((item) => typeof item === 'string'
-    ? { source: item, type: isVideoPath(item) ? 'video' : 'image', name: '' }
-    : item);
-  gallery.innerHTML = normalized.map((item, index) => {
-    const source = previewMediaSrc(item.source || '');
-    const safeSource = escapeHtml(source);
-    const label = escapeHtml(item.name || ('媒體 ' + (index + 1)));
-    const isVideo = item.type === 'video' || String(item.type).startsWith('video/') || isVideoPath(source);
-    return isVideo
-      ? '<figure class="media-item"><video src="' + safeSource + '" controls playsinline preload="metadata" aria-label="' + label + '"></video></figure>'
-      : '<figure class="media-item"><img src="' + safeSource + '" alt="' + label + '" loading="lazy" /></figure>';
-  }).join('');
-  const wrap = $('#previewImageWrap');
-  if (wrap) {
-    const isEmpty = normalized.length === 0;
-    wrap.classList.toggle('empty', isEmpty);
-    wrap.hidden = isEmpty;
-  }
-}
 
 function syncArchivedEditorState() {
   const locked = state.savedPost?.status === 'archived';
@@ -453,6 +92,7 @@ function syncArchivedEditorState() {
   const panel = $('#reviewPanel');
   if (panel) panel.classList.toggle('is-archived', locked);
 }
+
 function syncApprovalActions() {
   const post = state.savedPost;
   const approvalState = post?.approvalState || 'draft';
@@ -474,26 +114,6 @@ function syncApprovalActions() {
   if (submit) submit.classList.toggle('is-hidden', !post || ['in_review', 'approved'].includes(approvalState));
   if (approve) approve.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
   if (changes) changes.classList.toggle('is-hidden', !post || approvalState !== 'in_review');
-}
-
-function confirmImmediatePublish({ platformName, accountName }) {
-  const accountBit = accountName ? `（${accountName}）` : '';
-  const text = `將立即發布到 ${platformName}${accountBit}。發布後無法從 ShrineFlow 收回。`;
-  const dialog = $('#publishConfirmDialog');
-  const summary = $('#publishConfirmSummary');
-  if (!dialog || typeof dialog.showModal !== 'function') {
-    return Promise.resolve(window.confirm(text));
-  }
-  if (summary) summary.textContent = text;
-  return new Promise((resolve) => {
-    const onClose = () => {
-      dialog.removeEventListener('close', onClose);
-      resolve(dialog.returnValue === 'confirm');
-    };
-    dialog.addEventListener('close', onClose);
-    dialog.returnValue = 'cancel';
-    dialog.showModal();
-  });
 }
 
 function renderEvergreenControls() {
@@ -595,7 +215,7 @@ async function runApprovalAction(action) {
   }
 }
 
-function syncEditorActions() {
+export function syncEditorActions() {
   const isArchived = state.savedPost?.status === 'archived';
   const isIdea = state.savedPost?.contentStage === 'idea';
   const hasSavedPost = Boolean(state.savedPost);
@@ -620,11 +240,45 @@ function syncEditorActions() {
   renderEvergreenControls();
 }
 
-export function markEditorDirty(isDirty = true) {
-  state.editorDirty = Boolean(isDirty);
-  if (state.editorDirty) scheduleAutosave();
-  else clearAutosaveTimer();
-  syncEditorActions();
+export function currentDraft() {
+  const generated = state.generated || {};
+  const contentType = fieldValue($('#createContentType')) || generated.contentType || 'post';
+  const contentTopic = $('#contentTopic')?.value?.trim() || generated.contentTopic || generated.godName || '';
+  const postType = document.querySelector('input[name="postType"]:checked')?.value || generated.postType || 'intro';
+  const extraNotes = $('#extraNotes')?.value?.trim() || generated.extraNotes || '';
+  const defaultHashtags = $('#defaultHashtags')?.value?.trim() || generated.defaultHashtags || '';
+  const facebook = $('#facebookText')?.value || generated.facebook || '';
+  const reel = $('#reelText')?.value || generated.reel || '';
+  const hashtags = ($('#hashtagsText')?.value?.trim() || '')
+    .split(/\s+/)
+    .filter(Boolean);
+  const selectedServerPaths = state.selectedMediaItems.map((item) => item.serverPath || item.source).filter(Boolean);
+  const mediaPaths = state.selectedMediaItems.length
+    ? selectedServerPaths
+    : mediaPathsOf(generated);
+  const imagePath = mediaPaths[0] || generated.imagePath || '';
+
+  const draft = {
+    ...generated,
+    clientId: state.currentClientId || 'default',
+    contentStage: state.savedPost?.contentStage || (generated.contentStage === 'idea' ? 'idea' : 'draft'),
+    contentTopic,
+    godName: contentTopic,
+    postType,
+    extraNotes,
+    defaultHashtags,
+    channel: state.selectedPlatform || 'facebook',
+    accountId: state.activeTargetId || state.accounts?.[0]?.id || 'facebook:default',
+    contentType,
+    contentSettings: readCreateContentSettings('facebook', contentType),
+    facebook,
+    reel,
+    hashtags,
+    imagePath,
+    mediaPaths,
+  };
+  draft.targets = buildTargetsPayload(draft);
+  return draft;
 }
 
 export function startNewComposer() {
@@ -748,60 +402,25 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (saveBtn) saveBtn.disabled = state.savedPost?.status === 'archived';
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
-  syncEditorActions();
   renderSavedMedia(previewItems);
-  renderPreviewPlatformTabs();
   updateLivePreview();
-  if (state.savedPost?.id) refreshVersionHistory();
-  renderEvergreenControls();
+  renderPreviewPlatformTabs();
+  syncEditorActions();
+  refreshVersionHistory();
 }
 
-export function currentDraft() {
-  const selectedServerPaths = state.selectedMediaItems.map((item) => item.serverPath).filter(Boolean);
-  const mediaPaths = state.selectedMediaItems.length
-    ? selectedServerPaths
-    : mediaPathsOf(state.generated || {});
-  const accounts = currentClient()?.accounts || state.accounts || [];
-  const activeAccount = accounts.find((account) => account.id === state.activeTargetId)
-    || accounts.find((account) => state.selectedTargetAccountIds.includes(account.id))
-    || accounts.find((account) => account.platformId === 'facebook')
-    || accounts[0]
-    || null;
-  const activeTarget = getActiveTarget();
-  const activeCopy = fieldValue($('#targetContentType')) === 'reel'
-    ? ($('#reelText')?.value || '')
-    : ($('#facebookText')?.value || '');
-  const motherFacebook = state.savedPost?.facebook || state.generated?.facebook || '';
-  const motherReel = state.savedPost?.reel || state.generated?.reel || '';
-  const activePlatform = activeAccount?.platformId || activeTarget?.platformId || 'facebook';
-  const isMotherCopy = !activeTarget?.copyOverride;
-  const contentTopic = $('#contentTopic')?.value || '';
-  const draft = {
-    ...(state.generated || {}),
-    contentStage: state.savedPost?.contentStage || state.generated?.contentStage || 'draft',
-    clientId: state.currentClientId || '',
-    contentTopic,
-    godName: contentTopic,
-    postType: document.querySelector('input[name="postType"]:checked')?.value || 'intro',
-    extraNotes: $('#extraNotes')?.value || '',
-    defaultHashtags: $('#defaultHashtags')?.value || '',
-    channel: activePlatform,
-    accountId: state.activeTargetId || activeAccount?.id || '',
-    contentType: fieldValue($('#createContentType')) || fieldValue($('#targetContentType')) || 'post',
-    contentSettings: Object.keys(readTargetContentSettings()).length
-      ? readTargetContentSettings()
-      : readCreateContentSettings(),
-    facebook: activePlatform === 'facebook' && isMotherCopy ? activeCopy : motherFacebook,
-    reel: activePlatform === 'facebook' && isMotherCopy && fieldValue($('#targetContentType')) === 'reel' ? activeCopy : motherReel,
-    hashtags: $('#hashtagsText')?.value ? $('#hashtagsText').value.split(/\s+/).map((tag) => tag.trim()).filter(Boolean) : [],
-    imagePath: mediaPaths[0] || '',
-    mediaPaths,
-  };
-  draft.targets = buildTargetsPayload(draft);
-  return draft;
-}
 export function initEditorListeners(refreshListsFn) {
   refreshListsCallback = refreshListsFn;
+  setAutosaveDependencies({
+    getDraft: currentDraft,
+    syncActions: syncEditorActions,
+    onRefreshLists: refreshListsFn,
+  });
+  setVersionDependencies({
+    onRefreshLists: refreshListsFn,
+    renderGenerated,
+  });
+
   window.addEventListener('beforeunload', (event) => {
     if (!state.editorDirty && !state.autosaveInFlight) return;
     event.preventDefault();
@@ -818,6 +437,49 @@ export function initEditorListeners(refreshListsFn) {
     if (!button || button.disabled) return;
     restoreVersion(button.dataset.restoreVersion);
   });
+
+  const topicChips = $('#topicChips');
+  topicChips?.addEventListener('click', (event) => {
+    const chip = event.target?.closest?.('.topic-chip');
+    if (!chip) return;
+    const topic = chip.dataset.topic;
+    const input = $('#contentTopic');
+    if (input && topic) {
+      input.value = topic;
+      input.focus();
+      markEditorDirty();
+    }
+  });
+
+  const copyBtn = $('#btnCopyPreviewText');
+  copyBtn?.addEventListener('click', async () => {
+    const contentType = fieldValue($('#targetContentType')) || 'post';
+    const text = contentType === 'reel'
+      ? ($('#reelText')?.value?.trim() || $('#facebookText')?.value?.trim() || '')
+      : ($('#facebookText')?.value?.trim() || '');
+    const hashtags = $('#hashtagsText')?.value?.trim() || '';
+    const fullText = [text, hashtags].filter(Boolean).join('\n\n');
+    if (!fullText) {
+      showToast('目前沒有文案可複製', 'error');
+      return;
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = fullText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      showToast('已複製貼文文案到剪貼簿 📋', 'success');
+    } catch {
+      showToast('複製失敗，請手動選取複製', 'error');
+    }
+  });
+
   const fbText = $('#facebookText');
   if (fbText) fbText.addEventListener('input', updateLivePreview);
   const reelText = $('#reelText');

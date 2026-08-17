@@ -146,7 +146,11 @@ function renderCalendarGrid() {
         key === today ? 'is-today' : '',
         calendarView === 'month' && date.getMonth() !== currentMonth ? 'is-outside' : '',
       ].filter(Boolean).join(' ');
-      return '<div class="' + classes + '" data-calendar-date="' + escapeHtml(key) + '"><span class="calendar-day-number">' + date.getDate() + '</span>'
+      return '<div class="' + classes + '" data-calendar-date="' + escapeHtml(key) + '">'
+        + '<div class="calendar-day-header">'
+        + '<span class="calendar-day-number">' + date.getDate() + '</span>'
+        + '<button class="calendar-day-add" type="button" data-schedule-quick-add="' + escapeHtml(key) + '" title="排程此日">＋</button>'
+        + '</div>'
         + '<div class="calendar-day-items">' + items.slice(0, 4).map(calendarItemMarkup).join('')
         + (items.length > 4 ? '<span class="calendar-more">+' + (items.length - 4) + '</span>' : '') + '</div></div>';
     }).join('') + '</div>';
@@ -543,4 +547,23 @@ export function initScheduleDialog(refreshListsFn) {
       }
     });
   }
+
+  const calendarGrid = $('#calendarGrid');
+  calendarGrid?.addEventListener('click', (event) => {
+    const quickAddBtn = event.target?.closest?.('[data-schedule-quick-add]');
+    if (quickAddBtn) {
+      const dateStr = quickAddBtn.dataset.scheduleQuickAdd;
+      if (dateStr) {
+        window.location.hash = '#/content/new';
+        window.setTimeout(() => {
+          const targetScheduleInput = $('#targetScheduledAt');
+          if (targetScheduleInput) {
+            targetScheduleInput.value = `${dateStr}T18:00`;
+          }
+          const topicInput = $('#contentTopic');
+          if (topicInput) topicInput.focus();
+        }, 120);
+      }
+    }
+  });
 }
