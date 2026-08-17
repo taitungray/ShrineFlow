@@ -4,6 +4,8 @@
 
 /* Panel Container */
 .panel {
+  min-width: 0;
+  max-width: 100%;
   padding: 28px;
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -353,6 +355,7 @@ h4 {
     padding: 16px 12px;
     min-height: 0;
     border-radius: var(--r-md);
+    overflow-wrap: break-word;
   }
 
   .form-group-card {
@@ -361,9 +364,21 @@ h4 {
   }
 
   .panel-heading {
+    align-items: stretch;
     gap: 8px;
     margin-bottom: 10px;
     padding-bottom: 8px;
+  }
+
+  .panel-heading > .btn-secondary,
+  .panel-heading > .btn-dark,
+  .panel-heading > .primary-button,
+  .panel-heading > .btn-text,
+  .panel-heading > a,
+  .panel-heading > .badge {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
   }
 
   .record-card {

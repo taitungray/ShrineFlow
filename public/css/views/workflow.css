@@ -480,6 +480,17 @@ a.content-card-action {
     min-height: 44px;
   }
 
+  .content-filter-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .content-filter-pills .radio-pill {
+    flex: none;
+    width: 100%;
+  }
+
   .content-filter-pills .radio-pill span {
     min-height: 40px;
     padding: 8px 10px;
@@ -776,8 +787,31 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 }
 
 @media (max-width: 1099px) {
+  html:has(#composerPanel:not(.is-hidden)) {
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+
+  body:has(#composerPanel:not(.is-hidden)) {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+
+  body:has(#composerPanel:not(.is-hidden)) .shell,
+  body:has(#composerPanel:not(.is-hidden)) .workspace-grid,
+  body:has(#composerPanel:not(.is-hidden)) .composer-panel {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
   .composer-workspace {
     grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
   }
 
   .composer-editor-pane,
@@ -802,8 +836,63 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 }
 
 @media (max-width: 767px) {
+  html:has(#composerPanel:not(.is-hidden)) {
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+
+  body:has(#composerPanel:not(.is-hidden)) {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow-x: clip;
+    overflow-y: auto;
+    padding-bottom: 0;
+  }
+
+  body:has(#composerPanel:not(.is-hidden)) .shell,
+  body:has(#composerPanel:not(.is-hidden)) .workspace-grid {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    flex: none;
+  }
+
+  body:has(#composerPanel:not(.is-hidden)) .composer-panel {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    flex: none;
+  }
+
   .composer-panel {
-    padding: 14px;
+    padding: 14px 12px 0;
+  }
+
+  .composer-workspace {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    flex: none;
+    padding-bottom: 96px;
+  }
+
+  .composer-editor-pane,
+  .composer-preview-pane {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .composer-preview-pane .review-preview {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
   }
 
   .composer-shell-header {
@@ -826,6 +915,25 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 
   .composer-panel .form-group-card {
     margin-bottom: 14px;
+  }
+
+  .composer-dock {
+    position: fixed;
+    right: 10px;
+    bottom: 0;
+    left: 10px;
+    z-index: 30;
+    margin: 0;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    border-radius: var(--r-md) var(--r-md) 0 0;
+    background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .composer-actions > button {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 44px;
   }
 
   body:has(#composerPanel:not(.is-hidden)) .mobile-bottom-nav {

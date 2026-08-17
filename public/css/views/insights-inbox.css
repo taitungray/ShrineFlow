@@ -482,6 +482,28 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .inbox-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inbox-toolbar .radio-pill-group,
+  .inbox-toolbar .helper,
+  .inbox-toolbar .btn-test {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inbox-toolbar .btn-test {
+    min-height: 44px;
+  }
+
+  .inbox-platform-card,
+  .error-log-list {
+    min-height: 0;
+  }
+
   .saved-reply-row {
     flex-direction: column;
     align-items: stretch;

@@ -313,7 +313,8 @@
     order: 2;
     min-width: 0;
     max-width: 100%;
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
   }
 
   .review-editor {

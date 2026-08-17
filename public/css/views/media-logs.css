@@ -27,8 +27,16 @@
   flex: 1 1 360px;
 }
 
-.module-filter-pills {
+.radio-pill-group.module-filter-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.75rem, 1fr));
   min-height: 42px;
+}
+
+.radio-pill-group.module-filter-pills .radio-pill {
+  flex: none;
+  width: auto;
+  min-width: 0;
 }
 
 .content-toolbar .field,
@@ -129,17 +137,80 @@ button.module-summary-card:focus-visible {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+  align-content: start;
 }
 
-.media-picker-dialog {
+.module-dialog.media-picker-dialog,
+.module-dialog.media-picker-dialog[open] {
+  display: flex;
+  flex-direction: column;
   width: min(760px, calc(100% - 32px));
+  height: min(88dvh, 760px);
+  max-height: min(88dvh, 760px);
+  overflow: hidden;
+}
+
+.module-dialog.media-picker-dialog form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.module-dialog.media-picker-dialog .dialog-heading,
+.module-dialog.media-picker-dialog .module-toolbar,
+.module-dialog.media-picker-dialog .module-summary,
+.module-dialog.media-picker-dialog .dialog-actions {
+  flex: 0 0 auto;
+}
+
+.module-dialog.media-picker-dialog .module-search-field,
+.module-dialog.media-picker-dialog .module-filter-field {
+  flex: 0 0 auto;
+}
+
+.module-dialog.media-picker-dialog .module-toolbar input {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.media-picker-scroll {
+  flex: 1 1 0%;
+  min-height: 12rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .media-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  min-height: 180px;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
+.module-dialog.media-picker-dialog .module-toolbar .field {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.module-dialog.media-picker-dialog .radio-pill-group.module-filter-pills {
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.module-dialog.media-picker-dialog .dialog-actions {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  background: var(--bg-card);
 }
 
 .media-picker-empty {
@@ -148,6 +219,8 @@ button.module-summary-card:focus-visible {
 
 .media-picker-card {
   display: flex;
+  align-self: start;
+  height: auto;
   min-width: 0;
   min-height: 44px;
   flex-direction: column;
@@ -180,7 +253,13 @@ button.module-summary-card:focus-visible {
 
 .media-picker-preview {
   position: relative;
-  aspect-ratio: 1;
+  display: block;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  min-height: 72px;
   overflow: hidden;
   border-radius: 8px;
   background: var(--bg-subtle);
@@ -573,6 +652,26 @@ button.module-summary-card:focus-visible {
     width: 100%;
   }
 
+  .module-toolbar .field,
+  .content-toolbar .field,
+  .help-toolbar .field,
+  .insights-toolbar .field {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .module-toolbar .radio-pill-group,
+  .content-toolbar .radio-pill-group,
+  .help-toolbar .radio-pill-group,
+  .insights-toolbar .radio-pill-group,
+  .module-toolbar input,
+  .content-toolbar input,
+  .help-toolbar input,
+  .insights-toolbar input {
+    flex: 0 1 auto;
+    width: 100%;
+  }
+
   .module-filter-pills {
     justify-content: flex-start;
   }
@@ -586,6 +685,27 @@ button.module-summary-card:focus-visible {
   .platform-connection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+    align-content: start;
+  }
+
+  .module-dialog.media-picker-dialog,
+  .module-dialog.media-picker-dialog[open] {
+    width: calc(100% - 16px);
+    height: calc(100dvh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .module-dialog.media-picker-dialog form {
+    padding: 18px 14px 0;
+  }
+
+  .module-dialog.media-picker-dialog .dialog-actions {
+    margin: 0 -14px 0;
+    padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .media-picker-preview {
+    min-height: 96px;
   }
 
   .media-library-preview {

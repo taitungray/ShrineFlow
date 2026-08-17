@@ -204,6 +204,7 @@
 .module-dialog form {
   position: relative;
   display: grid;
+  align-content: start;
   gap: 14px;
   max-height: min(88vh, 760px);
   padding: 28px;

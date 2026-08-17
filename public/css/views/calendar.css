@@ -31,6 +31,9 @@
 }
 
 .calendar-grid {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-bottom: 20px;
 }
 
@@ -39,6 +42,9 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .calendar-weekdays {
@@ -46,6 +52,8 @@
 }
 
 .calendar-weekdays span {
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-tertiary);
   font-size: 0.68rem;
   font-weight: 800;
@@ -53,8 +61,10 @@
 }
 
 .calendar-day {
+  min-width: 0;
   min-height: 124px;
   padding: 8px;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--bg-input);
@@ -123,6 +133,8 @@
   display: grid;
   gap: 1px;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 4px 5px;
   border: 0;
   border-left: 3px solid var(--accent);
@@ -223,25 +235,67 @@
 }
 
 @media (max-width: 767px) {
+  .calendar-toolbar,
+  .calendar-month-nav,
+  .calendar-view-switch {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .calendar-toolbar {
     align-items: stretch;
     flex-direction: column;
     gap: 10px;
   }
 
-  .calendar-month-nav strong {
+  .calendar-month-nav {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
-    flex: 1;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .calendar-month-nav .btn-icon {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+
+  .calendar-month-nav .btn-text {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 8px 10px;
+  }
+
+  .calendar-month-nav strong {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
     font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .calendar-view-switch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
     justify-content: stretch;
-    width: 100%;
   }
 
   .calendar-view-switch .radio-pill {
-    flex: 1 1 0;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .calendar-view-switch .radio-pill span {
+    padding: 8px 4px;
+    font-size: 0.82rem;
   }
 
   .calendar-weekdays,
@@ -249,14 +303,54 @@
     gap: 3px;
   }
 
+  .calendar-weekdays span {
+    font-size: 0.72rem;
+  }
+
   .calendar-day {
-    min-height: 64px;
-    padding: 4px;
+    min-height: 52px;
+    padding: 4px 2px;
     border-radius: var(--r-sm);
   }
 
   .calendar-day-number {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
+  }
+
+  .calendar-day-add {
+    display: none;
+  }
+
+  .calendar-day-items {
+    gap: 2px;
+    margin-top: 3px;
+  }
+
+  /* 月曆格只留色條，長標題改看下方行程列表，避免 7 欄被 nowrap 撐出畫面 */
+  .calendar-item {
+    display: block;
+    height: 5px;
+    padding: 0;
+    border-left-width: 0;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .calendar-item-platform,
+  .calendar-item-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .calendar-more {
+    display: block;
+    overflow: hidden;
+    font-size: 0.58rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .calendar-event {
@@ -266,7 +360,7 @@
   }
 
   .calendar-grid-week .calendar-day {
-    min-height: 100px;
+    min-height: 72px;
   }
 
   #schedulePanel[data-calendar-view="month"] .calendar-agenda,

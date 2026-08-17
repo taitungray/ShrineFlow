@@ -276,12 +276,21 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .team-section {
+    min-height: 0;
+  }
+
   .team-section-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     flex-wrap: wrap;
   }
 
   .team-section-tab {
-    flex: 1 1 120px;
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    padding: 8px 6px;
   }
 
   .team-member-card {

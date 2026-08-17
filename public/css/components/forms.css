@@ -204,6 +204,9 @@ input.datetime-24h-native,
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .radio-pill {
@@ -544,6 +547,25 @@ input.datetime-24h-native,
     gap: 10px;
   }
 
+  .settings-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
+    gap: 6px;
+  }
+
+  .settings-tab {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: 0.75rem;
+  }
+
+  .settings-pages {
+    min-height: 0;
+  }
+
   .field {
     margin-bottom: 12px;
   }
@@ -574,13 +596,15 @@ input.datetime-24h-native,
   }
 
   .radio-pill {
-    flex: 1 1 calc(50% - 4px);
+    flex: 1 1 5.5rem;
   }
 
   .radio-pill span {
     min-height: 42px;
     padding: 8px 10px;
+    overflow-wrap: anywhere;
     font-size: 0.8rem;
+    text-align: center;
   }
 }
 

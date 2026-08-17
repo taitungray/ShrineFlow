@@ -5,6 +5,7 @@
   position: absolute;
   width: 1px;
   height: 1px;
+  max-width: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
@@ -13,13 +14,17 @@
   border: 0;
 }
 
+.visually-hidden * {
+  max-width: 1px;
+}
+
 html {
   overflow-y: scroll;
   overflow-x: hidden;
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
 }
 
 *, *::before, *::after {
@@ -29,7 +34,7 @@ html {
 
 body {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
   overflow-x: hidden;
   color: var(--text-secondary);
   background-color: var(--bg-app);
@@ -59,3 +64,15 @@ body::before {
 }
 .ambient-one { top: -8rem; left: -8rem; width: 28rem; height: 28rem; background: #e8c9b6; }
 .ambient-two { right: -10rem; bottom: -6rem; width: 26rem; height: 26rem; background: #d99a4e; }
+
+@media (max-width: 767px) {
+  html {
+    overflow-x: clip;
+    overflow-y: auto;
+    scrollbar-gutter: auto;
+  }
+
+  body {
+    overflow-x: clip;
+  }
+}

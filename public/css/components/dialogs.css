@@ -177,6 +177,28 @@ dialog:not([open]) {
   font-weight: 600;
 }
 
+@media (max-width: 767px) {
+  .schedule-dialog,
+  .module-dialog,
+  .shortcuts-dialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .schedule-dialog form {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .schedule-dialog-body {
+    padding: 18px 16px 12px;
+  }
+
+  .schedule-dialog-actions,
+  .dialog-actions {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
 kbd {
   display: inline-block;
   padding: 3px 8px;

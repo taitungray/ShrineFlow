@@ -922,9 +922,14 @@
     font-size: 1.1rem;
   }
 
+  .page-heading {
+    display: block;
+    min-width: 0;
+  }
+
   .page-heading h1 {
     overflow: hidden;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -941,14 +946,17 @@
   .client-switcher {
     width: auto;
     min-width: 0;
-    max-width: 140px;
-    flex: 1 1 auto;
+    max-width: 10rem;
+    flex: 1 1 7.5rem;
   }
 
   .client-switcher select {
     min-height: 40px;
     padding: 6px 24px 6px 8px;
+    overflow: hidden;
     font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .status-cluster,
@@ -959,14 +967,34 @@
   .shell {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
     margin: 0;
-    padding: 12px 10px calc(24px + env(safe-area-inset-bottom));
+    padding: 10px 10px 12px;
   }
 
   .workspace-grid {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    align-content: start;
     gap: 12px;
+  }
+
+  .scaffold-panel {
+    min-height: 0;
+  }
+
+  .help-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .help-toolbar .field,
+  .help-search-field {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
   }
 
   .overview-heading {
@@ -1079,6 +1107,10 @@
 
   .mobile-bottom-nav .mobile-nav-create small {
     color: var(--brand);
+  }
+
+  .help-article-fold > summary {
+    min-height: 44px;
   }
 }
 
