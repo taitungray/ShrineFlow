@@ -1,20 +1,20 @@
-import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js?v=0.6.38';
-import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js?v=0.6.38';
-import { api } from './modules/api.js?v=0.6.38';
-import { initTabs, setActiveView } from './modules/tabs.js?v=0.6.38';
+import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js';
+import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js';
+import { api } from './modules/api.js';
+import { initTabs, setActiveView } from './modules/tabs.js';
 import {
   renderPlatformOptions,
   renderAccountOptions,
   renderContentTypeOptions,
   renderCreatePublishSpec,
   renderCreateContentSettings,
-} from './modules/platform-ui.js?v=0.6.38';
+} from './modules/platform-ui.js';
 import {
   previewSelectedMedia,
   bindUploadReordering,
-} from './modules/upload.js?v=0.6.38';
-import { buildGenerateMediaPayload } from './modules/media-picker.js?v=0.6.38';
-import { initMediaPicker } from './modules/media-picker-ui.js?v=0.6.38';
+} from './modules/upload.js';
+import { buildGenerateMediaPayload } from './modules/media-picker.js';
+import { initMediaPicker } from './modules/media-picker-ui.js';
 import {
   renderPreviewPlatformTabs,
   updateLivePreview,
@@ -22,43 +22,43 @@ import {
   renderGenerated,
   initEditorListeners,
   startNewComposer,
-} from './modules/editor.js?v=0.6.38';
-import { renderPosts, initContentFilters } from './modules/drafts.js?v=0.6.38';
-import { initBulkImportListeners } from './modules/bulk-import.js?v=0.6.38';
-import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js?v=0.6.38';
-import { renderOverview } from './modules/overview.js?v=0.6.38';
-import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js?v=0.6.38';
-import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js?v=0.6.38';
-import { renderPlatformConnections } from './modules/platform-connections.js?v=0.6.38';
-import { renderApiStatus } from './modules/api-status.js?v=0.6.38';
-import { renderTemplates, initTemplateManager } from './modules/templates.js?v=0.6.38';
-import { renderCampaigns, initCampaignManager } from './modules/campaigns.js?v=0.6.38';
-import { renderInsights, initInsightsListeners } from './modules/insights.js?v=0.6.38';
-import { renderInbox, initInboxListeners } from './modules/inbox.js?v=0.6.38';
-import { loadSettings, initSettingsListeners } from './modules/settings.js?v=0.6.38';
-import { initSystemTools } from './modules/system.js?v=0.6.38';
-import { initErrorLogs } from './modules/error-log-page.js?v=0.6.38';
-import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js?v=0.6.38';
-import { initClientErrorReporter } from './modules/client-error-reporter.js?v=0.6.38';
-import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js?v=0.6.38';
-import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js?v=0.6.38';
-import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js?v=0.6.38';
-import { initKeyboardShortcuts } from './modules/shortcuts.js?v=0.6.38';
-import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js?v=0.6.38';
-import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js?v=0.6.38';
-import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js?v=0.6.38';
-import { initHelp } from './modules/help.js?v=0.6.38';
-import { initDateTime24h } from './modules/datetime-24h.js?v=0.6.38';
-import { renderBestTimes } from './modules/best-times.js?v=0.6.38';
-import { renderRemoteSchedule } from './modules/remote-schedule.js?v=0.6.38';
+} from './modules/editor.js';
+import { renderPosts, initContentFilters } from './modules/drafts.js';
+import { initBulkImportListeners } from './modules/bulk-import.js';
+import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js';
+import { renderOverview } from './modules/overview.js';
+import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
+import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js';
+import { renderPlatformConnections } from './modules/platform-connections.js';
+import { renderApiStatus } from './modules/api-status.js';
+import { renderTemplates, initTemplateManager } from './modules/templates.js';
+import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
+import { renderInsights, initInsightsListeners } from './modules/insights.js';
+import { renderInbox, initInboxListeners } from './modules/inbox.js';
+import { loadSettings, initSettingsListeners } from './modules/settings.js';
+import { initSystemTools } from './modules/system.js';
+import { initErrorLogs } from './modules/error-log-page.js';
+import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js';
+import { initClientErrorReporter } from './modules/client-error-reporter.js';
+import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
+import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
+import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js';
+import { initKeyboardShortcuts } from './modules/shortcuts.js';
+import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js';
+import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js';
+import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
+import { initHelp } from './modules/help.js';
+import { initDateTime24h } from './modules/datetime-24h.js';
+import { renderBestTimes } from './modules/best-times.js';
+import { renderRemoteSchedule } from './modules/remote-schedule.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
   const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
-    api(clientQuery('/api/posts')),
-    api(clientQuery('/api/schedule')),
-    api(clientQuery('/api/templates')),
-    api(clientQuery('/api/campaigns')),
+    api(clientQuery('/api/posts')).then((value) => (Array.isArray(value) ? value : [])),
+    api(clientQuery('/api/schedule')).then((value) => (Array.isArray(value) ? value : [])),
+    api(clientQuery('/api/templates')).then((value) => (Array.isArray(value) ? value : [])),
+    api(clientQuery('/api/campaigns')).then((value) => (Array.isArray(value) ? value : [])),
     api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
@@ -75,8 +75,8 @@ async function refreshLists() {
   state.insights = insights;
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
-  state.notifications = notifications;
-  state.savedReplies = savedReplies;
+  state.notifications = Array.isArray(notifications) ? notifications : [];
+  state.savedReplies = Array.isArray(savedReplies) ? savedReplies : [];
   state.crisisPause = crisisPause;
   state.bestTimes = bestTimes;
   state.remoteSchedule = remoteSchedule;
@@ -125,92 +125,151 @@ function setLoading(isLoading) {
   button.innerHTML = isLoading ? '<span class="spinner"></span> AI 讀取媒體中…' : '<span>✦</span> AI 產生文案';
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+async function resolveClientsFromConfig(config) {
+  let clients = asArray(config?.clients);
+  if (clients.length) return clients;
+  try {
+    clients = asArray(await api('/api/clients'));
+  } catch (error) {
+    console.warn('fallback /api/clients failed:', error);
+  }
+  return clients;
+}
+
 async function loadData() {
   const config = await api('/api/config');
-
-  state.config = config;
-  state.clients = config.clients || [];
-  if (!state.currentClientId || !state.clients.some((client) => client.id === state.currentClientId)) {
-    setCurrentClientId(state.clients[0]?.id || '');
-  }
-  renderClientSwitcher();
-  renderUserIdentity();
-  applyPermissionUi();
-
-  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
-    api(clientQuery('/api/posts')),
-    api(clientQuery('/api/schedule')),
-    api(clientQuery('/api/templates')),
-    api(clientQuery('/api/campaigns')),
-    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
-    api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
-    api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
-    api(clientQuery('/api/saved-replies')).catch(() => []),
-    api(clientQuery('/api/crisis-pause')).catch(() => null),
-    api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
-    api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
-  ]);
-
-  const facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
-    configured: config.facebookConfigured,
+  let posts = [];
+  let schedule = [];
+  let templates = [];
+  let campaigns = [];
+  let insights = { status: 'unavailable', sources: [] };
+  let inbox = { status: 'unavailable', sources: [] };
+  let notifications = [];
+  let savedReplies = [];
+  let crisisPause = null;
+  let bestTimes = { status: 'unavailable', slots: [] };
+  let remoteSchedule = { status: 'remote_schedule_unavailable', sources: [] };
+  let repurposeCandidates = { status: 'insufficient_data', candidates: [] };
+  let facebookStatus = {
+    configured: Boolean(config.facebookConfigured),
     connected: false,
-    error: error.message,
-  }));
-  state.facebookStatus = facebookStatus;
+    error: '',
+  };
 
-  state.posts = posts;
-  state.schedule = schedule;
-  state.templates = templates;
-  state.campaigns = campaigns;
-  state.insights = insights;
-  state.insightsScope = insights.scope || state.insightsScope || 'account';
-  state.inbox = inbox;
-  state.notifications = notifications;
-  state.savedReplies = savedReplies;
-  state.crisisPause = crisisPause;
-  state.bestTimes = bestTimes;
-  state.remoteSchedule = remoteSchedule;
-  state.repurposeCandidates = repurposeCandidates;
-  state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
-  state.platforms = config.publishingPlatforms || [];
-  applyClientAccounts();
-  await loadQueueSettings();
-  await loadCrisisPause();
-  loadClientFacebookFields();
+  try {
+    state.config = config;
+    state.clients = await resolveClientsFromConfig(config);
+    if (!state.currentClientId || !state.clients.some((client) => client.id === state.currentClientId)) {
+      setCurrentClientId(state.clients[0]?.id || '');
+    }
+    renderClientSwitcher();
+    renderUserIdentity();
+    applyPermissionUi();
 
-  if (config.version && $('#appVersion')) {
-    $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
-  }
+    const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
+    [
+      posts,
+      schedule,
+      templates,
+      campaigns,
+      insights,
+      inbox,
+      notifications,
+      savedReplies,
+      crisisPause,
+      bestTimes,
+      remoteSchedule,
+      repurposeCandidates,
+    ] = await Promise.all([
+      api(clientQuery('/api/posts')).then(asArray),
+      api(clientQuery('/api/schedule')).then(asArray),
+      api(clientQuery('/api/templates')).then(asArray),
+      api(clientQuery('/api/campaigns')).then(asArray),
+      api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
+      api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
+      api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
+      api(clientQuery('/api/saved-replies')).catch(() => []),
+      api(clientQuery('/api/crisis-pause')).catch(() => null),
+      api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
+      api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
+      api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+    ]);
 
-  renderPreviewPlatformTabs();
-  renderPlatformOptions(config.publishingPlatforms);
-  renderContentTypeOptions('facebook');
-  renderCreatePublishSpec();
-  renderPosts();
-  renderSchedule();
-  renderOverview();
-  renderMediaLibrary();
-  renderPublishingLogs();
-  renderPlatformConnections();
-  renderQueueSettings();
-  renderCrisisPause();
-  renderTemplates();
-  renderCampaigns();
-  renderInsights();
-  renderInbox();
-  renderBestTimes();
-  renderRemoteSchedule();
-  await loadTeamManagement();
-  await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
+    facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
+      configured: config.facebookConfigured,
+      connected: false,
+      error: error.message,
+    }));
 
-  renderApiStatus();
+    if (!state.clients.length && posts.length) {
+      const clientIds = [...new Set(posts.map((post) => post.clientId).filter(Boolean))];
+      if (clientIds.length) {
+        showToast('品牌列表異常，已用貼文品牌暫時還原。請重新整理。', 'error');
+        state.clients = clientIds.map((id) => ({ id, name: id, accounts: [] }));
+        if (!state.currentClientId) setCurrentClientId(clientIds[0]);
+        renderClientSwitcher();
+      }
+    }
+  } catch (error) {
+    showToast(error.message || '載入資料失敗', 'error');
+  } finally {
+    state.posts = asArray(posts);
+    state.schedule = asArray(schedule);
+    state.templates = asArray(templates);
+    state.campaigns = asArray(campaigns);
+    state.insights = insights;
+    state.insightsScope = insights.scope || state.insightsScope || 'account';
+    state.inbox = inbox;
+    state.notifications = asArray(notifications);
+    state.savedReplies = asArray(savedReplies);
+    state.crisisPause = crisisPause;
+    state.bestTimes = bestTimes;
+    state.remoteSchedule = remoteSchedule;
+    state.repurposeCandidates = repurposeCandidates;
+    state.facebookStatus = facebookStatus;
+    state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
+    state.platforms = asArray(config.publishingPlatforms);
+    applyClientAccounts();
+    try { await loadQueueSettings(); } catch { /* keep UI usable */ }
+    try { await loadCrisisPause(); } catch { /* keep UI usable */ }
+    loadClientFacebookFields();
 
-  if (config.aiConfigured) {
-    setFormMessage('先選品牌，再建立內容；每個平台都能各自覆寫與排程。');
-  } else {
-    setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
+    if (config.version && $('#appVersion')) {
+      $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
+    }
+
+    renderPreviewPlatformTabs();
+    renderPlatformOptions(config.publishingPlatforms);
+    renderContentTypeOptions('facebook');
+    renderCreatePublishSpec();
+    renderPosts();
+    renderSchedule();
+    renderOverview();
+    renderMediaLibrary();
+    renderPublishingLogs();
+    renderPlatformConnections();
+    renderQueueSettings();
+    renderCrisisPause();
+    renderTemplates();
+    renderCampaigns();
+    renderInsights();
+    renderInbox();
+    renderBestTimes();
+    renderRemoteSchedule();
+    try { await loadTeamManagement(); } catch { /* keep UI usable */ }
+    await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
+
+    renderApiStatus();
+
+    if (config.aiConfigured) {
+      setFormMessage('先選品牌，再建立內容；每個平台都能各自覆寫與排程。');
+    } else {
+      setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
+    }
   }
 }
 

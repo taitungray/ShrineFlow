@@ -79,6 +79,7 @@ export function hasPermission(permission) {
 export function setCurrentClientId(clientId) {
   state.currentClientId = clientId || '';
   if (clientId) localStorage.setItem('shrineflow.currentClientId', clientId);
+  else localStorage.removeItem('shrineflow.currentClientId');
 }
 
 export function clientQuery(path) {

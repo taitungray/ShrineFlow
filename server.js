@@ -98,6 +98,7 @@ let facebookPublisher;
 let publishingPlatforms;
 let publishingAccounts;
 let scheduler;
+let aiService;
 
 async function resolveAccount({ clientId, accountId, account }) {
   if (account) return account;
@@ -229,7 +230,8 @@ async function initServices() {
 }
 
 await initServices();
-const aiService = createAiService();
+aiService = createAiService();
+aiService.reloadConfig();
 const authService = createEnvironmentAuthService({ repositories, securityMonitor });
 assertProductionAuthEnabled({ authEnabled: authService.enabled });
 if (!authService.enabled) {

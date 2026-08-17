@@ -66,14 +66,16 @@ html = html.replace(/<span class="version-tag" id="authAppVersion">[^<]*<\/span>
 fs.writeFileSync(htmlPath, html, 'utf8');
 console.log(`[OK] public/index.html (?v=${version})`);
 
-// 4. Update all imports in public/app.js
+// 4. Update public/app.js imports WITHOUT ?v= on submodule paths.
+// ESM treats `./modules/state.js` and `./modules/state.js?v=x` as different modules.
+// Cache-bust only the entry (`index.html` → app.js?v=...); keep one shared state singleton.
 const appJsPath = path.join(__dirname, '../public/app.js');
 let appJs = fs.readFileSync(appJsPath, 'utf8');
-appJs = appJs.replace(/from\s+['"]\.\/modules\/([a-zA-Z0-9_.-]+)\.js(?:\?v=[^'"]*)?['"]/g, `from './modules/$1.js?v=${version}'`);
+appJs = appJs.replace(/from\s+['"]\.\/modules\/([a-zA-Z0-9_.-]+)\.js(?:\?v=[^'"]*)?['"]/g, `from './modules/$1.js'`);
 fs.writeFileSync(appJsPath, appJs, 'utf8');
-console.log(`[OK] public/app.js (all submodules ?v=${version})`);
+console.log(`[OK] public/app.js (submodule imports are unversioned ESM singletons)`);
 
-// 5. Clean intra-module imports inside public/modules/*.js (standard singletons for ESM)
+// 5. Clean intra-module imports inside public/modules/*.js (same singleton rule)
 const modulesDir = path.join(__dirname, '../public/modules');
 const moduleFiles = fs.readdirSync(modulesDir).filter((f) => f.endsWith('.js'));
 let cleanModuleCount = 0;
