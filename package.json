@@ -1,6 +1,6 @@
 {
   "name": "shrineflow",
-  "version": "0.6.36",
+  "version": "0.6.37",
   "private": true,
   "description": "本機 JSON 版多平台社群發布工作台：建立內容、平台預覽與排程資料。",
   "type": "module",
@@ -10,6 +10,7 @@
     "dev": "node --watch server.js",
     "test": "node --test",
     "version:sync": "node scripts/update-version.js",
+    "version:bump": "node scripts/bump-version.js",
     "css:split": "node scripts/split-css.js",
     "migrate:firestore": "node scripts/migrate-json-to-firestore.js",
     "migrate:media:r2": "node scripts/migrate-uploads-to-r2.js"
