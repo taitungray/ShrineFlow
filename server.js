@@ -263,16 +263,12 @@ app.use((request, response, next) => {
 
 const staticOptions = {
   setHeaders: (response, filePath) => {
-    if (process.env.NODE_ENV !== 'production') {
-      response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
+      response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
       response.setHeader('Pragma', 'no-cache');
       response.setHeader('Expires', '0');
     } else {
-      if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
-        response.setHeader('Cache-Control', 'no-cache, must-revalidate');
-      } else {
-        response.setHeader('Cache-Control', 'public, max-age=86400');
-      }
+      response.setHeader('Cache-Control', 'public, max-age=86400');
     }
   },
 };
