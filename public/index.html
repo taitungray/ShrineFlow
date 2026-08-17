@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.30" />
+    <link rel="stylesheet" href="/style.css?v=0.6.31" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -242,12 +242,19 @@
               <button class="btn-text" id="btnRestoreMotherCopy" type="button" aria-label="還原母稿" disabled>還原母稿</button>
             </div>
             <div class="field">
-              <label for="hashtagsText" class="field-label">Hashtag</label>
-              <input id="hashtagsText" type="text" value="#品牌內容 #社群經營 #內容行銷" />
+              <label for="hashtagsText" class="field-label">Hashtags 標籤 <span class="field-optional">(選填)</span></label>
+              <input id="hashtagsText" type="text" placeholder="選填，多個標籤請用空格隔開，如 #品牌名稱 #新品" value="" />
+              <div class="hashtag-chips" id="quickHashtagChips" role="group" aria-label="快捷標籤">
+                <button type="button" class="hashtag-chip" data-tag="#新品上市">＋ #新品上市</button>
+                <button type="button" class="hashtag-chip" data-tag="#限時特惠">＋ #限時特惠</button>
+                <button type="button" class="hashtag-chip" data-tag="#熱門推薦">＋ #熱門推薦</button>
+                <button type="button" class="hashtag-chip" data-tag="#門市資訊">＋ #門市資訊</button>
+                <button type="button" class="hashtag-chip" data-tag="#抽獎活動">＋ #抽獎活動</button>
+              </div>
             </div>
             <div class="field visually-hidden">
               <label for="defaultHashtags" class="field-label">AI Hashtag</label>
-              <input id="defaultHashtags" name="defaultHashtags" type="text" value="#品牌內容 #社群經營 #內容行銷" />
+              <input id="defaultHashtags" name="defaultHashtags" type="text" value="" />
             </div>
 
           <div class="composer-generate-action">
@@ -350,7 +357,10 @@
               <article class="copy-card">
                 <div class="copy-card-header">
                   <h4>貼文預覽</h4>
-                  <button type="button" class="btn-text copy-preview-btn" id="btnCopyPreviewText" title="複製貼文文案到剪貼簿">📋 複製文案</button>
+                  <div class="preview-header-actions">
+                    <button type="button" class="btn-text copy-preview-btn" id="btnDownloadMedia" title="下載此貼文素材圖片或影片">📥 下載素材</button>
+                    <button type="button" class="btn-text copy-preview-btn" id="btnCopyPreviewText" title="複製貼文文案到剪貼簿">📋 複製文案</button>
+                  </div>
                 </div>
                 <div id="facebookPreview" class="copy-text">尚未產生文案</div>
                 <p id="hashtagsPreview" class="hashtags"></p>
@@ -1389,6 +1399,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.30" type="module"></script>
+    <script src="/app.js?v=0.6.31" type="module"></script>
   </body>
 </html>

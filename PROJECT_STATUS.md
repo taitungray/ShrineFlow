@@ -1,6 +1,6 @@
 # ShrineFlow：專案狀態與後續規劃
 
-更新日期：2026-08-17（v0.6.30；CSS 組件細粒度拆分、JS 編輯器子模組解耦、快捷鍵模組抽離、遞迴樣式載入測試）
+更新日期：2026-08-17（v0.6.31；移除硬編碼預設標籤、快捷標籤點擊追加、剪貼簿圖片貼上、預覽區打包下載素材）
 
 ## 專案定位
 
@@ -21,10 +21,10 @@
 
 - [x] 圖片／影片可選填；沒有素材也可以產生文案。
 - [x] 最多 10 個媒體檔案，單檔 20MB。
-- [x] 支援拖曳上傳、檔案選擇與媒體預覽。
+- [x] 支援拖曳上傳、檔案選擇、媒體預覽與剪貼簿圖片直接貼上 (`Ctrl+V`)。
 - [x] 媒體卡片可拖曳或用上下按鈕調整順序。
 - [x] 產文時將媒體順序保存到 `mediaPaths`。
-- [x] 預設 Hashtag 可在產文前修改，預設為 `#品牌內容 #社群經營 #內容行銷`。
+- [x] 移除硬編碼 Hashtags，支援商戶自訂預設標籤與常用標籤快捷晶片（Quick Hashtag Chips）。
 - [x] Facebook 文案與 Reel 文案自動分段。
 - [x] 主題靈感快捷標籤（Topic Quick Chips）：提供新品、活動、公告、日常、祝福等一鍵帶入主題。
 - [x] Gemini 503／429 等暫時性錯誤會自動退避重試並切換備援模型。
@@ -38,7 +38,7 @@
 - [x] UI-4：素材庫、發布紀錄、平台連線與設定入口。
 - [x] UI-5：模板建立／編輯／套用、Campaign 內容關聯與發布進度，以及不虛構數據的 Insights／Inbox 狀態頁。
 - [x] 編輯與即時預覽在同一個畫面，避免反覆切換。
-- [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示，提供一鍵複製貼文文案按鈕。
+- [x] 預覽頁可切換 Facebook、Instagram、Threads 版型與平台策略提示，提供「一鍵複製貼文文案」與「一鍵下載素材包」按鈕。
 - [x] 即時動態字數統計徽章（Real-Time Character Counter）：針對 FB (120-250字)、Reel (50-90字)、Threads (500字)、IG (2200字) 動態提示字數與警戒色。
 - [x] Target 平台標籤狀態指示圓點（🟢 沿用母稿 / 🟠 已客製覆寫）。
 - [x] 桌機左右布局、平板單欄、手機單欄與 44px 觸控區域。
@@ -46,7 +46,7 @@
 - [x] CSS 模組化與細粒度拆分（`public/css/`）：將龐大樣式檔細拆為 Tokens、Base、Layout、Components（按鈕 buttons、表單 forms、卡片 cards、彈窗 dialogs、反饋 feedback）與 8 個業務 View 模組，兼具零建置負擔（Zero-build）與極致清晰的維護性。
 - [x] 前端 JS 核心模組細粒度解耦（`public/modules/`）：將 1,000+ 行編輯器解耦拆分為 `editor-autosave.js`（自動儲存與快照）、`editor-versions.js`（版本歷史）、`editor-preview.js`（預覽與字數計算）與 `shortcuts.js`（快捷鍵監聽）。
 - [x] 靜態資源生產快取標頭優化：`server.js` 在 production 模式下對 HTML 設 `no-cache`，對靜態資源設置 HTTP 86400 快取，開發模式維持 `no-store`。
-- [x] 鍵盤快捷鍵（Power-user Shortcuts）：支援 `Ctrl/Cmd + S` 快速儲存草稿、`Ctrl/Cmd + Enter` 開啟排程視窗、`Alt + N` 快速新建內容、`?` 開啟快捷鍵手冊彈窗。
+- [x] 鍵盤快捷鍵（Power-user Shortcuts）：支援 `Ctrl/Cmd + S` 快速儲存草稿、`Ctrl/Cmd + Enter` 開啟排程視窗、`Alt + N` 快速新建內容、`?` 開啟快捷鍵手冊彈窗、`Ctrl/Cmd + V` 直接貼上螢幕截圖。
 - [x] 網路狀態即時感知（Network Resilience）：監聽 `online`/`offline` 事件，斷網時即時 Toast 提示本機快照防護。
 - [x] Skeleton Shimmer 骨架屏載入樣式：符合 `ui-ux-pro-max` 設計系統規範。
 

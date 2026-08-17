@@ -52,8 +52,8 @@ function installDom(extra = {}) {
         byId.extraNotes.value = '';
         byId.facebookText.value = '';
         byId.reelText.value = '';
-        byId.hashtagsText.value = '#品牌內容 #社群經營 #內容行銷';
-        byId.defaultHashtags.value = '#品牌內容 #社群經營 #內容行銷';
+        byId.hashtagsText.value = '';
+        byId.defaultHashtags.value = '';
         byId.targetScheduledAt.value = '';
       },
     }),
@@ -163,7 +163,7 @@ test('startNewComposer clears a scheduled post so 新增內容 is a blank compos
   assert.equal(byId.contentTopic.value, '');
   assert.equal(byId.facebookText.value, '');
   assert.equal(byId.reelText.value, '');
-  assert.equal(byId.hashtagsText.value, '#品牌內容 #社群經營 #內容行銷');
+  assert.equal(byId.hashtagsText.value, '');
   assert.equal(byId.draftState.textContent, '尚未產生');
   assert.equal(byId.previewMediaGallery.innerHTML, '');
   assert.equal(byId.facebookPreview.innerHTML, '尚未產生文案。');

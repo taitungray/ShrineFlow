@@ -41,7 +41,7 @@ export const state = {
   actor: null,
 };
 
-export const DEFAULT_HASHTAGS = ['#品牌內容', '#社群經營', '#內容行銷'];
+export const DEFAULT_HASHTAGS = [];
 
 export const PLATFORM_NAMES = {
   facebook: 'Facebook 粉專',

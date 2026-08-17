@@ -309,9 +309,12 @@ export function startNewComposer() {
   const reelText = $('#reelText');
   if (reelText) reelText.value = '';
   const hashtagsText = $('#hashtagsText');
-  if (hashtagsText) hashtagsText.value = DEFAULT_HASHTAGS.join(' ');
+  const initialTags = Array.isArray(currentClient()?.defaultHashtags)
+    ? currentClient().defaultHashtags.join(' ')
+    : (typeof currentClient()?.defaultHashtags === 'string' ? currentClient().defaultHashtags : '');
+  if (hashtagsText) hashtagsText.value = initialTags;
   const defaultHashtags = $('#defaultHashtags');
-  if (defaultHashtags) defaultHashtags.value = DEFAULT_HASHTAGS.join(' ');
+  if (defaultHashtags) defaultHashtags.value = initialTags;
   const postTypeIntro = document.querySelector('input[name="postType"][value="intro"]');
   if (postTypeIntro) postTypeIntro.checked = true;
   const targetScheduledAt = $('#targetScheduledAt');
@@ -390,7 +393,7 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   applyActiveTargetToEditor();
   const hashtags = Array.isArray(generated.hashtags) && generated.hashtags.length
     ? generated.hashtags
-    : DEFAULT_HASHTAGS;
+    : (generated.defaultHashtags ? generated.defaultHashtags.split(/\s+/).filter(Boolean) : []);
   const tagsText = $('#hashtagsText');
   if (tagsText) tagsText.value = hashtags.join(' ');
   const badge = $('#draftState');
@@ -427,6 +430,29 @@ export function initEditorListeners(refreshListsFn) {
     event.returnValue = '';
   });
 
+  // Clipboard Paste Image support (Ctrl+V directly pasting screenshot)
+  window.addEventListener('paste', (event) => {
+    const composer = $('#composerPanel');
+    if (!composer || composer.classList.contains('is-hidden')) return;
+    const items = event.clipboardData?.items;
+    if (!items) return;
+    const imageFiles = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+    if (imageFiles.length > 0) {
+      event.preventDefault();
+      import('./upload.js').then(({ previewSelectedMedia }) => {
+        previewSelectedMedia(imageFiles, renderSavedMedia);
+        showToast(`已從剪貼簿加入 ${imageFiles.length} 張圖片 📋`, 'success');
+      });
+    }
+  });
+
   const refreshVersionsButton = $('#refreshVersionsButton');
   refreshVersionsButton?.addEventListener('click', () => refreshVersionHistory());
   const createVersionButton = $('#createVersionButton');
@@ -449,6 +475,49 @@ export function initEditorListeners(refreshListsFn) {
       input.focus();
       markEditorDirty();
     }
+  });
+
+  const quickHashtags = $('#quickHashtagChips');
+  quickHashtags?.addEventListener('click', (event) => {
+    const chip = event.target?.closest?.('.hashtag-chip');
+    if (!chip) return;
+    const tag = chip.dataset.tag;
+    const input = $('#hashtagsText');
+    if (input && tag) {
+      const currentTags = input.value.trim().split(/\s+/).filter(Boolean);
+      if (!currentTags.includes(tag)) {
+        currentTags.push(tag);
+        input.value = currentTags.join(' ');
+        const defaults = $('#defaultHashtags');
+        if (defaults) defaults.value = input.value;
+        markEditorDirty();
+        updateLivePreview();
+        showToast(`已加入標籤 ${tag}`, 'info');
+      }
+    }
+  });
+
+  const downloadMediaBtn = $('#btnDownloadMedia');
+  downloadMediaBtn?.addEventListener('click', () => {
+    const mediaItems = state.selectedMediaItems.length
+      ? state.selectedMediaItems.map((item) => item.serverPath || item.source).filter(Boolean)
+      : mediaPathsOf(state.savedPost || state.generated || {});
+    if (!mediaItems.length) {
+      showToast('目前沒有可下載的圖片或影片', 'info');
+      return;
+    }
+    showToast(`正在下載 ${mediaItems.length} 個素材檔案… 📥`, 'success');
+    mediaItems.forEach((src, idx) => {
+      window.setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = src;
+        link.download = src.split('/').pop() || `media-${idx + 1}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, idx * 250);
+    });
   });
 
   const copyBtn = $('#btnCopyPreviewText');
