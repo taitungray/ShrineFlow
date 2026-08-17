@@ -21,6 +21,7 @@ const REQUIRED_IDS = [
   'public-media-url',
   'media-library',
   'facebook-connect',
+  'facebook-app-live',
   'facebook-user-id',
   'facebook-token-expired',
   'facebook-permissions',
@@ -102,4 +103,12 @@ test('facebook connect article keeps a short summary and longer advanced steps',
   const article = HELP_ARTICLES.find((item) => item.id === 'facebook-connect');
   assert.ok(article.steps.length <= 6);
   assert.ok(Array.isArray(article.advancedSteps) && article.advancedSteps.length >= 6);
+});
+
+test('facebook live article matches the not-visible-to-others symptom', () => {
+  const results = filterHelpArticles(HELP_ARTICLES, '自己看得到 別人看不到 Development');
+  assert.equal(results.some((article) => article.id === 'facebook-app-live'), true);
+  const article = HELP_ARTICLES.find((item) => item.id === 'facebook-app-live');
+  assert.match(article.steps.join('\n'), /privacy\.html/);
+  assert.match(article.steps.join('\n'), /切成 Live/);
 });

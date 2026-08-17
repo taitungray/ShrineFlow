@@ -12,7 +12,7 @@
       .is-hidden { display: none !important; }
     </style>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.50" />
+    <link rel="stylesheet" href="/style.css?v=0.6.51" />
   </head>
   <body class="auth-required">
     <div class="ambient ambient-one"></div>
@@ -40,7 +40,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.50</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.51</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -559,7 +559,7 @@
                     </ul>
                     「使用 Facebook 登入」沒出現就往下走。不要勾廣告、WhatsApp、遊戲、oEmbed、Messenger。
                   </li>
-                  <li>商家沒有就跳過。自己粉專先維持開發模式，不必立刻 App Review。</li>
+                  <li>商家沒有就跳過。接 Token、測連線可以先留 Development。粉絲要看得到必須切 Live，步驟在下方。</li>
                   <li>儀表板：<strong>使用案例 → 自訂（Pages API）→ 權限</strong>。這頁才是加權限的地方。<code>pages_show_list</code> 若已「可供測試」就略過。對 <code>pages_manage_posts</code>、<code>pages_read_engagement</code> 按「+ 新增」。不要加 <code>manage_pages</code>／<code>publish_pages</code>。IG 再到 Instagram 使用案例加 <code>instagram_basic</code>、<code>instagram_content_publish</code>。</li>
                 </ol>
                 <p class="setup-subtitle">第一次：拿粉專 Token</p>
@@ -578,11 +578,23 @@
                   <li>Debugger 看<strong>粉專</strong> Token：<code>Expires</code> 為 <strong>Never</strong> 才算換成。到期日留白。改密碼、撤銷 App、失去粉專角色才會失效。</li>
                 </ol>
                 <p class="setup-note">備援：也可用 App 編號＋密鑰做 <code>grant_type=fb_exchange_token</code>，但不要在 Graph Explorer 做。密鑰不要填進本頁。</p>
+                <p class="setup-subtitle">粉絲要看得到：把 App 切 Live</p>
+                <p class="setup-warn">Development 發出去的文，只有 App 角色看得到。你看得到、別人看不到＝還沒切 Live。切 Live 前的舊文通常要刪掉重發。</p>
+                <ol class="setup-steps">
+                  <li>開 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> → 你的 App → 設定 → 基本。</li>
+                  <li>Privacy Policy URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/privacy.html</code></li>
+                  <li>Terms of Service URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/terms.html</code></li>
+                  <li>User Data Deletion URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/data-deletion.html</code></li>
+                  <li>右上 <strong>Development 切成 Live</strong>。自己管的粉專通常不必先做完整 App Review。</li>
+                  <li>已發／已排的舊文：在粉專刪掉或取消，Live 後重發。用沒加 App 角色的帳號或無痕開粉專確認。</li>
+                </ol>
+                <p class="helper">完整說明在幫助：<a class="field-link" href="#/help/facebook-app-live">粉絲看不到貼文</a>。</p>
                 <p class="setup-subtitle">常見踩雷</p>
                 <ul class="setup-usecases">
                   <li>Cannot parse access token → 貼到的是 JSON 或數字 ID，不是 <code>EAA...</code>。</li>
                   <li><code>data</code> 空陣列 → 登入帳號必須是粉專管理員，且跟 App 角色同一個 Facebook。</li>
                   <li>短效 Token 約 1–2 小時；發文突然失敗就重拿粉專 Token 或走長期流程。</li>
+                  <li>自己看得到、別人看不到 → App 還在 Development，照上面切 Live 並重發。</li>
                 </ul>
               </div>
             </details>
@@ -1424,6 +1436,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" popover="manual"></div>
-    <script src="/app.js?v=0.6.50" type="module"></script>
+    <script src="/app.js?v=0.6.51" type="module"></script>
   </body>
 </html>
