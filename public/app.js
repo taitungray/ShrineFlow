@@ -1,20 +1,20 @@
-import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js?v=0.6.35';
-import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js?v=0.6.35';
-import { api } from './modules/api.js?v=0.6.35';
-import { initTabs, setActiveView } from './modules/tabs.js?v=0.6.35';
+import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js?v=0.6.36';
+import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js?v=0.6.36';
+import { api } from './modules/api.js?v=0.6.36';
+import { initTabs, setActiveView } from './modules/tabs.js?v=0.6.36';
 import {
   renderPlatformOptions,
   renderAccountOptions,
   renderContentTypeOptions,
   renderCreatePublishSpec,
   renderCreateContentSettings,
-} from './modules/platform-ui.js?v=0.6.35';
+} from './modules/platform-ui.js?v=0.6.36';
 import {
   previewSelectedMedia,
   bindUploadReordering,
-} from './modules/upload.js?v=0.6.35';
-import { buildGenerateMediaPayload } from './modules/media-picker.js?v=0.6.35';
-import { initMediaPicker } from './modules/media-picker-ui.js?v=0.6.35';
+} from './modules/upload.js?v=0.6.36';
+import { buildGenerateMediaPayload } from './modules/media-picker.js?v=0.6.36';
+import { initMediaPicker } from './modules/media-picker-ui.js?v=0.6.36';
 import {
   renderPreviewPlatformTabs,
   updateLivePreview,
@@ -22,35 +22,35 @@ import {
   renderGenerated,
   initEditorListeners,
   startNewComposer,
-} from './modules/editor.js?v=0.6.35';
-import { renderPosts, initContentFilters } from './modules/drafts.js?v=0.6.35';
-import { initBulkImportListeners } from './modules/bulk-import.js?v=0.6.35';
-import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js?v=0.6.35';
-import { renderOverview } from './modules/overview.js?v=0.6.35';
-import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js?v=0.6.35';
-import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js?v=0.6.35';
-import { renderPlatformConnections } from './modules/platform-connections.js?v=0.6.35';
-import { renderApiStatus } from './modules/api-status.js?v=0.6.35';
-import { renderTemplates, initTemplateManager } from './modules/templates.js?v=0.6.35';
-import { renderCampaigns, initCampaignManager } from './modules/campaigns.js?v=0.6.35';
-import { renderInsights, initInsightsListeners } from './modules/insights.js?v=0.6.35';
-import { renderInbox, initInboxListeners } from './modules/inbox.js?v=0.6.35';
-import { loadSettings, initSettingsListeners } from './modules/settings.js?v=0.6.35';
-import { initSystemTools } from './modules/system.js?v=0.6.35';
-import { initErrorLogs } from './modules/error-log-page.js?v=0.6.35';
-import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js?v=0.6.35';
-import { initClientErrorReporter } from './modules/client-error-reporter.js?v=0.6.35';
-import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js?v=0.6.35';
-import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js?v=0.6.35';
-import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js?v=0.6.35';
-import { initKeyboardShortcuts } from './modules/shortcuts.js?v=0.6.35';
-import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js?v=0.6.35';
-import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js?v=0.6.35';
-import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js?v=0.6.35';
-import { initHelp } from './modules/help.js?v=0.6.35';
-import { initDateTime24h } from './modules/datetime-24h.js?v=0.6.35';
-import { renderBestTimes } from './modules/best-times.js?v=0.6.35';
-import { renderRemoteSchedule } from './modules/remote-schedule.js?v=0.6.35';
+} from './modules/editor.js?v=0.6.36';
+import { renderPosts, initContentFilters } from './modules/drafts.js?v=0.6.36';
+import { initBulkImportListeners } from './modules/bulk-import.js?v=0.6.36';
+import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js?v=0.6.36';
+import { renderOverview } from './modules/overview.js?v=0.6.36';
+import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js?v=0.6.36';
+import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js?v=0.6.36';
+import { renderPlatformConnections } from './modules/platform-connections.js?v=0.6.36';
+import { renderApiStatus } from './modules/api-status.js?v=0.6.36';
+import { renderTemplates, initTemplateManager } from './modules/templates.js?v=0.6.36';
+import { renderCampaigns, initCampaignManager } from './modules/campaigns.js?v=0.6.36';
+import { renderInsights, initInsightsListeners } from './modules/insights.js?v=0.6.36';
+import { renderInbox, initInboxListeners } from './modules/inbox.js?v=0.6.36';
+import { loadSettings, initSettingsListeners } from './modules/settings.js?v=0.6.36';
+import { initSystemTools } from './modules/system.js?v=0.6.36';
+import { initErrorLogs } from './modules/error-log-page.js?v=0.6.36';
+import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js?v=0.6.36';
+import { initClientErrorReporter } from './modules/client-error-reporter.js?v=0.6.36';
+import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js?v=0.6.36';
+import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js?v=0.6.36';
+import { applyPermissionUi, initTeamListeners, loadTeamManagement } from './modules/team.js?v=0.6.36';
+import { initKeyboardShortcuts } from './modules/shortcuts.js?v=0.6.36';
+import { initReviewListeners, loadReviewQueue, renderReviewQueue } from './modules/reviews.js?v=0.6.36';
+import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './modules/queue.js?v=0.6.36';
+import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js?v=0.6.36';
+import { initHelp } from './modules/help.js?v=0.6.36';
+import { initDateTime24h } from './modules/datetime-24h.js?v=0.6.36';
+import { renderBestTimes } from './modules/best-times.js?v=0.6.36';
+import { renderRemoteSchedule } from './modules/remote-schedule.js?v=0.6.36';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
