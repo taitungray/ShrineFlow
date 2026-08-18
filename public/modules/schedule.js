@@ -9,11 +9,14 @@ import { humanizePlatformError } from './platform-errors.js';
 import { previewMediaSrc } from './media-preview.js';
 import { loadPost, runPostAction } from './drafts.js';
 import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+import { agendaItemsForView, dateKey } from './calendar-agenda.js';
 
 let reschedulingItem = null;
 let draggedTargetId = '';
 let calendarView = 'month';
 let schedulePage = 1;
+let selectedCalendarDate = '';
+let selectedCalendarTargetId = '';
 let calendarCursor = new Date();
 calendarCursor.setHours(0, 0, 0, 0);
 
@@ -24,11 +27,6 @@ function setScheduleFormMessage(message = '', type = '') {
   if (!el) return;
   el.textContent = humanizePlatformError(message) || String(message || '');
   el.dataset.type = type;
-}
-
-function dateKey(date) {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
-  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 }
 
 function startOfWeek(date) {
@@ -68,9 +66,16 @@ function visibleCalendarDays() {
 }
 
 function scheduleListItems() {
-  if (calendarView === 'list') return state.schedule;
-  const keys = new Set(visibleCalendarDays().map(dateKey));
-  return state.schedule.filter((item) => keys.has(dateKey(new Date(item.scheduledAt))));
+  return agendaItemsForView(state.schedule, {
+    view: calendarView,
+    selectedDate: selectedCalendarDate,
+    visibleDateKeys: new Set(visibleCalendarDays().map(dateKey)),
+  });
+}
+
+function clearCalendarSelection() {
+  selectedCalendarDate = '';
+  selectedCalendarTargetId = '';
 }
 
 function schedulePostTitle(post) {
@@ -106,7 +111,8 @@ function calendarItemMarkup(item) {
   const title = schedulePostTitle(post);
   const channel = PLATFORM_NAMES[item.channel] || item.channel || '平台';
   const draggable = item.status === 'scheduled' ? ' draggable="true"' : '';
-  return '<button class="calendar-item" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
+  const selected = item.targetId === selectedCalendarTargetId ? ' is-selected' : '';
+  return '<button class="calendar-item' + selected + '" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
     '<span class="calendar-item-platform">' + escapeHtml(channel) + '</span><span class="calendar-item-title">' + escapeHtml(title) + '</span></button>';
 }
 
@@ -116,6 +122,8 @@ function renderCalendarGrid() {
   const label = $('#calendarMonthLabel');
   if (!grid || !panel) return;
   panel.dataset.calendarView = calendarView;
+  if (selectedCalendarDate && calendarView !== 'list') panel.dataset.selectedDate = selectedCalendarDate;
+  else delete panel.dataset.selectedDate;
   grid.className = 'calendar-grid calendar-grid-' + calendarView;
 
   if (calendarView === 'list') {
@@ -147,6 +155,7 @@ function renderCalendarGrid() {
       const classes = [
         'calendar-day',
         key === today ? 'is-today' : '',
+        key === selectedCalendarDate ? 'is-selected' : '',
         calendarView === 'month' && date.getMonth() !== currentMonth ? 'is-outside' : '',
       ].filter(Boolean).join(' ');
       return '<div class="' + classes + '" data-calendar-date="' + escapeHtml(key) + '">'
@@ -221,12 +230,21 @@ export function renderSchedule() {
   if (!container) return;
   renderCalendarGrid();
   renderCalendarTokenNotice();
+  const heading = document.querySelector('#schedulePanel .calendar-list-heading h3');
+  if (heading) {
+    heading.textContent = selectedCalendarDate && calendarView !== 'list'
+      ? calendarLabel(new Date(selectedCalendarDate + 'T12:00:00')) + ' 發布行程'
+      : '發布行程';
+  }
   const items = scheduleListItems();
   if (!items.length) {
     removeListPager(container);
     container.className = 'list-empty';
+    const emptyText = selectedCalendarDate && calendarView !== 'list'
+      ? '這天沒有排程。'
+      : (state.schedule.length ? '這個日期範圍沒有排程。' : '還沒有排程，產生並儲存草稿後即可排程發布。');
     container.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>'
-      + (state.schedule.length ? '這個日期範圍沒有排程。' : '還沒有排程，產生並儲存草稿後即可排程發布。')
+      + emptyText
       + '</p></div>';
     return;
   }
@@ -255,7 +273,8 @@ export function renderSchedule() {
       status: item.status,
     }], PLATFORM_NAMES);
     const title = schedulePostTitle(post);
-    return '<article class="record-card content-card" id="schedule-item-' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(status) + '">'
+    const selectedClass = item.targetId === selectedCalendarTargetId ? ' is-selected' : '';
+    return '<article class="record-card content-card' + selectedClass + '" id="schedule-item-' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(status) + '">'
       + '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(item.postId || '') + '" aria-label="開啟貼文 ' + escapeHtml(title) + '">'
       + '<span class="record-thumb">' + thumbnail + '</span>'
       + '<span class="record-body"><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>'
@@ -286,27 +305,47 @@ export function initCalendarControls(refreshListsFn) {
   $('#calendarPrevious')?.addEventListener('click', () => {
     if (calendarView === 'week') calendarCursor.setDate(calendarCursor.getDate() - 7);
     else calendarCursor.setMonth(calendarCursor.getMonth() - 1);
+    clearCalendarSelection();
     renderSchedule();
   });
   $('#calendarNext')?.addEventListener('click', () => {
     if (calendarView === 'week') calendarCursor.setDate(calendarCursor.getDate() + 7);
     else calendarCursor.setMonth(calendarCursor.getMonth() + 1);
+    clearCalendarSelection();
     renderSchedule();
   });
   $('#calendarToday')?.addEventListener('click', () => {
     calendarCursor = new Date();
     calendarCursor.setHours(0, 0, 0, 0);
+    clearCalendarSelection();
     renderSchedule();
   });
   document.querySelectorAll('input[name="calendarView"]').forEach((input) => input.addEventListener('change', () => {
     calendarView = input.value;
     schedulePage = 1;
+    if (calendarView === 'list') clearCalendarSelection();
     renderSchedule();
   }));
   $('#calendarGrid')?.addEventListener('click', (event) => {
+    if (event.target.closest('[data-schedule-quick-add]')) return;
     const item = event.target.closest('[data-calendar-target-id]');
-    if (!item) return;
-    document.getElementById('schedule-item-' + item.dataset.calendarTargetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const day = event.target.closest('[data-calendar-date]');
+    const targetId = item?.dataset.calendarTargetId || '';
+    const fromItem = targetId
+      ? state.schedule.find((entry) => entry.targetId === targetId)
+      : null;
+    const nextDate = fromItem
+      ? dateKey(new Date(fromItem.scheduledAt))
+      : (day?.dataset.calendarDate || '');
+    if (!nextDate) return;
+    selectedCalendarDate = nextDate;
+    selectedCalendarTargetId = targetId;
+    schedulePage = 1;
+    renderSchedule();
+    if (!targetId) return;
+    requestAnimationFrame(() => {
+      document.getElementById('schedule-item-' + targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   });
   $('#calendarGrid')?.addEventListener('dragstart', (event) => {
     const item = event.target.closest('[data-calendar-target-id][draggable="true"]');

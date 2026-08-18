@@ -98,6 +98,11 @@
   box-shadow: inset 0 0 0 1px var(--brand);
 }
 
+.calendar-day.is-selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
 .calendar-day-header {
   display: flex;
   align-items: center;
@@ -160,7 +165,8 @@
   cursor: pointer;
 }
 
-.calendar-item:hover {
+.calendar-item:hover,
+.calendar-item.is-selected {
   background: var(--brand-soft);
 }
 
@@ -243,8 +249,8 @@
   margin-top: 0;
 }
 
-#schedulePanel[data-calendar-view="month"] .calendar-agenda,
-#schedulePanel[data-calendar-view="week"] .calendar-agenda {
+#schedulePanel[data-calendar-view="month"]:not([data-selected-date]) .calendar-agenda,
+#schedulePanel[data-calendar-view="week"]:not([data-selected-date]) .calendar-agenda {
   display: none;
 }
 

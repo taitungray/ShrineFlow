@@ -65,6 +65,8 @@ import {
   setAutosaveStatus,
   saveDraft,
   markEditorDirty,
+  savedStatusLabel,
+  postSavedAt,
 } from './editor-autosave.js';
 
 import {
@@ -358,7 +360,12 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   state.autosaveIntent += 1;
   state.generated = generated;
   state.editorDirty = !state.savedPost;
-  setAutosaveStatus(state.savedPost ? '已載入草稿' : '尚未儲存，編輯內容會暫存於本機', state.savedPost ? 'saved' : 'local');
+  setAutosaveStatus(
+    state.savedPost
+      ? savedStatusLabel('已載入草稿', postSavedAt(state.savedPost))
+      : '尚未儲存，編輯內容會暫存於本機',
+    state.savedPost ? 'saved' : 'local',
+  );
   if (syncSelectedMedia && state.selectedMediaItems.length) {
     const paths = mediaPathsOf(generated);
     state.selectedMediaItems.forEach((item) => {

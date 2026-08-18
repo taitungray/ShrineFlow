@@ -28,7 +28,11 @@ test('calendar hides crisis pause and duplicate agenda in month view', async () 
 
   assert.match(html, /<details class="disclosure compact crisis-pause-card" id="crisisPauseCard"/, 'crisis pause starts collapsed');
   assert.match(html, /class="calendar-agenda"/, 'agenda list is wrapped so month/week can hide it');
-  assert.match(css, /data-calendar-view="month"\] \.calendar-agenda/, 'month view hides the duplicate agenda list');
+  assert.match(
+    css,
+    /data-calendar-view="month"\]:not\(\[data-selected-date\]\) \.calendar-agenda/,
+    'month view hides the duplicate agenda until a day is selected',
+  );
 });
 
 test('nav badges stay hidden until they have a count', async () => {

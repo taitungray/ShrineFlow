@@ -1,6 +1,41 @@
-import { $, showToast, setPreviewMessage, fieldValue } from './dom.js';
+import { $, showToast, setPreviewMessage, fieldValue, formatDate } from './dom.js';
 import { state } from './state.js';
 import { api } from './api.js';
+
+const SAVED_TIME = new Intl.DateTimeFormat('zh-TW', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+const SAVED_DATE_TIME = new Intl.DateTimeFormat('zh-TW', {
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+export function formatSavedAt(value, now = new Date()) {
+  const saved = new Date(value);
+  if (!value || Number.isNaN(saved.getTime())) return '';
+  const current = now instanceof Date ? now : new Date(now);
+  if (Number.isNaN(current.getTime())) return formatDate(saved);
+  const sameDay = saved.getFullYear() === current.getFullYear()
+    && saved.getMonth() === current.getMonth()
+    && saved.getDate() === current.getDate();
+  if (sameDay) return SAVED_TIME.format(saved);
+  if (saved.getFullYear() === current.getFullYear()) return SAVED_DATE_TIME.format(saved);
+  return formatDate(saved);
+}
+
+export function savedStatusLabel(prefix, savedAt, now = new Date()) {
+  const time = formatSavedAt(savedAt, now);
+  return time ? `${prefix} · ${time}` : prefix;
+}
+
+export function postSavedAt(post = state.savedPost) {
+  return post?.updatedAt || post?.createdAt || '';
+}
 
 export const AUTOSAVE_DELAY_MS = 800;
 export const RECOVERY_SNAPSHOT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -22,13 +57,21 @@ export function recoveryKey(postId = state.savedPost?.id || 'new') {
   return `${RECOVERY_KEY_PREFIX}:${state.currentClientId || 'default'}:${postId}`;
 }
 
-export function setAutosaveStatus(message = '', status = 'idle') {
+export function setAutosaveStatus(message = '', status = 'idle', savedAt = '') {
   state.autosaveState = status;
   const element = $('#autosaveStatus');
   if (element) {
     element.textContent = message;
     element.dataset.state = status;
     element.hidden = !message;
+    const stamp = savedAt || (status === 'saved' ? postSavedAt() : '');
+    if (stamp && formatSavedAt(stamp)) {
+      element.title = formatDate(stamp);
+      element.dataset.savedAt = stamp;
+    } else {
+      element.removeAttribute('title');
+      delete element.dataset.savedAt;
+    }
   }
   const retryButton = $('#autosaveRetryButton');
   if (retryButton) {
@@ -180,7 +223,10 @@ export async function saveDraft({ mode = 'manual', intent = state.autosaveIntent
         state.editorDirty = false;
         clearRecoverySnapshot(saveKey);
         if (!postBeforeSave) clearRecoverySnapshot('new');
-        setAutosaveStatus(mode === 'autosave' ? '已自動儲存' : '已儲存', 'saved');
+        setAutosaveStatus(
+          savedStatusLabel(mode === 'autosave' ? '已自動儲存' : '已儲存', postSavedAt(saved)),
+          'saved',
+        );
         setPreviewMessage(mode === 'autosave' ? '草稿已自動儲存。' : '貼文已儲存。', 'success');
         if (mode === 'manual') showToast('貼文已儲存', 'success');
       } else {
