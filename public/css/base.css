@@ -22,7 +22,7 @@ html {
   overflow-y: scroll;
   overflow-x: hidden;
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   width: 100%;
   max-width: 100%;
 }

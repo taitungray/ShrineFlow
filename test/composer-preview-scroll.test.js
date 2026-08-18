@@ -116,7 +116,7 @@ test('narrow preview caps reel media so caption stays reachable', async () => {
   assert.ok(mediaRule, 'narrow preview must restyle gallery media');
   assert.match(
     mediaRule[1],
-    /max-height\s*:\s*min\(\s*52dvh\s*,\s*420px\s*\)/,
+    /max-height\s*:\s*min\(\s*32dvh\s*,\s*240px\s*\)/,
     '9:16 reel at full phone width pushes copy below the fold and video controls eat the swipe',
   );
   assert.match(
@@ -129,4 +129,20 @@ test('narrow preview caps reel media so caption stays reachable', async () => {
     /max-height\s*:\s*none/,
     'narrow preview must not inherit desktop max-height:none for reel-sized media',
   );
+});
+
+test('narrow copy card is tall enough to show hashtags above the caption', async () => {
+  const css = await loadCss('public/style.css');
+  const narrow = [mediaBlocks(css, 767), mediaBlocks(css, 1099)].join('\n');
+  const card = narrow.match(/\.composer-preview-pane\s+\.copy-card\s*\{([^}]+)\}/);
+  const tags = narrow.match(/\.composer-preview-pane\s+\.hashtags\s*\{([^}]+)\}/);
+  const copy = narrow.match(/\.composer-preview-pane\s+\.copy-text\s*\{([^}]+)\}/);
+
+  assert.ok(card, 'narrow preview must restyle the copy card');
+  assert.match(card[1], /min-height\s*:\s*min\(\s*48dvh\s*,\s*360px\s*\)/, 'copy card must be tall enough to show tags');
+  assert.match(card[1], /overflow-y\s*:\s*auto/, 'copy card must scroll instead of clipping tags');
+  assert.ok(tags, 'narrow preview must pin hashtags in the copy card');
+  assert.match(tags[1], /order\s*:\s*1/, 'hashtags must sit under the header, not after a long caption');
+  assert.ok(copy, 'narrow preview must keep caption after hashtags');
+  assert.match(copy[1], /order\s*:\s*2/, 'caption follows tags so tags stay visible');
 });

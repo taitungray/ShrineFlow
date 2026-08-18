@@ -15,15 +15,6 @@
   min-height: 540px;
 }
 
-.panel:not(.is-hidden) {
-  animation: panelFadeIn 0.16s ease-out;
-}
-
-@keyframes panelFadeIn {
-  from { opacity: 0; transform: translateY(3px) scale(0.995); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 .panel-heading {
   display: flex;
   flex-wrap: wrap;

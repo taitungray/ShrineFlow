@@ -1,6 +1,13 @@
-import { $, setFormMessage, showToast, fieldValue } from './modules/dom.js';
+import { $, setFormMessage, setPreviewMessage, showToast, fieldValue } from './modules/dom.js';
 import { state, clientQuery, setCurrentClientId, currentClient } from './modules/state.js';
 import { api } from './modules/api.js';
+import {
+  startAndWaitGenerate,
+  waitForBackgroundJob,
+  waitForPublishTarget,
+  readPendingLongTask,
+  clearPendingLongTask,
+} from './modules/long-task.js';
 import { initTabs, setActiveView } from './modules/tabs.js';
 import {
   renderPlatformOptions,
@@ -27,7 +34,7 @@ import { renderPosts, initContentFilters } from './modules/drafts.js';
 import { initBulkImportListeners } from './modules/bulk-import.js';
 import { renderSchedule, initScheduleDialog, initCalendarControls } from './modules/schedule.js';
 import { renderOverview } from './modules/overview.js';
-import { renderMediaLibrary, initMediaLibrary } from './modules/media-library.js';
+import { renderMediaLibrary, initMediaLibrary, loadMediaLibraryAssets } from './modules/media-library.js';
 import { renderPublishingLogs, initPublishingLogs } from './modules/publishing-logs.js';
 import { renderPlatformConnections } from './modules/platform-connections.js';
 import { renderApiStatus } from './modules/api-status.js';
@@ -82,6 +89,7 @@ async function refreshLists() {
   state.remoteSchedule = remoteSchedule;
   state.repurposeCandidates = repurposeCandidates;
   await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
+  await loadMediaLibraryAssets().catch(() => {});
   renderPosts();
   renderSchedule();
   renderOverview();
@@ -122,7 +130,63 @@ function setLoading(isLoading) {
   const button = $('#generateButton');
   if (!button) return;
   button.disabled = isLoading;
-  button.innerHTML = isLoading ? '<span class="spinner"></span> AI 讀取媒體中…' : '<span>✦</span> AI 產生文案';
+  button.innerHTML = isLoading ? '<span class="spinner"></span> AI 產文中…' : '<span>✦</span> AI 產生文案';
+}
+
+async function loadPostById(postId) {
+  const posts = await api(clientQuery('/api/posts'));
+  return (Array.isArray(posts) ? posts : []).find((item) => item.id === postId) || null;
+}
+
+async function resumePendingLongTask() {
+  const pending = readPendingLongTask();
+  if (!pending) return;
+  if (pending.type === 'rewrite') {
+    clearPendingLongTask();
+    return;
+  }
+  if (pending.type === 'generate' && pending.jobId) {
+    setLoading(true);
+    setFormMessage('正在恢復先前的文案產生…');
+    try {
+      const generated = await waitForBackgroundJob(pending.jobId, { api });
+      state.savedPost = null;
+      renderGenerated(generated, { syncSelectedMedia: true });
+      setActiveView('review');
+      setFormMessage('文案已產生，請檢查預覽後儲存。', 'success');
+    } catch (error) {
+      clearPendingLongTask();
+      setFormMessage(error.message, 'error');
+      showToast(error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+    return;
+  }
+  if (pending.type === 'publish' && pending.postId && pending.targetId) {
+    setPreviewMessage('正在恢復發布結果…', 'info');
+    try {
+      await waitForPublishTarget({
+        postId: pending.postId,
+        targetId: pending.targetId,
+        loadPost: () => loadPostById(pending.postId),
+      });
+      await refreshLists();
+      const refreshedPost = state.posts.find((item) => item.id === pending.postId);
+      if (refreshedPost) {
+        state.savedPost = refreshedPost;
+        state.generated = refreshedPost;
+        state.editorDirty = false;
+        renderGenerated(refreshedPost);
+      }
+      setPreviewMessage('發布已完成。', 'success');
+      showToast('發布已完成。', 'success');
+    } catch (error) {
+      clearPendingLongTask();
+      setPreviewMessage(error.message, 'error');
+      showToast(error.message, 'error');
+    }
+  }
 }
 
 function asArray(value) {
@@ -372,14 +436,20 @@ async function initApp() {
       setLoading(true);
       const hasLibrary = mediaPayload.sequence.some((entry) => entry.kind === 'library');
       setFormMessage(mediaPayload.files.length
-        ? '正在讀取 ' + mediaPayload.files.length + ' 個媒體並撰寫文案，影片可能需要較長時間。'
-        : (hasLibrary ? '正在沿用素材庫檔案並撰寫文案。' : '正在根據文字資訊撰寫文案。'));
+        ? '正在讀取 ' + mediaPayload.files.length + ' 個媒體並撰寫文案；切到背景也會繼續，回來會自動接上。'
+        : (hasLibrary ? '正在沿用素材庫檔案並撰寫文案；切到背景也會繼續。' : '正在根據文字資訊撰寫文案；切到背景也會繼續。'));
       try {
-        const generated = await api('/api/generate', { method: 'POST', body: formData });
+        const generated = await startAndWaitGenerate(formData, { api });
         state.savedPost = null;
         renderGenerated(generated, { syncSelectedMedia: true });
         setActiveView('review');
-        setFormMessage('文案已產生，請檢查預覽後儲存。', 'success');
+        const reused = Number(generated.reusedMediaCount) || 0;
+        setFormMessage(
+          reused
+            ? '文案已產生。有 ' + reused + ' 個檔與素材庫重複，已改用既有素材。'
+            : '文案已產生，請檢查預覽後儲存。',
+          'success',
+        );
       } catch (error) {
         setFormMessage(error.message, 'error');
         showToast(error.message, 'error');
@@ -456,7 +526,9 @@ async function initApp() {
   // Power-user keyboard shortcuts
   initKeyboardShortcuts();
 
-  loadData().catch((error) => showToast(error.message, 'error'));
+  loadData()
+    .then(() => resumePendingLongTask())
+    .catch((error) => showToast(error.message, 'error'));
   loadSettings().catch((error) => showToast(error.message, 'error'));
 }
 

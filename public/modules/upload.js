@@ -1,8 +1,59 @@
 import { $, isVideoPath, setFormMessage } from './dom.js';
-import { state, mediaPathsOf } from './state.js';
+import { api } from './api.js';
+import { state, mediaPathsOf, clientQuery, currentClient } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
-import { mergeSelectedMedia, seedSelectedMedia } from './media-picker.js';
+import {
+  findReadyAssetByChecksum,
+  mediaItemFromAsset,
+  mergeSelectedMedia,
+  seedSelectedMedia,
+} from './media-picker.js';
 import { markEditorDirty } from './editor.js';
+
+async function hashFileSha256(file) {
+  if (!file || typeof crypto === 'undefined' || !crypto.subtle?.digest) return '';
+  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function loadLibraryAssets() {
+  try {
+    const payload = await api(clientQuery('/api/media'));
+    return Array.isArray(payload?.assets) ? payload.assets : [];
+  } catch {
+    return [];
+  }
+}
+
+async function bindDuplicateUploads(items = []) {
+  const pending = (Array.isArray(items) ? items : []).filter((item) => item.file && !item.serverPath);
+  if (!pending.length) return { items, reused: 0 };
+  const assets = await loadLibraryAssets();
+  const clientId = currentClient()?.id || state.currentClientId || '';
+  const seenPaths = new Set(items.map((item) => item.serverPath).filter(Boolean));
+  let reused = 0;
+  const next = [];
+  for (const item of items) {
+    if (!item.file || item.serverPath) {
+      next.push(item);
+      continue;
+    }
+    const asset = findReadyAssetByChecksum(assets, await hashFileSha256(item.file), clientId);
+    if (!asset) {
+      next.push(item);
+      continue;
+    }
+    reused += 1;
+    revokePreviewUrl(item.source);
+    if (seenPaths.has(asset.mediaPath)) continue;
+    seenPaths.add(asset.mediaPath);
+    next.push({
+      ...mediaItemFromAsset(asset),
+      source: asset.mediaPath,
+    });
+  }
+  return { items: next, reused };
+}
 
 function revokePreviewUrl(source) {
   if (String(source || '').startsWith('blob:')) URL.revokeObjectURL(source);
@@ -214,7 +265,7 @@ export function bindUploadReordering(renderSavedMediaFn) {
   });
 }
 
-export function previewSelectedMedia(fileList, renderSavedMediaFn) {
+export async function previewSelectedMedia(fileList, renderSavedMediaFn) {
   const files = [...(fileList || [])];
   if (!files.length) return false;
   const unsupported = files.find((file) => !file.type.startsWith('image/') && !file.type.startsWith('video/'));
@@ -248,7 +299,8 @@ export function previewSelectedMedia(fileList, renderSavedMediaFn) {
       state.uploadPreviewUrls.push(item.source);
     }
   });
-  state.selectedMediaItems = result.items;
+  const bound = await bindDuplicateUploads(result.items);
+  state.selectedMediaItems = bound.items;
   state.editorDirty = true;
   refreshSelectedMediaPreview(renderSavedMediaFn);
   const saveBtn = $('#saveButton');
@@ -261,8 +313,14 @@ export function previewSelectedMedia(fileList, renderSavedMediaFn) {
     setFormMessage('已達 10 個上限，沒有加入新檔案。', 'error');
     return false;
   }
+  const stillUploading = bound.items.some((item) => item.file && !item.serverPath);
+  if (bound.reused && !stillUploading) {
+    setFormMessage('素材庫已有相同檔案，已改用既有素材，沒有再存一份。', 'success');
+    return true;
+  }
   const imageCount = files.filter((file) => file.type.startsWith('image/')).length;
   const videoCount = files.length - imageCount;
-  setFormMessage('已選擇 ' + files.length + ' 個檔案（圖片 ' + imageCount + '、影片 ' + videoCount + '）。', 'success');
+  const reusedNote = bound.reused ? '；其中 ' + bound.reused + ' 個與素材庫重複，已改用既有檔' : '';
+  setFormMessage('已選擇 ' + files.length + ' 個檔案（圖片 ' + imageCount + '、影片 ' + videoCount + '）' + reusedNote + '。', 'success');
   return true;
 }

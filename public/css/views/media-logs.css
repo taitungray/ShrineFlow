@@ -321,6 +321,13 @@ button.module-summary-card:focus-visible {
   background: rgba(70, 60, 55, 0.88);
 }
 
+.media-usage-badge.is-duplicate {
+  left: auto;
+  right: 8px;
+  color: #fff8f4;
+  background: rgba(194, 94, 64, 0.94);
+}
+
 .media-library-card.is-unused {
   opacity: 0.85;
 }

@@ -88,7 +88,7 @@ function closeMobileNavigation() {
 let lastComposerView = '';
 
 export function resetViewScroll({ window: win = window, document: doc = document } = {}) {
-  win.scrollTo?.(0, 0);
+  win.scrollTo?.({ top: 0, left: 0, behavior: 'instant' });
   if (doc.documentElement) doc.documentElement.scrollTop = 0;
   if (doc.body) doc.body.scrollTop = 0;
   doc.querySelectorAll?.('.composer-editor-pane, .composer-preview-pane, .review-preview').forEach((pane) => {
@@ -114,9 +114,29 @@ export function setComposerMode(mode = 'edit') {
   });
 }
 
+function viewAlreadyActive(normalizedView) {
+  const panels = $$('[data-view-panel]');
+  if (!panels.length) return false;
+  const enteringComposer = ['create', 'review'].includes(normalizedView);
+  return [...panels].every((panel) => {
+    const shouldShow = panel.dataset.viewPanel === normalizedView
+      || (panel.dataset.viewPanel === 'composer' && enteringComposer);
+    return panel.classList.contains('is-hidden') !== shouldShow;
+  });
+}
+
 export function setActiveView(view, { syncHash = true, routePath = '' } = {}) {
   const normalizedView = normalizeView(view);
   const activePath = routePath || VIEW_ROUTES[normalizedView] || VIEW_ROUTES.overview;
+
+  if (viewAlreadyActive(normalizedView)) {
+    closeMobileNavigation();
+    if (syncHash) {
+      const nextHash = '#/' + activePath;
+      if (window.location.hash !== nextHash) window.history.pushState({}, '', nextHash);
+    }
+    return;
+  }
 
   $$('[data-view-panel]').forEach((panel) => {
     const isComposer = panel.dataset.viewPanel === 'composer' && ['create', 'review'].includes(normalizedView);

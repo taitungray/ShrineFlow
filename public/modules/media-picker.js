@@ -120,9 +120,64 @@ export function mergeSelectedMedia(currentItems = [], incomingItems = [], { max 
   return { items, skippedDuplicate, skippedLimit, added: items.length - currentItems.length };
 }
 
+export function findReadyAssetByChecksum(assets = [], checksum = '', clientId = '') {
+  const digest = trim(checksum).toLowerCase();
+  if (!digest) return null;
+  return (Array.isArray(assets) ? assets : []).find((asset) => (
+    isReadyPickerAsset(asset, clientId)
+    && trim(asset.checksumSha256).toLowerCase() === digest
+  )) || null;
+}
+
+export function bindPersistedMediaItems(items = [], paths = []) {
+  return (Array.isArray(items) ? items : []).map((item, index) => {
+    const serverPath = trim(paths[index] || item.serverPath);
+    if (!serverPath) return item;
+    return {
+      ...item,
+      kind: 'library',
+      serverPath,
+      source: serverPath,
+      file: null,
+      mediaId: trim(item.mediaId),
+    };
+  });
+}
+
+export function annotateMediaDuplicates(items = [], assets = []) {
+  const checksumByPath = new Map();
+  (Array.isArray(assets) ? assets : []).forEach((asset) => {
+    const mediaPath = trim(asset?.mediaPath);
+    const digest = trim(asset?.checksumSha256).toLowerCase();
+    if (mediaPath && digest) checksumByPath.set(mediaPath, digest);
+  });
+  const counts = new Map();
+  (Array.isArray(items) ? items : []).forEach((item) => {
+    const digest = checksumByPath.get(item.path) || '';
+    if (!digest) return;
+    counts.set(digest, (counts.get(digest) || 0) + 1);
+  });
+  return (Array.isArray(items) ? items : []).map((item) => {
+    const checksumSha256 = checksumByPath.get(item.path) || '';
+    return {
+      ...item,
+      checksumSha256,
+      duplicateCount: checksumSha256 ? (counts.get(checksumSha256) || 1) : 1,
+    };
+  });
+}
+
 export function buildGenerateMediaPayload(items = []) {
   const files = [];
   const sequence = items.map((item) => {
+    const serverPath = trim(item.serverPath);
+    if (serverPath) {
+      return {
+        kind: 'library',
+        mediaPath: serverPath,
+        mediaId: trim(item.mediaId),
+      };
+    }
     if (item.file) {
       const index = files.length;
       files.push(item.file);
@@ -130,7 +185,7 @@ export function buildGenerateMediaPayload(items = []) {
     }
     return {
       kind: 'library',
-      mediaPath: trim(item.serverPath || item.source),
+      mediaPath: trim(item.source),
       mediaId: trim(item.mediaId),
     };
   });

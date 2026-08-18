@@ -1,7 +1,8 @@
 import { $, escapeHtml, formatDate, setPreviewMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss, isVideoPath } from './dom.js';
-import { state, PLATFORM_NAMES, currentClient, mediaPathsOf } from './state.js';
+import { state, PLATFORM_NAMES, currentClient, mediaPathsOf, clientQuery } from './state.js';
 import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, readContentSettings } from './platform-ui.js';
 import { api, createIdempotencyKey } from './api.js';
+import { publishTargetWithRecovery } from './long-task.js';
 import { getActiveTarget } from './targets-ui.js';
 import { targetStatusLabel, targetStatusSummary } from './status.js';
 import { humanizePlatformError } from './platform-errors.js';
@@ -401,13 +402,16 @@ export function initScheduleDialog(refreshListsFn) {
         button.disabled = true;
         try {
           showToast('重發中…', 'info');
-          await api('/api/publish/target', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
-            body: JSON.stringify({
-              postId: item.postId || button.dataset.postId,
-              targetId: item.targetId,
-            }),
+          await publishTargetWithRecovery({
+            api,
+            postId: item.postId || button.dataset.postId,
+            targetId: item.targetId,
+            createIdempotencyKey,
+            loadPost: async () => {
+              const postId = item.postId || button.dataset.postId;
+              const posts = await api(clientQuery('/api/posts'));
+              return (Array.isArray(posts) ? posts : []).find((entry) => entry.id === postId) || null;
+            },
           });
           if (typeof refreshListsFn === 'function') await refreshListsFn();
           showToast(`${platformName} 已重發成功。`, 'success');

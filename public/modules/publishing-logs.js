@@ -1,6 +1,7 @@
 import { $, escapeHtml, formatDate, isVideoPath, showToast } from './dom.js';
-import { state, PLATFORM_NAMES, mediaPathsOf } from './state.js';
+import { state, PLATFORM_NAMES, mediaPathsOf, clientQuery } from './state.js';
 import { api, createIdempotencyKey } from './api.js';
+import { publishTargetWithRecovery } from './long-task.js';
 import { loadPost } from './drafts.js';
 import { previewMediaSrc } from './media-preview.js';
 import { publishingStatusGroup, targetStatusLabel, targetStatusSummary } from './status.js';
@@ -173,10 +174,16 @@ export function initPublishingLogs(refreshListsFn) {
       try {
         button.dataset.busy = 'true';
         button.disabled = true;
-        await api('/api/publish/target', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
-          body: JSON.stringify({ postId: item.postId || button.dataset.postId, targetId: item.targetId }),
+        await publishTargetWithRecovery({
+          api,
+          postId: item.postId || button.dataset.postId,
+          targetId: item.targetId,
+          createIdempotencyKey,
+          loadPost: async () => {
+            const postId = item.postId || button.dataset.postId;
+            const posts = await api(clientQuery('/api/posts'));
+            return (Array.isArray(posts) ? posts : []).find((entry) => entry.id === postId) || null;
+          },
         });
         if (typeof refreshListsFn === 'function') await refreshListsFn();
         showToast('已重新送出平台發布。', 'success');

@@ -4,6 +4,17 @@ import express from 'express';
 
 import { createGenerateRouter } from '../lib/routes/generate.js';
 
+async function waitForJob(baseUrl, jobId, { timeoutMs = 1_000 } = {}) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const response = await fetch(`${baseUrl}/generate/jobs/${jobId}`);
+    const body = await response.json();
+    if (body.status === 'succeeded' || body.status === 'failed') return { response, body };
+    await new Promise((resolve) => setTimeout(resolve, 15));
+  }
+  throw new Error('timed out waiting for generate job');
+}
+
 test('platform rewrite route returns an AI suggestion without persisting message content', async () => {
   const app = express();
   app.use(express.json());
@@ -19,14 +30,16 @@ test('platform rewrite route returns an AI suggestion without persisting message
     },
   }));
   const server = app.listen(0);
+  const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
   try {
-    const result = await fetch(`http://127.0.0.1:${server.address().port}/api/rewrite`, {
+    const result = await fetch(`${baseUrl}/rewrite`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ platformId: 'threads', contentType: 'post', sourceCopy: '母稿內容' }),
     });
-    assert.equal(result.status, 200);
-    assert.deepEqual(await result.json(), {
+    assert.equal(result.status, 202);
+    const finished = await waitForJob(baseUrl, (await result.json()).jobId);
+    assert.deepEqual(finished.body.result, {
       platformId: 'threads',
       contentType: 'post',
       copy: '改寫後內容',
@@ -66,17 +79,18 @@ test('generate route supports no-media content generation without creating uploa
     },
   }));
   const server = app.listen(0);
+  const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
   try {
     const form = new FormData();
     form.set('contentTopic', '新產品');
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+    const response = await fetch(`${baseUrl}/generate`, {
       method: 'POST',
       body: form,
     });
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.deepEqual(body.mediaPaths, []);
-    assert.equal(body.facebook, '無素材母稿');
+    assert.equal(response.status, 202);
+    const finished = await waitForJob(baseUrl, (await response.json()).jobId);
+    assert.deepEqual(finished.body.result.mediaPaths, []);
+    assert.equal(finished.body.result.facebook, '無素材母稿');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -108,20 +122,21 @@ test('generate route binds existing library media from mediaSequence', async () 
     },
   }));
   const server = app.listen(0);
+  const baseUrl = `http://127.0.0.1:${server.address().port}/api`;
   try {
     const form = new FormData();
     form.set('contentTopic', '沿用舊圖');
     form.set('mediaSequence', JSON.stringify([
       { kind: 'library', mediaPath: '/uploads/altar.jpg', mediaId: 'asset-photo' },
     ]));
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/generate`, {
+    const response = await fetch(`${baseUrl}/generate`, {
       method: 'POST',
       body: form,
     });
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.deepEqual(body.mediaPaths, ['/uploads/altar.jpg']);
-    assert.equal(body.imagePath, '/uploads/altar.jpg');
+    assert.equal(response.status, 202);
+    const finished = await waitForJob(baseUrl, (await response.json()).jobId);
+    assert.deepEqual(finished.body.result.mediaPaths, ['/uploads/altar.jpg']);
+    assert.equal(finished.body.result.imagePath, '/uploads/altar.jpg');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -154,8 +169,11 @@ test('generate route returns clear API errors for missing topic and AI failure',
       method: 'POST',
       body: failingForm,
     });
-    assert.equal(failingResponse.status, 429);
-    assert.match((await failingResponse.json()).error, /AI provider/);
+    assert.equal(failingResponse.status, 202);
+    const finished = await waitForJob(`http://127.0.0.1:${server.address().port}/api`, (await failingResponse.json()).jobId);
+    assert.equal(finished.body.status, 'failed');
+    assert.match(finished.body.error.message, /AI provider/);
+    assert.equal(finished.body.error.status, 429);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -1,11 +1,14 @@
 import { $, escapeHtml, formatDate, isVideoPath } from './dom.js';
-import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
+import { api } from './api.js';
+import { state, mediaPathsOf, PLATFORM_NAMES, clientQuery } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
+import { annotateMediaDuplicates } from './media-picker.js';
 import { loadPost } from './drafts.js';
 import { GRID_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const filters = { query: '', type: 'all' };
 let mediaPage = 1;
+let mediaAssets = [];
 
 function postTitle(post) {
   return post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容';
@@ -65,21 +68,37 @@ function renderEmpty(container, filtered) {
   });
 }
 
+export async function loadMediaLibraryAssets() {
+  try {
+    const payload = await api(clientQuery('/api/media'));
+    mediaAssets = Array.isArray(payload?.assets) ? payload.assets : [];
+  } catch {
+    mediaAssets = [];
+  }
+  return mediaAssets;
+}
+
 export function renderMediaLibrary() {
   const grid = $('#mediaGrid');
   const summary = $('#mediaSummary');
   if (!grid) return;
-  const allMedia = collectMedia();
+  const allMedia = annotateMediaDuplicates(collectMedia(), mediaAssets);
+  const duplicateCount = allMedia.filter((item) => item.duplicateCount > 1).length;
   const visible = allMedia.filter((item) => {
     const type = isVideoPath(item.path) ? 'video' : 'image';
-    if (filters.type !== 'all' && filters.type !== type) return false;
+    if (filters.type === 'duplicate') {
+      if (item.duplicateCount < 2) return false;
+    } else if (filters.type !== 'all' && filters.type !== type) {
+      return false;
+    }
     if (!filters.query) return true;
     const haystack = [mediaName(item.path), ...item.posts.map((post) => post.title)].join(' ').toLowerCase();
     return haystack.includes(filters.query.toLowerCase());
   });
   if (summary) {
     const used = allMedia.filter((item) => item.posts.length > 0).length;
-    summary.textContent = `共 ${allMedia.length} 個素材 · 圖片 ${allMedia.filter((item) => !isVideoPath(item.path)).length} · 影片 ${allMedia.filter((item) => isVideoPath(item.path)).length} · 使用中 ${used}`;
+    summary.textContent = `共 ${allMedia.length} 個素材 · 圖片 ${allMedia.filter((item) => !isVideoPath(item.path)).length} · 影片 ${allMedia.filter((item) => isVideoPath(item.path)).length} · 使用中 ${used}`
+      + (duplicateCount ? ` · 重複 ${duplicateCount}` : '');
   }
   if (!visible.length) {
     renderEmpty(grid, Boolean(allMedia.length));
@@ -101,10 +120,14 @@ export function renderMediaLibrary() {
     const usageBadge = isUsed
       ? '<span class="media-usage-badge is-used" title="已使用於 ' + item.posts.length + ' 篇內容">✓ ' + item.posts.length + ' 篇引用</span>'
       : '<span class="media-usage-badge is-unused">未使用</span>';
-    return '<article class="media-library-card' + (isUsed ? '' : ' is-unused') + '">'
+    const duplicateBadge = item.duplicateCount > 1
+      ? '<span class="media-usage-badge is-duplicate">重複 ×' + item.duplicateCount + '</span>'
+      : '';
+    return '<article class="media-library-card' + (isUsed ? '' : ' is-unused') + (item.duplicateCount > 1 ? ' is-duplicate' : '') + '">'
       + '<div class="media-library-preview" data-type="' + (video ? 'video' : 'image') + '">'
       + preview
       + usageBadge
+      + duplicateBadge
       + '</div>'
       + '<div class="media-library-body"><strong title="' + escapeHtml(name) + '">' + escapeHtml(name) + '</strong>'
       + '<small>' + (isUsed ? '使用於 ' + item.posts.length + ' 篇內容' : '尚未被任何內容使用') + (item.latestAt ? ' · ' + escapeHtml(formatDate(item.latestAt)) : '') + '</small>'

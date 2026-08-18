@@ -887,8 +887,38 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 
   .preview-media-gallery .media-item img,
   .preview-media-gallery .media-item video {
-    max-height: min(52dvh, 420px);
+    max-height: min(32dvh, 240px);
     touch-action: pan-y;
+  }
+
+  .composer-preview-pane .copy-card {
+    display: flex;
+    flex-direction: column;
+    min-height: min(48dvh, 360px);
+    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .composer-preview-pane .copy-card-header {
+    order: 0;
+    flex: 0 0 auto;
+  }
+
+  .composer-preview-pane .hashtags {
+    order: 1;
+    flex: 0 0 auto;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .composer-preview-pane .copy-text {
+    order: 2;
+    min-height: 0;
+  }
+
+  .composer-preview-pane .story-preview-notice {
+    order: 3;
   }
 }
 

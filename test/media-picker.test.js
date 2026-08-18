@@ -9,6 +9,9 @@ import {
   mergeSelectedMedia,
   buildGenerateMediaPayload,
   seedSelectedMedia,
+  findReadyAssetByChecksum,
+  bindPersistedMediaItems,
+  annotateMediaDuplicates,
 } from '../public/modules/media-picker.js';
 
 const readyPhoto = {
@@ -99,4 +102,57 @@ test('buildGenerateMediaPayload keeps mixed library and upload order', () => {
     { kind: 'upload', index: 0 },
     { kind: 'library', mediaPath: '/uploads/rite.mp4', mediaId: 'asset-video' },
   ]);
+});
+
+test('buildGenerateMediaPayload keeps already persisted files as library items', () => {
+  const file = { name: 'altar.jpg', type: 'image/jpeg', size: 12 };
+  const payload = buildGenerateMediaPayload([
+    {
+      kind: 'file',
+      file,
+      source: 'blob:1',
+      serverPath: '/uploads/altar.jpg',
+      mediaId: 'asset-photo',
+      type: 'image/jpeg',
+      name: 'altar.jpg',
+    },
+  ]);
+  assert.deepEqual(payload.files, []);
+  assert.deepEqual(payload.sequence, [
+    { kind: 'library', mediaPath: '/uploads/altar.jpg', mediaId: 'asset-photo' },
+  ]);
+});
+
+test('findReadyAssetByChecksum matches current brand ready assets', () => {
+  const hashed = { ...readyPhoto, checksumSha256: 'abc123' };
+  assert.equal(findReadyAssetByChecksum([hashed, readyVideo], 'ABC123', 'brand-a')?.id, 'asset-photo');
+  assert.equal(findReadyAssetByChecksum([hashed], 'abc123', 'brand-b'), null);
+  assert.equal(findReadyAssetByChecksum([{ ...hashed, status: 'deleted' }], 'abc123', 'brand-a'), null);
+});
+
+test('bindPersistedMediaItems converts uploaded files to library items', () => {
+  const file = { name: 'altar.jpg', type: 'image/jpeg' };
+  const [item] = bindPersistedMediaItems([
+    { kind: 'file', file, source: 'blob:1', name: 'altar.jpg', type: 'image/jpeg' },
+  ], ['/uploads/altar.jpg']);
+  assert.equal(item.kind, 'library');
+  assert.equal(item.serverPath, '/uploads/altar.jpg');
+  assert.equal(item.file, null);
+  assert.equal(item.source, '/uploads/altar.jpg');
+});
+
+test('annotateMediaDuplicates counts items that share a checksum', () => {
+  const annotated = annotateMediaDuplicates([
+    { path: '/uploads/a.jpg' },
+    { path: '/uploads/a-copy.jpg' },
+    { path: '/uploads/unique.jpg' },
+  ], [
+    { mediaPath: '/uploads/a.jpg', checksumSha256: 'samehash' },
+    { mediaPath: '/uploads/a-copy.jpg', checksumSha256: 'SAMEHASH' },
+    { mediaPath: '/uploads/unique.jpg', checksumSha256: 'otherhash' },
+  ]);
+  assert.equal(annotated[0].duplicateCount, 2);
+  assert.equal(annotated[1].duplicateCount, 2);
+  assert.equal(annotated[2].duplicateCount, 1);
+  assert.equal(annotated[0].checksumSha256, 'samehash');
 });

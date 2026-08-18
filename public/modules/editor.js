@@ -1,5 +1,5 @@
 import { $, setPreviewMessage, setFormMessage, showToast, fieldValue, setFieldValue, bindDialogDismiss } from './dom.js';
-import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission } from './state.js';
+import { state, DEFAULT_HASHTAGS, PLATFORM_NAMES, mediaPathsOf, currentClient, hasPermission, clientQuery } from './state.js';
 import {
   renderCreatePublishSpec,
   renderCreateContentSettings,
@@ -7,7 +7,9 @@ import {
   readTargetContentSettings,
 } from './platform-ui.js';
 import { clearUploadPreview } from './upload.js';
+import { bindPersistedMediaItems } from './media-picker.js';
 import { api, createIdempotencyKey } from './api.js';
+import { startAndWaitRewrite, publishTargetWithRecovery } from './long-task.js';
 import {
   buildTargetsPayload,
   getActiveTarget,
@@ -359,9 +361,10 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   setAutosaveStatus(state.savedPost ? '已載入草稿' : '尚未儲存，編輯內容會暫存於本機', state.savedPost ? 'saved' : 'local');
   if (syncSelectedMedia && state.selectedMediaItems.length) {
     const paths = mediaPathsOf(generated);
-    state.selectedMediaItems.forEach((item, index) => {
-      item.serverPath = paths[index] || '';
+    state.selectedMediaItems.forEach((item) => {
+      if (String(item.source || '').startsWith('blob:')) URL.revokeObjectURL(item.source);
     });
+    state.selectedMediaItems = bindPersistedMediaItems(state.selectedMediaItems, paths);
   }
   const previewItems = state.selectedMediaItems.length
     ? state.selectedMediaItems
@@ -569,18 +572,14 @@ export function initEditorListeners(refreshListsFn) {
       rewriteButton.disabled = true;
       rewriteButton.dataset.busy = 'true';
       try {
-        const rewritten = await api('/api/rewrite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientId: state.currentClientId,
-            platformId: account.platformId,
-            contentType,
-            sourceCopy,
-            contentTopic: $('#contentTopic')?.value || '',
-            extraNotes: $('#extraNotes')?.value || '',
-          }),
-        });
+        const rewritten = await startAndWaitRewrite({
+          clientId: state.currentClientId,
+          platformId: account.platformId,
+          contentType,
+          sourceCopy,
+          contentTopic: $('#contentTopic')?.value || '',
+          extraNotes: $('#extraNotes')?.value || '',
+        }, { api });
         if (input) input.value = rewritten.copy || '';
         const mode = $('#platformCopyMode');
         if (mode) {
@@ -698,10 +697,15 @@ export function initEditorListeners(refreshListsFn) {
 
     setPreviewMessage(`正在發布到 ${platformName}…`, 'info');
     try {
-      await api('/api/publish/target', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': createIdempotencyKey() },
-        body: JSON.stringify({ postId: post.id, targetId: target.id }),
+      await publishTargetWithRecovery({
+        api,
+        postId: post.id,
+        targetId: target.id,
+        createIdempotencyKey,
+        loadPost: async () => {
+          const posts = await api(clientQuery('/api/posts'));
+          return (Array.isArray(posts) ? posts : []).find((item) => item.id === post.id) || null;
+        },
       });
       if (typeof refreshListsFn === 'function') await refreshListsFn();
       const refreshedPost = state.posts.find((item) => item.id === post.id);
