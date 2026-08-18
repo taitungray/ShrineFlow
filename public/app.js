@@ -460,4 +460,13 @@ async function initApp() {
   loadSettings().catch((error) => showToast(error.message, 'error'));
 }
 
-document.addEventListener('DOMContentLoaded', initApp);
+function lockPhonePortrait() {
+  const orientation = globalThis.screen?.orientation;
+  if (!orientation || typeof orientation.lock !== 'function') return;
+  orientation.lock('portrait').catch(() => {});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  lockPhonePortrait();
+  initApp();
+});

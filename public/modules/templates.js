@@ -52,7 +52,7 @@ export function renderTemplates() {
   grid.className = 'templates-grid';
   grid.innerHTML = paged.items.map((template) => {
     const platforms = templatePlatforms(template).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
-    const hashtags = (template.hashtags || []).slice(0, 4).map((tag) => escapeHtml(tag)).join(' ');
+    const hashtags = (template.hashtags || []).map((tag) => escapeHtml(tag)).join(' ');
     return '<article class="template-card">'
       + '<div class="template-card-heading"><span class="template-icon" aria-hidden="true">◇</span><div><h3>' + escapeHtml(template.name) + '</h3><span class="template-type">' + escapeHtml(postTypeLabel(template.postType)) + '</span></div></div>'
       + '<p class="template-purpose">' + escapeHtml(template.purpose || template.topicHint || '尚未填寫用途說明。') + '</p>'

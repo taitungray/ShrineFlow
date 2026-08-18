@@ -77,11 +77,12 @@
 }
 
 .template-hashtags {
-  overflow: hidden;
+  overflow: visible;
   color: var(--brand);
   font-size: 0.7rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .template-meta,

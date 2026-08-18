@@ -177,6 +177,34 @@ test('desktop CSS keeps sidebar shell, anti-jitter panels, and dual-pane compose
   assert.match(css, /grid-template-columns\s*:\s*minmax\(\s*0\s*,\s*1\.05fr\s*\)\s+minmax\(\s*360px\s*,\s*0\.95fr\s*\)/, 'desktop composer is editor + preview, not a single squeezed column');
 });
 
+test('phone landscape is blocked by a portrait-lock overlay', async () => {
+  const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const css = await loadCss('public/style.css');
+
+  assert.match(html, /id="portraitLock"/, 'index.html must render the portrait-lock overlay');
+  assert.match(html, /screen-orientation" content="portrait"/, 'viewport must declare portrait orientation');
+  assert.match(
+    html,
+    /body\.auth-required > :not\(#authGate\):not\(\.nav-sprite\):not\(#portraitLock\)/,
+    'auth gate must still show the portrait-lock overlay',
+  );
+  assert.match(
+    css,
+    /\.auth-required > :not\(#authGate\):not\(#portraitLock\)/,
+    'stylesheet auth hide must exclude #portraitLock',
+  );
+  assert.match(
+    css,
+    /@media \(orientation:\s*landscape\) and \(max-height:\s*540px\) and \(hover:\s*none\) and \(pointer:\s*coarse\)/,
+    'overlay must target phone landscape, not desktop or tablet',
+  );
+  assert.match(
+    css,
+    /orientation:\s*landscape[\s\S]*\.portrait-lock\s*\{[^}]*display:\s*flex/,
+    'phone landscape must show .portrait-lock',
+  );
+});
+
 test('web viewports do not overflow any panel or inner tab', async () => {
   const result = spawnSync(process.execPath, [path.join(root, 'scripts', 'audit-mobile-layout.mjs'), '--web'], {
     cwd: root,

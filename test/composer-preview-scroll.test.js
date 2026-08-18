@@ -8,6 +8,37 @@ import { loadCss } from './fixtures/load-css.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
+function extractBraceBlock(css, openIndex) {
+  let depth = 0;
+  for (let i = openIndex; i < css.length; i += 1) {
+    if (css[i] === '{') depth += 1;
+    else if (css[i] === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return { body: css.slice(openIndex + 1, i), end: i + 1 };
+      }
+    }
+  }
+  throw new Error(`Unbalanced CSS brace at ${openIndex}`);
+}
+
+function mediaBlocks(css, maxWidthPx) {
+  const blocks = [];
+  const needle = '@media';
+  let searchFrom = 0;
+  while (searchFrom < css.length) {
+    const at = css.indexOf(needle, searchFrom);
+    if (at === -1) break;
+    const brace = css.indexOf('{', at);
+    if (brace === -1) break;
+    const prelude = css.slice(at, brace).replace(/\s+/g, '');
+    const { body, end } = extractBraceBlock(css, brace);
+    if (prelude.includes(`max-width:${maxWidthPx}px`)) blocks.push(body);
+    searchFrom = end;
+  }
+  return blocks.join('\n');
+}
+
 function ruleBodies(css, selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return [...css.matchAll(new RegExp(`${escaped}\\s*\\{([^}]+)\\}`, 'g'))].map((match) => match[1]);
@@ -73,4 +104,29 @@ test('live preview drops the empty media placeholder so photos can use the pane'
   assert.doesNotMatch(wrap, /min-height\s*:\s*180px/, '180px empty box reserved height even when photos exist');
   assert.match(hiddenEmpty, /display\s*:\s*none/, 'no media → hide the whole wrap, do not keep a dashed slot');
   assert.match(hasMedia, /display\s*:\s*grid/, 'stuck .empty class must not hide photos once .media-item exists');
+});
+
+test('narrow preview caps reel media so caption stays reachable', async () => {
+  const css = await loadCss('public/style.css');
+  const narrow = [mediaBlocks(css, 767), mediaBlocks(css, 1099)].join('\n');
+  const mediaRule = narrow.match(
+    /\.preview-media-gallery\s+\.media-item\s+img\s*,\s*\.preview-media-gallery\s+\.media-item\s+video\s*\{([^}]+)\}/,
+  );
+
+  assert.ok(mediaRule, 'narrow preview must restyle gallery media');
+  assert.match(
+    mediaRule[1],
+    /max-height\s*:\s*min\(\s*52dvh\s*,\s*420px\s*\)/,
+    '9:16 reel at full phone width pushes copy below the fold and video controls eat the swipe',
+  );
+  assert.match(
+    mediaRule[1],
+    /touch-action\s*:\s*pan-y/,
+    'preview video must yield vertical swipe to page scroll',
+  );
+  assert.doesNotMatch(
+    mediaRule[1],
+    /max-height\s*:\s*none/,
+    'narrow preview must not inherit desktop max-height:none for reel-sized media',
+  );
 });

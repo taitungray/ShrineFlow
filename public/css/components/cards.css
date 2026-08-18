@@ -190,7 +190,7 @@ h4 {
 }
 
 .auth-gate.is-hidden { display: none; }
-.auth-required > :not(#authGate) { display: none !important; }
+.auth-required > :not(#authGate):not(#portraitLock) { display: none !important; }
 .auth-card {
   width: min(100%, 420px);
   padding: 28px;

@@ -160,6 +160,15 @@
   font-weight: 600;
   overflow-wrap: anywhere;
   word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.hashtag-field {
+  min-height: 88px;
+  resize: vertical;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 /* Topic Inspiration Chips */

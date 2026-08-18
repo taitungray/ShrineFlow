@@ -863,6 +863,12 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
   .composer-preview-pane {
     grid-column: 1;
     grid-row: 1;
+    overflow: visible;
+  }
+
+  .composer-preview-pane .review-preview {
+    flex: none;
+    overflow: visible;
   }
 
   .composer-mode-switch {
@@ -877,6 +883,12 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
   .composer-panel[data-composer-mode="edit"] .composer-preview-pane,
   .composer-panel[data-composer-mode="preview"] .composer-editor-pane {
     display: none;
+  }
+
+  .preview-media-gallery .media-item img,
+  .preview-media-gallery .media-item video {
+    max-height: min(52dvh, 420px);
+    touch-action: pan-y;
   }
 }
 
