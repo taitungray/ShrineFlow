@@ -112,6 +112,20 @@ test('mobile layout drops desktop min-heights that leave empty space', async () 
   assert.match(lastDecls(phone, '.panel'), /min-height\s*:\s*0/, 'panel anti-jitter 540px must not apply on phone');
 });
 
+test('phone composer reserves scroll room under the fixed two-row dock', async () => {
+  const css = await loadCss('public/style.css');
+  const phone = mediaBlocks(css, 767);
+  const htmlComposer = lastDecls(phone, 'html:has(#composerPanel:not(.is-hidden))');
+  const workspace = lastDecls(phone, '.composer-workspace');
+  const dock = lastDecls(phone, '.composer-dock');
+
+  assert.match(dock, /position\s*:\s*fixed/, 'phone dock floats over the form');
+  assert.match(htmlComposer, /--composer-dock-clearance\s*:\s*calc\(\s*176px/, 'clearance must cover 2×44px buttons + gaps + hint');
+  assert.match(workspace, /padding-bottom\s*:\s*var\(--composer-dock-clearance/, 'workspace must scroll the last section above the dock');
+  assert.doesNotMatch(workspace, /padding-bottom\s*:\s*96px/, '96px is shorter than the two-row dock and covers 進階排程與版本');
+  assert.match(htmlComposer, /scroll-padding-bottom\s*:\s*var\(--composer-dock-clearance\)/, 'scroll-into-view must also clear the dock');
+});
+
 test('phone CSS does not use 100vw and does not lock composer to 100dvh', async () => {
   const css = await loadCss('public/style.css');
   const phone = mediaBlocks(css, 767);

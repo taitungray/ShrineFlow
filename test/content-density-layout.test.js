@@ -22,6 +22,19 @@ test('content list puts posts before CSV import and hides extra filters', async 
   assert.ok(ideaAt > 0 && ideaAt < listAt, 'Idea bar stays above the list without burying it');
 });
 
+test('content toolbar keeps status pills and trailing actions on one baseline', async () => {
+  const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const css = await loadCss('public/style.css');
+  const toolbarAt = html.indexOf('class="content-toolbar"');
+  const mainAt = html.indexOf('class="content-toolbar-main"');
+  const endAt = html.indexOf('class="content-toolbar-end"');
+
+  assert.ok(toolbarAt > 0 && mainAt > toolbarAt && endAt > mainAt, 'status pills and trailing actions share one toolbar-main row');
+  assert.match(css, /\.content-toolbar\s*\{[^}]*align-items\s*:\s*center/, 'toolbar centers search, pills, and actions');
+  assert.match(css, /\.content-toolbar-end\s*\{[^}]*align-items\s*:\s*center/, 'trailing actions sit on the pill baseline, not flex-end');
+  assert.match(css, /\.content-more-filters\.disclosure\.compact\s*\{[^}]*margin\s*:\s*0/, 'more-filters must beat .disclosure.compact margins');
+});
+
 test('calendar hides crisis pause and duplicate agenda in month view', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   const css = await loadCss('public/style.css');
@@ -38,11 +51,18 @@ test('calendar hides crisis pause and duplicate agenda in month view', async () 
 test('nav badges stay hidden until they have a count', async () => {
   const css = await loadCss('public/style.css');
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const overviewJs = await fs.readFile(path.join(root, 'public', 'modules', 'overview.js'), 'utf8');
   const insightsNav = html.match(/href="#\/insights"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
+  const contentNav = html.match(/href="#\/content"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
+  const calendarNav = html.match(/href="#\/calendar"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
 
   assert.match(css, /\.nav-badge\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important/, 'empty nav badges must not paint a blank circle');
-  assert.match(html, /id="navDraftsBadge" hidden/, 'content badge starts hidden');
+  assert.equal(contentNav.includes('nav-badge'), false, 'content is inventory, not a badge');
+  assert.equal(calendarNav.includes('nav-badge'), false, 'calendar is inventory, not a badge');
   assert.match(html, /id="navPublishingBadge" hidden/, 'publishing badge starts hidden');
+  assert.match(html, /id="navInboxBadge" hidden/, 'inbox badge starts hidden');
+  assert.match(html, /id="navReviewsBadge" hidden/, 'reviews badge starts hidden');
+  assert.match(overviewJs, /inboxAttentionCount/, 'inbox badge counts unread or needs-reply only');
   assert.match(insightsNav, /href="#nav-insights"/, 'insights uses a bar-chart icon, not a circle');
   assert.equal(insightsNav.includes('◌'), false, 'insights icon must not look like a notification dot');
 });
@@ -53,7 +73,7 @@ test('publishing logs reuse content-card density', async () => {
   assert.match(js, /record-card content-card/, 'publishing logs use the same card shell as content');
   assert.match(js, /record-thumb/, 'thumbnail is visible without opening the post');
   assert.match(js, /excerpt/, 'copy excerpt distinguishes same-title rows');
-  assert.match(js, /platform-chip/, 'platform chip matches content list');
+  assert.match(js, /platformChipHtml/, 'platform chip matches content list');
   assert.match(js, /copyOverride/, 'per-target override copy is preferred over mother copy');
 });
 

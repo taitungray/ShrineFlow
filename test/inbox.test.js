@@ -50,6 +50,53 @@ test('Facebook and Instagram Inbox adapters read recent conversations with beare
   assert.doesNotMatch(requests[0].url, /secret-page-token/);
   assert.match(requests[0].url, /\/v25\.0\/page-1\/conversations/);
   assert.match(requests[1].url, /\/v25\.0\/ig-1\/conversations/);
+  assert.match(decodeURIComponent(requests[0].url), /messages\.limit\(20\)/);
+});
+
+test('Facebook Inbox conversations expose counterpart name and chronological replies', async () => {
+  const facebook = createFacebookInboxClient({
+    pageId: 'page-1',
+    pageAccessToken: 'page-token',
+    fetchImpl: async () => response({
+      data: [{
+        id: 'conversation-1',
+        snippet: '實在非常可惜',
+        updated_time: '2026-08-18T10:56:00.000Z',
+        message_count: 2,
+        participants: {
+          data: [
+            { id: 'page-1', name: 'Facebook 粉專' },
+            { id: 'user-9', name: '林信德' },
+          ],
+        },
+        messages: {
+          data: [
+            {
+              id: 'm2',
+              message: '實在非常可惜',
+              created_time: '2026-08-18T10:56:00.000Z',
+              from: { id: 'user-9', name: '林信德' },
+            },
+            {
+              id: 'm1',
+              message: '您好，請問想問什麼？',
+              created_time: '2026-08-18T10:50:00.000Z',
+              from: { id: 'page-1', name: 'Facebook 粉專' },
+            },
+          ],
+        },
+      }],
+    }),
+  });
+
+  const result = await facebook.fetchRecent({ limit: 10 });
+  assert.equal(result.items[0].author, '林信德');
+  assert.equal(result.items[0].recipientId, 'user-9');
+  assert.equal(result.items[0].messages.length, 2);
+  assert.equal(result.items[0].messages[0].text, '您好，請問想問什麼？');
+  assert.equal(result.items[0].messages[0].fromPage, true);
+  assert.equal(result.items[0].messages[1].fromPage, false);
+  assert.equal(result.items[0].messages[1].author, '林信德');
 });
 
 test('Threads Inbox adapter expands recent threads into normalized replies', async () => {

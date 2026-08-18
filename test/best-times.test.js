@@ -9,13 +9,26 @@ function publishedAt(day, hour) {
   return new Date(`2026-08-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:00:00+08:00`).toISOString();
 }
 
-test('best timing suggestions stay explicit about insufficient samples', () => {
+test('best timing suggestions stay empty only when there are no published records', () => {
+  const result = analyzeBestTimes([], { clientId: 'client-1', timeZone: 'Asia/Taipei' });
+  assert.equal(result.status, 'insufficient_data');
+  assert.equal(result.sampleCount, 0);
+  assert.deepEqual(result.slots, []);
+  assert.equal(result.dataQuality, 'insufficient');
+  assert.equal(result.minimumSamples, 1);
+  assert.equal(result.source, 'local_published_targets');
+});
+
+test('best timing suggestions show slots from a single published record', () => {
   const result = analyzeBestTimes([
     { clientId: 'client-1', platformId: 'instagram', accountId: 'ig-1', status: 'published', publishedAt: publishedAt(15, 9) },
   ], { clientId: 'client-1', timeZone: 'Asia/Taipei' });
-  assert.equal(result.status, 'insufficient_data');
+  assert.equal(result.status, 'ok');
   assert.equal(result.sampleCount, 1);
-  assert.deepEqual(result.slots, []);
+  assert.equal(result.dataQuality, 'thin');
+  assert.equal(result.slots.length, 1);
+  assert.equal(result.slots[0].localHour, '09:00');
+  assert.equal(result.slots[0].weekdayLabel, '六');
   assert.equal(result.source, 'local_published_targets');
 });
 
@@ -34,12 +47,13 @@ test('best timing suggestions rank local published buckets without changing queu
   const result = analyzeBestTimes(records, { clientId: 'client-1', platformId: 'instagram', timeZone: 'Asia/Taipei' });
   assert.equal(result.status, 'ok');
   assert.equal(result.sampleCount, 11);
+  assert.equal(result.dataQuality, 'adequate');
   assert.equal(result.slots[0].localHour, '09:00');
   assert.equal(result.slots[0].sampleCount, 10);
   assert.equal(result.algorithmVersion, 'local-publish-v1');
 });
 
-test('GET /insights/best-times returns scoped metadata and insufficient_data honestly', async (t) => {
+test('GET /insights/best-times returns slots once any published target exists', async (t) => {
   const posts = [{
     id: 'post-1',
     clientId: 'client-1',
@@ -57,7 +71,9 @@ test('GET /insights/best-times returns scoped metadata and insufficient_data hon
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.clientId, 'client-1');
-  assert.equal(body.status, 'insufficient_data');
-  assert.equal(body.minimumSamples, 10);
-  assert.equal(body.dataQuality, 'insufficient');
+  assert.equal(body.status, 'ok');
+  assert.equal(body.minimumSamples, 1);
+  assert.equal(body.dataQuality, 'thin');
+  assert.equal(body.slots.length, 1);
+  assert.equal(body.slots[0].localHour, '10:00');
 });

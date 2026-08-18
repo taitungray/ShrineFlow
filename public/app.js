@@ -62,6 +62,7 @@ import { renderRemoteSchedule } from './modules/remote-schedule.js';
 import { initBusinessSuiteButtons } from './modules/business-suite.js';
 
 async function refreshLists() {
+  const insightsPlatform = state.insightsPlatform || 'facebook';
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
   const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
     api(clientQuery('/api/posts')).then((value) => (Array.isArray(value) ? value : [])),
@@ -73,9 +74,9 @@ async function refreshLists() {
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
     api(clientQuery('/api/crisis-pause')).catch(() => null),
-    api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
+    api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
     api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+    api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
   ]);
   state.posts = posts;
   state.schedule = schedule;
@@ -264,6 +265,7 @@ async function loadData() {
     renderUserIdentity();
     applyPermissionUi();
 
+    const insightsPlatform = state.insightsPlatform || 'facebook';
     const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
     [
       posts,
@@ -288,9 +290,9 @@ async function loadData() {
       api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
       api(clientQuery('/api/saved-replies')).catch(() => []),
       api(clientQuery('/api/crisis-pause')).catch(() => null),
-      api(clientQuery('/api/insights/best-times')).catch(() => ({ status: 'unavailable', slots: [] })),
+      api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
       api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-      api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+      api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
     ]);
 
     facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({

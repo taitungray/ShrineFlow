@@ -12,6 +12,8 @@ import {
   createFacebookInsightsClient,
   createInstagramInsightsClient,
   createThreadsInsightsClient,
+  DEFAULT_METRICS,
+  DEFAULT_POST_METRICS,
   InsightsApiError,
 } from '../lib/insights.js';
 
@@ -70,8 +72,8 @@ test('Facebook and Threads adapters use their platform insight endpoints', async
     fetchImpl,
   }).fetchAccountInsights();
 
-  assert.match(requests[0], /\/v25\.0\/page-1\/insights/);
-  assert.match(requests[1], /\/v1\.0\/threads-user-1\/threads_insights/);
+  assert.ok(requests.some((url) => /\/v25\.0\/page-1\/insights/.test(url)));
+  assert.ok(requests.some((url) => /\/v1\.0\/threads-user-1\/threads_insights/.test(url)));
 });
 
 test('post Insights adapters request the platform object insights endpoint', async () => {
@@ -325,4 +327,90 @@ test('post Insights snapshots can be queried by target and remain bounded per re
     directories.insights = originalDirectory;
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
+});
+
+test('default Insights catalogs cover organic Page, IG and Threads metrics', () => {
+  for (const metric of ['page_impressions', 'page_media_view', 'page_video_views', 'page_fans', 'page_post_engagements']) {
+    assert.ok(DEFAULT_METRICS.facebook.includes(metric), metric);
+  }
+  for (const metric of ['post_media_view', 'post_clicks', 'post_reactions_like_total', 'post_video_views']) {
+    assert.ok(DEFAULT_POST_METRICS.facebook.includes(metric), metric);
+  }
+  for (const metric of ['views', 'reach', 'likes', 'comments', 'shares', 'saves', 'accounts_engaged']) {
+    assert.ok(DEFAULT_METRICS.instagram.includes(metric), metric);
+  }
+  for (const metric of ['views', 'reach', 'likes', 'comments', 'shares', 'saved', 'total_interactions']) {
+    assert.ok(DEFAULT_POST_METRICS.instagram.includes(metric), metric);
+  }
+  for (const metric of ['views', 'likes', 'replies', 'reposts', 'quotes', 'clicks', 'followers_count', 'shares']) {
+    assert.ok(DEFAULT_METRICS.threads.includes(metric), metric);
+  }
+});
+
+test('Insights adapter keeps valid metrics when Meta rejects one name', async () => {
+  const requested = [];
+  const client = createFacebookInsightsClient({
+    pageId: 'page-1',
+    pageAccessToken: 'page-token',
+    fetchImpl: async (url) => {
+      const metric = new URL(String(url)).searchParams.get('metric') || '';
+      requested.push(metric);
+      if (metric.split(',').includes('dead_metric')) {
+        return response({ error: { message: '(#100) The value must be a valid insights metric', code: 100 } }, 400);
+      }
+      return response({
+        data: metric.split(',').filter(Boolean).map((name) => ({ name, values: [{ value: 1 }] })),
+      });
+    },
+  });
+
+  const result = await client.fetchAccountInsights({
+    since: '2026-08-01T00:00:00.000Z',
+    until: '2026-08-02T00:00:00.000Z',
+    metrics: ['page_views_total', 'dead_metric', 'page_follows'],
+  });
+
+  assert.deepEqual(result.data.map((item) => item.name).sort(), ['page_follows', 'page_views_total']);
+  assert.deepEqual(result.skippedMetrics, ['dead_metric']);
+  assert.ok(requested.some((metric) => metric.includes('dead_metric')));
+});
+
+test('Facebook post Insights merge object engagement fields', async () => {
+  const urls = [];
+  const client = createFacebookInsightsClient({
+    pageId: 'page-1',
+    pageAccessToken: 'page-token',
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      const parsed = new URL(String(url));
+      if (parsed.pathname.endsWith('/insights')) {
+        return response({ data: [{ name: 'post_clicks', values: [{ value: 5 }] }] });
+      }
+      return response({
+        likes: { summary: { total_count: 3 } },
+        comments: { summary: { total_count: 1 } },
+        shares: { count: 2 },
+        reactions: { summary: { total_count: 4 } },
+      });
+    },
+  });
+
+  const result = await client.fetchPostInsights({
+    externalId: 'page-1_99',
+    metrics: ['post_clicks'],
+  });
+
+  assert.equal(result.scope, 'post');
+  assert.deepEqual(
+    result.data.map((item) => [item.name, item.value ?? item.values?.[0]?.value]),
+    [
+      ['post_clicks', 5],
+      ['likes', 3],
+      ['comments', 1],
+      ['shares', 2],
+      ['reactions', 4],
+    ],
+  );
+  assert.ok(urls.some((url) => url.includes('/page-1_99/insights')));
+  assert.ok(urls.some((url) => url.includes('fields=') && url.includes('likes.summary')));
 });

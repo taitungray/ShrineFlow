@@ -6,7 +6,8 @@
 ## ShrineFlow 落地約束（必讀）
 
 1. **UI 視覺／表單結構** → 永遠跟 `ui-ux-pro-max` + `AGENTS.md`  
-   - 色票、字體、`.field`、`form-group-card`、`radio-pill-group`、觸控 44px、`flex-wrap` 禁止水平捲軸、面板 min-height 等，一律以既有規範為準。  
+   - 色票、字體、`.field`、`form-group-card`、`radio-pill-group`、觸控 44px、`flex-wrap` 禁止水平捲軸、面板 min-height 等，一律以既有規範為準。
+   - **平台辨識**：掃台用官方 FB／IG／Threads ICON；說明、設定內文、錯誤句子用字。見 `.cursor/rules/platform-brand-icons.mdc`。  
    - 本 pack「不要做成制式 SaaS 卡片牆」指 Dashboard 亂卡堆疊；**不禁止**表單用 `form-group-card` 分組。
 
 2. **前端實作** → 沿用現有 **Express + 靜態 HTML/CSS/JS** 架構  

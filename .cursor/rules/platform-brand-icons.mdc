@@ -1,0 +1,28 @@
+---
+description: FB／IG／Threads 掃台用官方 ICON、說明與句子用字
+alwaysApply: true
+---
+
+# 平台辨識：官方 ICON 或字
+
+判準：**一眼掃「哪一台」→ 官方 ICON。讀句子／教步驟 → 字。**
+
+用 `public/icons/facebook.svg`、`instagram.svg`、`threads.svg`（Simple Icons 官方路徑）。**不要**手畫仿品、不要只剩色點。
+
+## 用官方 ICON（`aria-label`／visually-hidden 留名）
+
+切台頁籤、選台 pill、列表／日曆 chip、洞察／收件匣分組標、Header 連線點。
+
+選中態走專案赤硃 pill，不要整顆塗成平台色把 logo 吃掉。
+
+## 用字
+
+說明中心、設定頁內文／欄位、toast／錯誤／confirm、字數提示。
+
+## 禁止
+
+- 手畫／簡化的 f、相機框、假 @
+- 只靠色點辨台
+- 說明標題改成只剩 logo
+- 掃台 pill 官方 ICON＋平台名並列
+- chip 只寫「Facebook」「IG」「Threads」

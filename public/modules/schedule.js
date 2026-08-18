@@ -4,10 +4,11 @@ import { renderAccountOptions, renderContentTypeOptions, renderContentSettings, 
 import { api, createIdempotencyKey } from './api.js';
 import { publishTargetWithRecovery } from './long-task.js';
 import { getActiveTarget } from './targets-ui.js';
-import { targetStatusLabel, targetStatusSummary } from './status.js';
+import { targetStatusLabel } from './status.js';
 import { humanizePlatformError } from './platform-errors.js';
 import { previewMediaSrc } from './media-preview.js';
 import { loadPost, runPostAction } from './drafts.js';
+import { platformChipHtml } from './platform-icon.js';
 import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 import { agendaItemsForView, dateKey } from './calendar-agenda.js';
 
@@ -86,13 +87,6 @@ function schedulePostText(post) {
   return String(post?.facebook || post?.text || post?.reel || '').trim();
 }
 
-function platformLabel(platformId) {
-  if (platformId === 'facebook') return 'Facebook';
-  if (platformId === 'instagram') return 'Instagram';
-  if (platformId === 'threads') return 'Threads';
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
-}
-
 function renderCalendarTokenNotice() {
   const notice = $('#calendarConnectionNotice');
   if (!notice) return;
@@ -112,8 +106,11 @@ function calendarItemMarkup(item) {
   const channel = PLATFORM_NAMES[item.channel] || item.channel || '平台';
   const draggable = item.status === 'scheduled' ? ' draggable="true"' : '';
   const selected = item.targetId === selectedCalendarTargetId ? ' is-selected' : '';
-  return '<button class="calendar-item' + selected + '" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '">' +
-    '<span class="calendar-item-platform">' + escapeHtml(channel) + '</span><span class="calendar-item-title">' + escapeHtml(title) + '</span></button>';
+  const platformSrc = ['facebook', 'instagram', 'threads'].includes(item.channel)
+    ? '<img class="calendar-item-platform" data-platform="' + escapeHtml(item.channel) + '" src="/icons/' + escapeHtml(item.channel) + '.svg" alt="" width="14" height="14" />'
+    : '';
+  return '<button class="calendar-item' + selected + '" type="button"' + draggable + ' data-calendar-target-id="' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(item.status || 'draft') + '" aria-label="' + escapeHtml(channel + ' · ' + title) + '">' +
+    platformSrc + '<span class="calendar-item-title">' + escapeHtml(title) + '</span></button>';
 }
 
 function renderCalendarGrid() {
@@ -266,20 +263,14 @@ export function renderSchedule() {
       updated ? formatDate(updated) : '',
       item.scheduledAt ? '排程：' + formatDate(item.scheduledAt) : '',
     ].filter(Boolean).join(' · ');
-    const platformChips = '<span class="platform-chip" data-platform="' + escapeHtml(item.channel || '') + '">'
-      + escapeHtml(platformLabel(item.channel)) + '</span>';
-    const targetSummary = targetStatusSummary([{
-      platformId: item.channel,
-      status: item.status,
-    }], PLATFORM_NAMES);
+    const platformChips = platformChipHtml(item.channel);
     const title = schedulePostTitle(post);
     const selectedClass = item.targetId === selectedCalendarTargetId ? ' is-selected' : '';
     return '<article class="record-card content-card' + selectedClass + '" id="schedule-item-' + escapeHtml(item.targetId) + '" data-status="' + escapeHtml(status) + '">'
       + '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(item.postId || '') + '" aria-label="開啟貼文 ' + escapeHtml(title) + '">'
       + '<span class="record-thumb">' + thumbnail + '</span>'
       + '<span class="record-body"><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>'
-      + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips
-      + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>'
+      + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + '</span></span>'
       + '</button>'
       + '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">'
       + escapeHtml(targetStatusLabel(status)) + '</em>' + scheduleActions(item) + '</span>'

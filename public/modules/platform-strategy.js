@@ -1,4 +1,5 @@
 import { $, escapeHtml } from './dom.js';
+import { platformIconHtml } from './platform-icon.js';
 
 const STRATEGIES = {
   facebook: {
@@ -24,5 +25,7 @@ export function renderPlatformStrategy(platformId = 'facebook') {
     summary: '請依平台受眾與內容格式檢查文案、素材及發布時間。',
   };
   card.dataset.platform = platformId;
+  const icon = card.querySelector('.platform-strategy-icon');
+  if (icon) icon.innerHTML = platformIconHtml(platformId);
   text.innerHTML = '<strong>' + escapeHtml(strategy.label) + ' 建議</strong>：' + escapeHtml(strategy.summary);
 }

@@ -53,6 +53,7 @@ const componentsCss = `/* ======================================================
 @import url('./components/cards.css?v=${version}');
 @import url('./components/dialogs.css?v=${version}');
 @import url('./components/feedback.css?v=${version}');
+@import url('./components/platform-icons.css?v=${version}');
 `;
 fs.writeFileSync(path.join(__dirname, '../public/css/components.css'), componentsCss, 'utf8');
 console.log(`[OK] public/css/components.css (@import ?v=${version})`);

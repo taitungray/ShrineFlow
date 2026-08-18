@@ -17,7 +17,8 @@ export function renderApiStatus() {
     if (!el) continue;
     el.dataset.ready = item.ready ? 'true' : 'false';
     el.title = item.text;
-    el.textContent = item.label;
+    el.setAttribute('aria-label', item.text);
+    if (item.key !== 'fb') el.textContent = item.label;
   }
   const summary = `${view.ai.text} · ${view.fb.text}`;
   root.title = summary;

@@ -80,6 +80,23 @@ description: ShrineFlow 頂級 UI/UX 設計系統與前端互動規範 (Pro-Max 
 
 ---
 
+## 🏷️ 3.5 平台辨識：掃台用官方 ICON、說明用字
+
+判準：**一眼掃「哪一台」→ 官方 ICON。讀句子／教步驟 → 字。**
+
+- **ICON**：`/icons/facebook.svg`、`/icons/instagram.svg`、`/icons/threads.svg`（Simple Icons 官方路徑）。切台、pill、chip、日曆、連線點。
+- **字**：說明中心、設定頁內文／欄位、toast／錯誤／confirm。
+- **禁**：手畫仿品、只靠色點、說明標題只剩 logo、掃台 pill ICON＋平台名並列。
+
+## 🔢 3.6 側欄數字：只標待辦
+
+`.nav-badge` = 要處理的事。0 或庫存 → 不畫。
+
+- **亮**：發布失敗／重試、待審、收件匣未讀或待回。
+- **不亮**：內容草稿數、日曆排程數、系統通知累積、其他分頁庫存。
+
+詳見 `.cursor/rules/nav-badges.mdc`。
+
 ## 📱 4. 行動端與觸控親和 (Mobile Responsive & Touch Usability)
 
 - 所有按鈕、頁籤與輸入框觸控區域最小 `≥ 44×44px`。

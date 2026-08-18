@@ -43,10 +43,9 @@ export function publishingStatusGroup(status) {
   return 'other';
 }
 
-export function targetStatusSummary(targets = [], platformNames = {}) {
+export function targetStatusSummary(targets = []) {
   if (!Array.isArray(targets) || !targets.length) return '';
-  return targets.map((target) => {
-    const platform = platformNames[target.platformId] || target.platformId || '未指定平台';
-    return [platform, targetStatusLabel(target.status)].join('：');
-  }).join(' · ');
+  const labels = targets.map((target) => targetStatusLabel(target.status));
+  if (new Set(labels).size <= 1) return '';
+  return labels.join(' · ');
 }

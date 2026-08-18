@@ -1,6 +1,8 @@
 import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
-import { clientQuery, hasPermission, state, PLATFORM_NAMES } from './state.js';
+import { clientQuery, currentClient, hasPermission, state, PLATFORM_NAMES } from './state.js';
+import { renderBestTimes } from './best-times.js';
+import { platformPillHtml } from './platform-icon.js';
 
 function targetsOf(post) {
   return Array.isArray(post.targets) && post.targets.length
@@ -8,49 +10,329 @@ function targetsOf(post) {
     : [{ platformId: post.channel || 'facebook', status: post.status || 'draft' }];
 }
 
-function platformLabel(platformId) {
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
+function platformIds() {
+  return state.platforms.length ? state.platforms.map((platform) => platform.id) : Object.keys(PLATFORM_NAMES);
 }
 
-function metricSummary(source) {
-  const metrics = (source?.data || []).map((metric) => {
-    const values = Array.isArray(metric.values) ? metric.values : [];
-    const latest = values.length ? values[values.length - 1]?.value : metric.value;
-    if (latest === undefined || latest === null) return '';
-    return escapeHtml(String(metric.name || metric.title || 'metric')) + ' <strong>' + escapeHtml(String(latest)) + '</strong>';
-  }).filter(Boolean).slice(0, 4);
-  return metrics.length ? metrics.join(' · ') : 'API 已回應，但目前沒有可顯示的指標。';
+const STATUS_LABELS = {
+  draft: '草稿',
+  review: '待審',
+  approved: '已核准',
+  scheduled: '已排程',
+  pending: '待處理',
+  publishing: '發布中',
+  published: '已發布',
+  failed: '失敗',
+  retrying: '重試中',
+  cancelled: '已取消',
+  archived: '已封存',
+  hidden: '已隱藏',
+  partial_success: '部分成功',
+};
+
+const METRIC_LABELS = {
+  page_post_engagements: '貼文互動',
+  page_views_total: '專頁瀏覽',
+  page_follows: '追蹤數',
+  page_daily_follows: '新增追蹤',
+  page_daily_follows_unique: '新增追蹤（不重複）',
+  page_daily_unfollows_unique: '取消追蹤',
+  page_impressions: '曝光',
+  page_impressions_paid: '付費曝光',
+  page_impressions_viral: '病毒曝光',
+  page_impressions_nonviral: '非病毒曝光',
+  page_media_view: '媒體觀看',
+  page_total_media_view_unique: '媒體觀看人數',
+  page_posts_impressions: '貼文曝光',
+  page_posts_impressions_unique: '貼文觸及',
+  page_posts_impressions_organic_unique: '自然觸及',
+  page_total_actions: '專頁行動',
+  page_actions_post_reactions_like_total: '讚',
+  page_actions_post_reactions_love_total: '大心',
+  page_actions_post_reactions_wow_total: '哇',
+  page_actions_post_reactions_haha_total: '哈',
+  page_actions_post_reactions_sorry_total: '嗚',
+  page_actions_post_reactions_anger_total: '怒',
+  page_video_views: '影片觀看',
+  page_video_views_organic: '影片自然觀看',
+  page_video_complete_views_30s: '影片看滿 30 秒',
+  page_fans: '粉絲數',
+  page_fan_adds: '新增粉絲',
+  page_fan_removes: '取消追蹤粉絲',
+  post_media_view: '媒體觀看',
+  post_total_media_view_unique: '觀看人數',
+  post_clicks: '點擊',
+  post_engaged_users: '互動人數',
+  post_impressions: '曝光',
+  post_impressions_organic: '自然曝光',
+  post_impressions_paid: '付費曝光',
+  post_impressions_fan: '粉絲曝光',
+  post_impressions_viral: '病毒曝光',
+  post_impressions_nonviral: '非病毒曝光',
+  post_reactions_like_total: '讚',
+  post_reactions_love_total: '大心',
+  post_reactions_wow_total: '哇',
+  post_reactions_haha_total: '哈',
+  post_reactions_sorry_total: '嗚',
+  post_reactions_anger_total: '怒',
+  post_activity_by_action_type: '互動類型',
+  post_video_views: '影片觀看',
+  post_video_views_organic: '影片自然觀看',
+  post_video_complete_views_organic: '影片完播',
+  likes: '讚',
+  comments: '留言',
+  shares: '分享',
+  reactions: '心情',
+  views: '觀看',
+  reach: '觸及',
+  saves: '收藏',
+  saved: '收藏',
+  replies: '回覆',
+  profile_links_taps: '個人檔連結點擊',
+  accounts_engaged: '互動帳號',
+  total_interactions: '總互動',
+  follower_count: '追蹤數',
+  followers_count: '追蹤數',
+  follows_and_unfollows: '追蹤增減',
+  website_clicks: '網站點擊',
+  profile_views: '個人檔瀏覽',
+  follows: '因此追蹤',
+  profile_visits: '個人檔造訪',
+  navigation: '導覽',
+  reposts: '轉發',
+  quotes: '引用',
+  clicks: '點擊',
+};
+
+const ACCOUNT_METRIC_GROUPS = {
+  facebook: [
+    { id: 'audience', title: '粉絲與追蹤', names: ['page_follows', 'page_fans', 'page_daily_follows', 'page_daily_follows_unique', 'page_daily_unfollows_unique', 'page_fan_adds', 'page_fan_removes'] },
+    { id: 'reach', title: '曝光與觸及', names: ['page_impressions', 'page_impressions_paid', 'page_impressions_viral', 'page_impressions_nonviral', 'page_posts_impressions', 'page_posts_impressions_unique', 'page_posts_impressions_organic_unique'] },
+    { id: 'engagement', title: '互動與心情', names: ['page_post_engagements', 'page_total_actions', 'page_actions_post_reactions_like_total', 'page_actions_post_reactions_love_total', 'page_actions_post_reactions_wow_total', 'page_actions_post_reactions_haha_total', 'page_actions_post_reactions_sorry_total', 'page_actions_post_reactions_anger_total'] },
+    { id: 'media', title: '媒體與影片', names: ['page_media_view', 'page_total_media_view_unique', 'page_video_views', 'page_video_views_organic', 'page_video_complete_views_30s', 'page_views_total'] },
+  ],
+  instagram: [
+    { id: 'reach', title: '觀看與觸及', names: ['views', 'reach'] },
+    { id: 'engagement', title: '互動', names: ['likes', 'comments', 'shares', 'saves', 'replies', 'total_interactions', 'accounts_engaged'] },
+    { id: 'profile', title: '個人檔', names: ['profile_views', 'profile_links_taps', 'website_clicks'] },
+    { id: 'audience', title: '追蹤', names: ['follower_count', 'follows_and_unfollows'] },
+  ],
+  threads: [
+    { id: 'reach', title: '觀看', names: ['views'] },
+    { id: 'engagement', title: '互動', names: ['likes', 'replies', 'reposts', 'quotes', 'shares', 'clicks'] },
+    { id: 'audience', title: '追蹤', names: ['followers_count'] },
+  ],
+};
+
+const POST_METRIC_GROUPS = {
+  facebook: [
+    { id: 'reach', title: '曝光', names: ['post_impressions', 'post_impressions_organic', 'post_impressions_paid', 'post_impressions_fan', 'post_impressions_viral', 'post_impressions_nonviral'] },
+    { id: 'engagement', title: '互動', names: ['likes', 'comments', 'shares', 'reactions', 'post_clicks', 'post_engaged_users', 'post_activity_by_action_type', 'post_reactions_like_total', 'post_reactions_love_total', 'post_reactions_wow_total', 'post_reactions_haha_total', 'post_reactions_sorry_total', 'post_reactions_anger_total'] },
+    { id: 'media', title: '媒體與影片', names: ['post_media_view', 'post_total_media_view_unique', 'post_video_views', 'post_video_views_organic', 'post_video_complete_views_organic'] },
+  ],
+  instagram: [
+    { id: 'reach', title: '觀看與觸及', names: ['views', 'reach'] },
+    { id: 'engagement', title: '互動', names: ['likes', 'comments', 'shares', 'saved', 'total_interactions', 'follows'] },
+    { id: 'profile', title: '個人檔', names: ['profile_visits', 'navigation'] },
+  ],
+  threads: [
+    { id: 'reach', title: '觀看', names: ['views'] },
+    { id: 'engagement', title: '互動', names: ['likes', 'replies', 'reposts', 'quotes', 'shares', 'clicks'] },
+  ],
+};
+
+const SNAPSHOT_METRICS = new Set(['page_follows', 'page_fans', 'follower_count', 'followers_count']);
+
+let insightsLoadToken = 0;
+let insightsLoading = false;
+
+function formatMetricNumber(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return Object.entries(value)
+      .map(([key, inner]) => (METRIC_LABELS[key] || key) + ' ' + formatMetricNumber(inner))
+      .join('／');
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? new Intl.NumberFormat('zh-TW').format(numeric) : String(value);
+}
+
+function formatShortDay(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return String(date.getMonth() + 1).padStart(2, '0') + '/' + String(date.getDate()).padStart(2, '0');
+}
+
+function metricDisplayValue(metric) {
+  if (metric?.value !== undefined && metric?.value !== null && metric?.value !== '') return metric.value;
+  const values = Array.isArray(metric?.values) ? metric.values : [];
+  if (!values.length) return undefined;
+  const name = String(metric.name || '');
+  if (SNAPSHOT_METRICS.has(name) || values.some((item) => item?.value && typeof item.value === 'object')) {
+    return values[values.length - 1]?.value;
+  }
+  const numbers = values.map((item) => Number(item.value)).filter((value) => Number.isFinite(value));
+  return numbers.length ? numbers.reduce((sum, value) => sum + value, 0) : values[values.length - 1]?.value;
+}
+
+function metricHasDisplayValue(value) {
+  if (value === undefined || value === null || value === '') return false;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+}
+
+function dailyBreakdown(metric) {
+  const values = Array.isArray(metric?.values) ? metric.values : [];
+  const days = values
+    .map((item) => {
+      const day = formatShortDay(item?.end_time || item?.endTime || '');
+      if (!day || !metricHasDisplayValue(item?.value)) return '';
+      return '<span><time>' + escapeHtml(day) + '</time> ' + escapeHtml(formatMetricNumber(item.value)) + '</span>';
+    })
+    .filter(Boolean);
+  return days.length > 1 ? '<div class="insights-metric-days">' + days.join('') + '</div>' : '';
+}
+
+function renderMetricCard(metric) {
+  const value = metricDisplayValue(metric);
+  const label = METRIC_LABELS[metric.name] || metric.title || metric.name || '指標';
+  const display = metricHasDisplayValue(value) ? formatMetricNumber(value) : '—';
+  const period = metric.period ? '<small>' + escapeHtml(metric.period) + '</small>' : '';
+  return '<div class="insights-metric"><span>' + escapeHtml(String(label)) + period + '</span><strong>' + escapeHtml(display) + '</strong>' + dailyBreakdown(metric) + '</div>';
+}
+
+function groupedMetricSections(source, groupsByPlatform) {
+  const metrics = Array.isArray(source?.data) ? source.data : [];
+  if (!metrics.length) {
+    return '<p class="helper">API 已回應，但這段期間沒有可列出的指標名稱。權限不足或粉專沒有對應 Insights 時，Meta 會回空資料。</p>';
+  }
+  const groups = groupsByPlatform[source.platformId] || [];
+  const used = new Set();
+  const sections = groups.map((group) => {
+    const items = group.names
+      .map((name) => metrics.find((metric) => metric.name === name))
+      .filter(Boolean);
+    items.forEach((metric) => used.add(metric.name));
+    if (!items.length) return '';
+    return '<div class="insights-metric-group"><h4>' + escapeHtml(group.title) + '</h4><div class="insights-metric-grid">'
+      + items.map(renderMetricCard).join('') + '</div></div>';
+  }).filter(Boolean);
+  const leftover = metrics.filter((metric) => !used.has(metric.name));
+  if (leftover.length) {
+    sections.push('<div class="insights-metric-group"><h4>其他指標</h4><div class="insights-metric-grid">'
+      + leftover.map(renderMetricCard).join('') + '</div></div>');
+  }
+  return sections.join('') || '<p class="helper">有回傳資料，但無法歸類顯示。</p>';
+}
+
+function skippedMetricsNote(source) {
+  const skipped = Array.isArray(source?.skippedMetrics) ? source.skippedMetrics : [];
+  if (!skipped.length) return '';
+  return '<p class="helper">已略過無效指標：' + skipped.map((name) => escapeHtml(METRIC_LABELS[name] || name)).join('、') + '。</p>';
 }
 
 function sourceStatusText(source) {
   if (!source) return '尚未同步真實成效';
   if (source.status === 'synced') {
-    return '已同步 ' + (source.fetchedAt ? escapeHtml(formatDate(source.fetchedAt)) : '最新資料');
+    return '已同步 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '最新資料');
   }
   if (source.status === 'cached') {
-    return '顯示已保存資料 ' + (source.fetchedAt ? escapeHtml(formatDate(source.fetchedAt)) : '') + '（非即時）';
+    return '顯示已保存資料 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '') + '（非即時）';
   }
   if (source.status === 'error') {
-    return '同步失敗：' + escapeHtml(source.error?.message || '請檢查平台權限與 Token');
+    return '同步失敗：' + (source.error?.message || '請檢查平台權限與 Token');
   }
   if (source.status === 'not_available') {
-    return escapeHtml(source.error?.message || '此 target 尚無可用的貼文 Insights。');
+    return source.error?.message || '此 target 尚無可用的貼文 Insights。';
   }
   if (source.status === 'not_configured') {
-    return escapeHtml(source.error?.message || '尚未設定此平台 Insights 憑證');
+    return source.error?.message || '尚未設定此平台 Insights 憑證';
   }
   return '尚未設定此平台 Insights 憑證';
 }
 
-async function loadInsightsScope(scope) {
-  state.insightsScope = scope;
-  const [insights, repurposeCandidates] = await Promise.all([
-    api(clientQuery('/api/insights?scope=' + encodeURIComponent(scope))),
-    api(clientQuery('/api/insights/repurpose')).catch(() => ({ status: 'insufficient_data', candidates: [] })),
-  ]);
-  state.insights = insights;
-  state.repurposeCandidates = repurposeCandidates;
-  renderInsights();
+function rangeText(source) {
+  const since = source?.range?.since;
+  const until = source?.range?.until;
+  if (!since || !until) return '帳號區間 ' + String(state.insightsRange || 7) + ' 日';
+  return formatDate(since) + ' → ' + formatDate(until);
+}
+
+function insightsQuery(extra = '') {
+  const platform = state.insightsPlatform || 'facebook';
+  const days = Number(state.insightsRange || 7);
+  const until = new Date();
+  const since = new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
+  return extra
+    + (extra.includes('?') ? '&' : '?')
+    + 'platform=' + encodeURIComponent(platform)
+    + '&since=' + encodeURIComponent(since.toISOString())
+    + '&until=' + encodeURIComponent(until.toISOString());
+}
+
+function cacheKeyMatches(record) {
+  return record
+    && record.platformId === (state.insightsPlatform || 'facebook')
+    && record.clientId === (state.currentClientId || record.clientId)
+    && Number(record.rangeDays || state.insightsRange) === Number(state.insightsRange || 7);
+}
+
+function mergeAccountSources(payload) {
+  const incoming = Array.isArray(payload?.sources) ? payload.sources : [];
+  const platform = state.insightsPlatform || 'facebook';
+  const others = (state.insights?.sources || []).filter((item) => item.platformId !== platform);
+  return {
+    ...payload,
+    scope: 'account',
+    sources: [...others, ...incoming],
+  };
+}
+
+async function loadInsightsDetail({ refreshAccount = true } = {}) {
+  const token = ++insightsLoadToken;
+  insightsLoading = true;
+  const platform = state.insightsPlatform || 'facebook';
+  const refreshButton = $('#btnRefreshInsights');
+  if (refreshButton) refreshButton.disabled = true;
+  try {
+    const accountPath = clientQuery('/api/insights' + insightsQuery('?scope=account'));
+    const postsPath = clientQuery('/api/insights' + insightsQuery('?scope=posts') + '&limit=50');
+    const bestTimesPath = clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(platform));
+    const repurposePath = clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(platform));
+    const [accountInsights, postInsights, bestTimes, repurposeCandidates] = await Promise.all([
+      refreshAccount
+        ? api(accountPath).catch((error) => ({ status: 'error', sources: [], error: { message: error.message } }))
+        : Promise.resolve(state.insights || { status: 'unavailable', sources: [] }),
+      api(postsPath).catch((error) => ({ status: 'error', sources: [], error: { message: error.message } })),
+      api(bestTimesPath).catch((error) => ({ status: 'unavailable', slots: [], error: error.message })),
+      api(repurposePath).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+    ]);
+    if (token !== insightsLoadToken) return;
+    if (refreshAccount) state.insights = mergeAccountSources(accountInsights);
+    state.insightsPosts = {
+      ...postInsights,
+      platformId: platform,
+      clientId: state.currentClientId || postInsights.clientId || '',
+      rangeDays: Number(state.insightsRange || 7),
+    };
+    state.bestTimes = bestTimes;
+    state.repurposeCandidates = repurposeCandidates;
+    renderInsights();
+    renderBestTimes();
+  } catch (error) {
+    if (token !== insightsLoadToken) return;
+    const notice = $('#insightsSourceNotice');
+    if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
+  } finally {
+    if (token === insightsLoadToken) insightsLoading = false;
+    const button = $('#btnRefreshInsights');
+    if (button) button.disabled = false;
+  }
+}
+
+function ensureInsightsDetail() {
+  if (insightsLoading) return;
+  if (cacheKeyMatches(state.insightsPosts)) return;
+  loadInsightsDetail({ refreshAccount: true });
 }
 
 async function createRepurposeDraft(button) {
@@ -72,19 +354,37 @@ async function createRepurposeDraft(button) {
   }
 }
 
+function renderPlatformTabs() {
+  const tabs = $('#insightsPlatformTabs');
+  if (!tabs) return;
+  const available = platformIds();
+  if (!available.includes(state.insightsPlatform)) state.insightsPlatform = available[0] || 'facebook';
+  const posts = state.posts || [];
+  tabs.innerHTML = available.map((platformId) => {
+    const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId).length;
+    return platformPillHtml(platformId, {
+      name: 'insightsPlatform',
+      checked: platformId === state.insightsPlatform,
+      count: count || '',
+    });
+  }).join('');
+}
+
 function renderRepurpose() {
   const container = $('#repurposeCard');
   if (!container) return;
   const result = state.repurposeCandidates || { status: 'insufficient_data', candidates: [] };
-  const candidates = Array.isArray(result.candidates) ? result.candidates : [];
+  const platform = state.insightsPlatform || 'facebook';
+  const candidates = (Array.isArray(result.candidates) ? result.candidates : [])
+    .filter((candidate) => !candidate.platformId || candidate.platformId === platform);
   const canCreate = hasPermission('content.create');
-  const notice = result.status === 'ready'
+  const notice = result.status === 'ready' && candidates.length
     ? '以下只根據已保存的貼文 Insights 排名；沒有真實貼文成效的內容不會出現在建議中。'
-    : '目前沒有同時具備已發布 target 與已保存貼文 Insights 的內容，因此不產生猜測式建議。';
+    : '目前沒有同時具備已發布 target 與已保存貼文 Insights 的內容。';
   const rows = candidates.length
     ? '<div class="repurpose-candidate-grid">' + candidates.map((candidate) => (
       '<article class="repurpose-candidate-card">'
-      + '<div class="repurpose-candidate-heading"><div><span class="section-tag">#' + escapeHtml(String(candidate.rank || '—')) + ' · ' + escapeHtml(platformLabel(candidate.platformId)) + '</span><h4>' + escapeHtml(candidate.postTitle || candidate.postId || '未命名內容') + '</h4></div>'
+      + '<div class="repurpose-candidate-heading"><div><span class="section-tag">#' + escapeHtml(String(candidate.rank || '—')) + '</span><h4>' + escapeHtml(candidate.postTitle || candidate.postId || '未命名內容') + '</h4></div>'
       + '<strong>' + escapeHtml(String(candidate.metric?.value ?? '—')) + '</strong></div>'
       + '<p class="repurpose-candidate-meta">依 ' + escapeHtml(candidate.metric?.name || '已保存指標') + ' 排名 · 發布於 ' + escapeHtml(candidate.publishedAt ? formatDate(candidate.publishedAt) : '未知') + ' · 成效資料 ' + escapeHtml(candidate.snapshotFetchedAt ? formatDate(candidate.snapshotFetchedAt) : '未知') + '</p>'
       + (canCreate
@@ -93,86 +393,188 @@ function renderRepurpose() {
       + '</article>'
     )).join('') + '</div>'
     : '<p class="helper">' + notice + '</p>';
-  container.innerHTML = '<div class="repurpose-heading"><div><span class="section-tag">REPURPOSE CANDIDATES</span><h3>已發布再製</h3></div><span class="badge" data-status="' + escapeHtml(result.status || 'insufficient_data') + '">' + escapeHtml(result.status === 'ready' ? '有真實資料' : '資料不足') + '</span></div>'
+  container.innerHTML = '<div class="repurpose-heading"><div><span class="section-tag">REPURPOSE CANDIDATES</span><h3>已發布再製</h3></div><span class="badge" data-status="' + escapeHtml(result.status || 'insufficient_data') + '">' + escapeHtml(result.status === 'ready' && candidates.length ? '有真實資料' : '資料不足') + '</span></div>'
     + '<p class="helper">' + notice + '</p>' + rows;
   container.querySelectorAll('[data-repurpose-post]').forEach((button) => {
     button.addEventListener('click', () => createRepurposeDraft(button));
   });
 }
 
+function countByStatus(targets) {
+  return targets.reduce((counts, target) => {
+    const key = target.status || 'draft';
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function renderFunnel(targets) {
+  const counts = countByStatus(targets);
+  const order = ['draft', 'review', 'approved', 'scheduled', 'pending', 'publishing', 'published', 'failed', 'retrying', 'cancelled'];
+  const items = order
+    .filter((status) => counts[status])
+    .map((status) => '<div class="insights-funnel-item" data-status="' + escapeHtml(status) + '"><span>' + escapeHtml(STATUS_LABELS[status] || status) + '</span><strong>' + counts[status] + '</strong></div>')
+    .join('');
+  return items
+    ? '<div class="insights-funnel">' + items + '</div>'
+    : '<p class="helper">這個平台還沒有本機 target。</p>';
+}
+
+function accountCards(platformId) {
+  const client = currentClient();
+  const accounts = (client?.accounts || []).filter((account) => account.platformId === platformId);
+  const sources = (state.insights?.sources || []).filter((source) => source.platformId === platformId);
+  if (!accounts.length && !sources.length) {
+    return '<p class="helper">尚未綁定帳號。到平台連線完成授權後才能拉真實成效。</p><a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">前往平台連線 →</a>';
+  }
+  const rows = (sources.length ? sources : accounts.map((account) => ({
+    accountId: account.id,
+    accountName: account.name || account.id,
+    platformId,
+    status: account.configured === false || account.enabled === false ? 'not_configured' : 'unavailable',
+    data: [],
+  }))).map((source) => {
+    const live = ['synced', 'cached'].includes(source.status);
+    return '<article class="insights-account-card" data-status="' + escapeHtml(source.status || 'unavailable') + '">'
+      + '<div class="insights-account-heading"><div><h4>' + escapeHtml(source.accountName || source.accountId || '未命名帳號') + '</h4>'
+      + '<small>' + escapeHtml(source.accountId || '') + (source.source ? ' · ' + escapeHtml(source.source) : '') + '</small></div>'
+      + '<p class="insights-external-stats" data-status="' + escapeHtml(source.status || 'unavailable') + '">' + escapeHtml(sourceStatusText(source)) + '</p></div>'
+      + '<p class="insights-account-range">' + escapeHtml(rangeText(source)) + '</p>'
+      + (source.error?.message && source.status !== 'synced' ? '<p class="helper">' + escapeHtml(source.error.message) + '</p>' : '')
+      + (live ? groupedMetricSections(source, ACCOUNT_METRIC_GROUPS) + skippedMetricsNote(source) : '')
+      + '</article>';
+  });
+  return rows.join('');
+}
+
+function postTitle(post) {
+  return post.contentTopic || post.godName || post.id || '未命名內容';
+}
+
+function postPreview(post, target) {
+  const text = String(target?.overrideText || post.generatedCopy || post.caption || post.content || '').trim();
+  if (!text) return '沒有可預覽的文案。';
+  return text.length > 140 ? text.slice(0, 140) + '…' : text;
+}
+
+function renderPublishedPosts(platformId, targets) {
+  const sources = Array.isArray(state.insightsPosts?.sources) ? state.insightsPosts.sources : [];
+  const published = targets
+    .filter((item) => item.target.status === 'published')
+    .sort((left, right) => new Date(right.target.publishedAt || right.post.updatedAt || 0) - new Date(left.target.publishedAt || left.post.updatedAt || 0));
+  if (!published.length) {
+    return '<p class="helper">這個平台還沒有已發布內容，因此沒有貼文 Insights 可對照。</p>';
+  }
+  const loading = insightsLoading && !cacheKeyMatches(state.insightsPosts);
+  return '<div class="insights-post-list">' + published.map(({ post, target }) => {
+    const source = sources.find((item) => item.targetId === target.id || item.externalId === target.externalId);
+    const live = ['synced', 'cached'].includes(source?.status);
+    return '<article class="insights-post-card">'
+      + '<div class="insights-post-heading"><div><h4>' + escapeHtml(postTitle(post)) + '</h4>'
+      + '<small>' + escapeHtml(STATUS_LABELS[target.status] || target.status)
+      + ' · ' + escapeHtml(target.publishedAt ? formatDate(target.publishedAt) : '發布時間未知')
+      + (target.accountId ? ' · ' + escapeHtml(target.accountId) : '')
+      + (target.externalId ? ' · 平台 ID ' + escapeHtml(target.externalId) : ' · 沒有平台貼文 ID')
+      + '</small></div>'
+      + '<p class="insights-external-stats" data-status="' + escapeHtml(source?.status || (loading ? 'pending' : 'unavailable')) + '">'
+      + escapeHtml(source ? sourceStatusText(source) : (loading ? '正在同步貼文成效…' : '尚未同步這則貼文成效'))
+      + '</p></div>'
+      + '<p class="insights-post-excerpt">' + escapeHtml(postPreview(post, target)) + '</p>'
+      + (live ? groupedMetricSections(source, POST_METRIC_GROUPS) + skippedMetricsNote(source) : '')
+      + (!live && source?.error?.message ? '<p class="helper">' + escapeHtml(source.error.message) + '</p>' : '')
+      + '</article>';
+  }).join('') + '</div>';
+}
+
+function renderLocalTargets(platformId, targets) {
+  const recent = [...targets]
+    .sort((left, right) => new Date(right.target.updatedAt || right.target.publishedAt || right.post.updatedAt || 0) - new Date(left.target.updatedAt || left.target.publishedAt || left.post.updatedAt || 0))
+    .slice(0, 20);
+  if (!recent.length) return '';
+  return '<div class="insights-local-table-wrap"><table class="insights-local-table"><caption>本機最近 20 筆 target</caption><thead><tr><th>內容</th><th>狀態</th><th>帳號</th><th>時間</th><th>平台貼文 ID</th></tr></thead><tbody>'
+    + recent.map(({ post, target }) => '<tr><td>' + escapeHtml(postTitle(post)) + '</td><td>' + escapeHtml(STATUS_LABELS[target.status] || target.status || '—') + '</td><td>' + escapeHtml(target.accountId || '—') + '</td><td>' + escapeHtml(target.publishedAt || target.scheduledAt || post.updatedAt ? formatDate(target.publishedAt || target.scheduledAt || post.updatedAt) : '—') + '</td><td>' + escapeHtml(target.externalId || '—') + '</td></tr>').join('')
+    + '</tbody></table></div>';
+}
+
 export function initInsightsListeners() {
-  const filter = $('#insightsScopeFilter');
-  filter?.addEventListener('change', async (event) => {
-    const scope = event.target.value === 'posts' ? 'posts' : 'account';
-    try {
-      await loadInsightsScope(scope);
-    } catch (error) {
-      const notice = $('#insightsSourceNotice');
-      if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
-    }
+  $('#insightsPlatformTabs')?.addEventListener('change', (event) => {
+    const input = event.target.closest('input[name="insightsPlatform"]');
+    if (!input) return;
+    state.insightsPlatform = input.value;
+    renderInsights();
+    loadInsightsDetail({ refreshAccount: true });
   });
 
-  $('#btnRefreshInsights')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    try {
-      await loadInsightsScope(state.insightsScope || 'account');
-    } catch (error) {
-      const notice = $('#insightsSourceNotice');
-      if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
-    } finally {
-      button.disabled = false;
-    }
+  $('#insightsRangeFilter')?.addEventListener('change', (event) => {
+    const input = event.target.closest('input[name="insightsRange"]');
+    if (!input) return;
+    state.insightsRange = Number(input.value) || 7;
+    state.insightsPosts = null;
+    loadInsightsDetail({ refreshAccount: true });
+  });
+
+  $('#btnRefreshInsights')?.addEventListener('click', () => {
+    state.insightsPosts = null;
+    loadInsightsDetail({ refreshAccount: true });
   });
 }
 
 export function renderInsights() {
+  renderPlatformTabs();
   renderRepurpose();
   const summary = $('#insightsOperationalSummary');
-  const platformGrid = $('#insightsPlatformGrid');
-  const targetGrid = $('#insightsTargetGrid');
+  const detail = $('#insightsPlatformDetail');
   const notice = $('#insightsSourceNotice');
-  if (!summary || !platformGrid) return;
+  if (!summary || !detail) return;
+
+  const platformId = state.insightsPlatform || 'facebook';
+  const rangeInput = document.querySelector('#insightsRangeFilter input[value="' + String(state.insightsRange || 7) + '"]');
+  if (rangeInput) rangeInput.checked = true;
+
   const posts = state.posts || [];
-  const targets = posts.flatMap(targetsOf);
+  const platformEntries = posts.flatMap((post) => targetsOf(post).map((target) => ({ post, target })))
+    .filter((item) => item.target.platformId === platformId);
+  const targets = platformEntries.map((item) => item.target);
   const published = targets.filter((target) => target.status === 'published').length;
   const scheduled = targets.filter((target) => ['scheduled', 'pending', 'publishing'].includes(target.status)).length;
   const failed = targets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
-  const partial = posts.filter((post) => post.status === 'partial_success').length;
-  summary.innerHTML = [['內容總數', posts.length, '目前品牌'], ['已發布目標', published, '本機發布狀態'], ['部分成功', partial, '需確認的平台'], ['排程中', scheduled, '待處理目標'], ['需處理', failed, '失敗或重試']].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
-  const insights = state.insights || { status: 'unavailable', sources: [] };
-  const scope = insights.scope || state.insightsScope || 'account';
-  state.insightsScope = scope;
-  const scopeInput = document.querySelector('#insightsScopeFilter input[value="' + scope + '"]');
-  if (scopeInput) scopeInput.checked = true;
+  const drafts = targets.filter((target) => ['draft', 'review', 'approved'].includes(target.status)).length;
+  const sources = (state.insights?.sources || []).filter((source) => source.platformId === platformId);
+  const liveSource = sources.find((source) => ['synced', 'cached'].includes(source.status));
+
+  summary.innerHTML = [
+    ['目標', targets.length, '此平台全部 target'],
+    ['草稿／待審', drafts, '尚未進入排程'],
+    ['排程中', scheduled, '待發或發布中'],
+    ['已發布', published, '可對照貼文 Insights'],
+    ['需處理', failed, '失敗或重試'],
+    ['已同步帳號', sources.filter((source) => source.status === 'synced').length, liveSource ? rangeText(liveSource) : '尚未同步'],
+  ].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
+
   if (notice) {
     const latest = posts.map((post) => post.updatedAt || post.createdAt).filter(Boolean).sort().pop();
-    const externalText = insights.status === 'synced' || insights.status === 'partial'
-      ? '下方平台成效只顯示已由 Meta API 回傳的真實資料。'
-      : '目前沒有可用的真實平台成效；未同步時不顯示推測數字。';
-    notice.innerHTML = '<strong>目前顯示營運資料</strong><span>本機內容與 target 狀態可直接查看；' + externalText + '</span>' + (latest ? '<small>本機內容最後更新：' + escapeHtml(formatDate(latest)) + '</small>' : '');
+    const liveCount = sources.filter((source) => ['synced', 'cached'].includes(source.status)).length;
+    notice.innerHTML = '<strong>成效</strong><span>'
+      + (liveCount
+        ? '帳號數字來自 Meta API；貼文列會對照已發布 target 的真實 Insights。'
+        : '目前沒有這平台的真實帳號成效。本機漏斗仍可看，數字不會用猜測補上。')
+      + '</span>'
+      + (latest ? '<small>本機內容最後更新：' + escapeHtml(formatDate(latest)) + '</small>' : '');
   }
-  const platformIds = state.platforms.length ? state.platforms.map((platform) => platform.id) : Object.keys(PLATFORM_NAMES);
-  platformGrid.innerHTML = platformIds.map((platformId) => {
-    const platformTargets = targets.filter((target) => target.platformId === platformId);
-    const platformPublished = platformTargets.filter((target) => target.status === 'published').length;
-    const platformFailed = platformTargets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
-    const source = (insights.sources || []).find((item) => item.platformId === platformId);
-    const externalStats = ['synced', 'cached'].includes(source?.status)
-      ? metricSummary(source) + ' · ' + sourceStatusText(source)
-      : sourceStatusText(source);
-    return '<article class="insights-platform-card"><div class="insights-platform-heading"><span class="platform-mark" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml((platformLabel(platformId)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(platformLabel(platformId)) + '</h3><span>本機發布摘要</span></div></div><div class="insights-platform-stats"><span>目標 <strong>' + platformTargets.length + '</strong></span><span>成功 <strong>' + platformPublished + '</strong></span><span>需處理 <strong>' + platformFailed + '</strong></span></div><p class="insights-external-stats" data-status="' + escapeHtml(source?.status || 'unavailable') + '">' + externalStats + '</p></article>';
-  }).join('');
 
-  if (targetGrid) {
-    targetGrid.classList.toggle('is-hidden', scope !== 'posts');
-    if (scope === 'posts') {
-      const sources = insights.sources || [];
-      targetGrid.innerHTML = sources.length
-        ? sources.map((source) => '<article class="insights-target-card"><div class="insights-target-heading"><span class="platform-mark" data-platform="' + escapeHtml(source.platformId) + '">' + escapeHtml((platformLabel(source.platformId)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(source.postTitle || source.postId || source.targetId || '未命名內容') + '</h3><small>' + escapeHtml(source.accountName || source.accountId || '') + '</small></div></div><p class="insights-external-stats" data-status="' + escapeHtml(source.status || 'unavailable') + '">' + (['synced', 'cached'].includes(source.status) ? metricSummary(source) + ' · ' : '') + sourceStatusText(source) + '</p></article>').join('')
-        : '<p class="helper">目前品牌沒有已發布且帶有平台貼文 ID 的 target。</p>';
-    } else {
-      targetGrid.innerHTML = '';
-    }
-  }
+  detail.innerHTML = '<fieldset class="form-group-card insights-section"><legend class="group-title">本機發布漏斗</legend>'
+    + '<p class="helper">只統計目前品牌此平台的 target 狀態，不是平台後台數字。</p>'
+    + renderFunnel(targets)
+    + renderLocalTargets(platformId, platformEntries)
+    + '</fieldset>'
+    + '<fieldset class="form-group-card insights-section"><legend class="group-title">帳號成效</legend>'
+    + '<p class="helper">粉絲、曝光、互動依帳號區間彙總。空值顯示為 —，不會改成 0 來假裝有資料。</p>'
+    + accountCards(platformId)
+    + '</fieldset>'
+    + '<fieldset class="form-group-card insights-section"><legend class="group-title">已發布內容成效</legend>'
+    + '<p class="helper">每一則已發布 target 分開列：文案摘要、平台貼文 ID、同步狀態與貼文指標。</p>'
+    + renderPublishedPosts(platformId, platformEntries)
+    + '</fieldset>';
+
+  ensureInsightsDetail();
 }

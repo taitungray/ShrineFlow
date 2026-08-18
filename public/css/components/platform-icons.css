@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Official Facebook / Instagram / Threads marks (Simple Icons paths).
+   Scan with the real logo. Help / settings copy stays text.
+   ========================================================================== */
+
+.platform-icon,
+.platform-chip,
+.platform-mark,
+.calendar-item-platform {
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.platform-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.platform-chip {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+
+.platform-chip-more {
+  display: inline-flex;
+  width: auto;
+  min-width: 22px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.platform-mark {
+  width: 22px;
+  height: 22px;
+}
+
+.radio-pill.radio-pill-platform {
+  flex: 0 0 44px;
+  width: 44px;
+}
+
+.radio-pill.radio-pill-platform > span {
+  position: relative;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  gap: 0;
+  border-color: transparent;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.radio-pill.radio-pill-platform input[type="radio"]:checked + span,
+.radio-pill.radio-pill-platform input[type="checkbox"]:checked + span,
+.radio-pill.radio-pill-platform:hover input[type="radio"]:not(:checked):not(:disabled) + span,
+.radio-pill.radio-pill-platform:hover input[type="checkbox"]:not(:checked):not(:disabled) + span {
+  color: inherit;
+  border-color: var(--brand);
+  background: transparent;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+
+.radio-pill.radio-pill-platform:has(.platform-pill-extra) {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.radio-pill.radio-pill-platform:has(.platform-pill-extra) > span {
+  width: auto;
+  min-width: 44px;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+.radio-pill.radio-pill-platform .platform-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.radio-pill.radio-pill-platform .platform-scan-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--brand);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
+.radio-pill.radio-pill-platform .platform-pill-extra {
+  display: inline-flex;
+  max-width: 12rem;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-tab-platform {
+  min-width: 44px;
+  padding: 8px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.settings-tab-platform .platform-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.settings-tab-platform.active,
+.settings-tab-platform:hover:not(.active) {
+  color: inherit;
+  border-color: var(--brand);
+  background: transparent;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+
+.status-dot-platform {
+  min-width: 44px;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.status-dot-platform .platform-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.calendar-item-platform {
+  width: 14px;
+  height: 14px;
+  flex-basis: 14px;
+}
+
+.platform-strategy-icon {
+  display: grid;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  place-items: center;
+  background: transparent;
+}
+
+.platform-strategy-icon .platform-icon {
+  width: 20px;
+  height: 20px;
+}
+

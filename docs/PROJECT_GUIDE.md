@@ -136,9 +136,9 @@ Evergreen 只能從已發布內容開始。設定間隔天數與最多再發布�
 
 ### 8. Insights、最佳時段與再製
 
-Insights 只顯示平台 API 回傳或有時間戳的 cached 資料。沒有真實資料時會顯示 `insufficient_data` 或不可用，不會自行估算數字。
+Insights 只顯示平台 API 回傳或有時間戳的 cached 資料。沒有真實資料時會顯示 `insufficient_data` 或不可用，不會自行估算數字。粉專／IG／Threads 會盡量拉現行有機 Insights；單一名稱失效會略過，不整包失敗。廣告花費不在這頁。Facebook 貼文另讀讚／留言／分享／心情。
 
-最佳時段至少需要 10 筆已發布樣本。再製候選只從已保存真實 Insights 的已發布 target 產生，建立後是新的草稿，不會覆寫原貼文。
+最佳時段：有 1 筆已發布紀錄就顯示時段分布。樣本少標 thin／exploratory，不擋畫面、不改 Queue。再製候選只從已保存真實 Insights 的已發布 target 產生，建立後是新的草稿，不會覆寫原貼文。
 
 ### 9. Inbox
 

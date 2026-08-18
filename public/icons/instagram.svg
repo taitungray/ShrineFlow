@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true">
+  <defs>
+    <radialGradient id="igAppMark" cx="32%" cy="108%" r="1.2">
+      <stop offset="0" stop-color="#fdf497"/>
+      <stop offset=".08" stop-color="#fdf497"/>
+      <stop offset=".45" stop-color="#fd5949"/>
+      <stop offset=".6" stop-color="#d6249f"/>
+      <stop offset="1" stop-color="#285AEB"/>
+    </radialGradient>
+  </defs>
+  <rect width="24" height="24" rx="6.2" fill="url(#igAppMark)"/>
+  <rect x="6.15" y="6.15" width="11.7" height="11.7" rx="3.4" fill="none" stroke="#fff" stroke-width="1.7"/>
+  <circle cx="12" cy="12.15" r="2.85" fill="none" stroke="#fff" stroke-width="1.7"/>
+  <circle cx="16.15" cy="8.15" r=".95" fill="#fff"/>
+</svg>

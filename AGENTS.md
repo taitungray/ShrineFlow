@@ -69,6 +69,8 @@
 4. **操作方便性與佈局 (Usability & Layout)**
    - **避免過度折疊與嵌套**：不要盲目將所有東西縮起來或做成選單/折疊選單 (`<details>`)。常用的重要操作（如媒體上傳、神明名稱、發布平台與格式）必須直接展開在畫面上，減少點擊層級與步驟。
    - **直覺預覽與動作**：編輯區與預覽區並排呈現，按鈕具備明確的主次階層（Primary CTA: 漸變主色按鈕、Secondary: 邊框按鈕、Dark: 暗色按鈕）。
+   - **平台辨識：掃台用官方 ICON、說明用字**：一眼辨「哪一台」用 `public/icons/{facebook,instagram,threads}.svg`（官方路徑）＋`aria-label`。禁止手畫仿品或只靠色點。說明、設定內文、toast／錯誤用平台名文字。詳見 `.cursor/rules/platform-brand-icons.mdc`。
+   - **側欄數字只標待辦**：`.nav-badge` 只給失敗／待審／未讀待回。草稿篇數、已排程筆數等庫存不畫；0 就藏。詳見 `.cursor/rules/nav-badges.mdc`。
 
 ## 📦 版本控制準則 (Git Workflow)
 

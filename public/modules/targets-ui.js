@@ -1,5 +1,6 @@
 import { $, escapeHtml, fieldValue } from './dom.js';
-import { state, currentClient, PLATFORM_NAMES } from './state.js';
+import { state, currentClient } from './state.js';
+import { platformName, platformPillFaceHtml } from './platform-icon.js';
 import {
   renderTargetContentTypeControls,
   renderTargetContentSettings,
@@ -8,13 +9,12 @@ import {
   resolveLockedContentType,
 } from './platform-ui.js';
 
-function accountPickerLabel(account) {
-  const platform = PLATFORM_NAMES[account.platformId] || account.platformId;
-  const pageId = account.credentials?.pageId || account.credentials?.userId || '';
-  let label = account.name && account.name !== platform ? account.name : platform;
-  if (label === platform && pageId) label = platform + '（' + pageId + '）';
-  if (!account.configured) label += '（未連線）';
-  return label;
+function accountScanExtra(account) {
+  const platform = platformName(account.platformId);
+  const bits = [];
+  if (account.name && account.name !== platform) bits.push(account.name);
+  else if (!account.configured) bits.push('未連線');
+  return bits.map((bit) => escapeHtml(bit)).join(' · ');
 }
 
 function accountsForComposer(accounts = []) {
@@ -115,9 +115,9 @@ export function renderTargetAccountControls() {
   checks.innerHTML = accounts.length
     ? accounts.map((account) => {
       const checked = state.selectedTargetAccountIds.includes(account.id);
-      return '<label class="radio-pill">'
+      return '<label class="radio-pill radio-pill-platform">'
         + '<input type="checkbox" value="' + escapeHtml(account.id) + '"' + (checked ? ' checked' : '') + ' />'
-        + '<span>' + escapeHtml(accountPickerLabel(account)) + '</span>'
+        + platformPillFaceHtml(account.platformId, { extra: accountScanExtra(account) })
         + '</label>';
     }).join('')
     : '<p class="helper">此品牌尚未設定平台連線，請到設定新增。</p>';
@@ -136,11 +136,11 @@ export function renderTargetAccountControls() {
     const target = targets.find((item) => item.accountId === account.id || item.id === account.id);
     const overridden = target?.copyOverride != null && String(target.copyOverride).trim() !== '';
     const dot = '<span class="target-status-dot ' + (overridden ? 'is-overridden' : 'is-inherited') + '" title="' + (overridden ? '已客製覆寫此平台文案' : '沿用母稿') + '"></span>';
-    return '<label class="radio-pill">'
+    return '<label class="radio-pill radio-pill-platform">'
     + '<input type="radio" name="activeTargetAccount" value="' + escapeHtml(account.id) + '"'
     + (account.id === state.activeTargetId ? ' checked' : '')
     + ' />'
-    + '<span>' + dot + escapeHtml(accountPickerLabel(account)) + '</span>'
+    + platformPillFaceHtml(account.platformId, { extra: (dot + accountScanExtra(account)).trim() })
     + '</label>';
   }).join('');
 

@@ -57,18 +57,29 @@ if not exist "node_modules\" (
   )
 )
 
+rem IPv4 only: server binds 0.0.0.0. localhost may hit ::1 and hang.
+set "APP_URL=http://127.0.0.1:3000"
+
+curl.exe -s -o NUL -m 2 %APP_URL%
+if not errorlevel 1 (
+  echo Already running at %APP_URL%
+  echo Opening browser. Close this window or run stop.bat to stop the server.
+  start "" "%APP_URL%"
+  >>"%~dp0start-last.log" echo [%date% %time%] already running
+  goto :hold
+)
+
 rem Closing the console often leaves orphan node --watch children.
 echo Stopping any leftover server on port 3000...
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\stop-server.ps1"
 echo.
 
-set "APP_URL=http://localhost:3000"
 echo Starting... Browser opens at %APP_URL%
 echo Close this window to stop. If page still loads after close, run stop.bat.
 echo.
 >>"%~dp0start-last.log" echo [%date% %time%] npm run dev
 
-start "" /b powershell.exe -NoProfile -WindowStyle Hidden -Command "$url='%APP_URL%'; for($attempt=0; $attempt -lt 60; $attempt++){ try { $response=Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 1; if($response.StatusCode -ge 200){ Start-Process $url; exit 0 } } catch {}; Start-Sleep -Milliseconds 500 }"
+start "" /b powershell.exe -NoProfile -WindowStyle Hidden -Command "$url='%APP_URL%'; $c=New-Object System.Net.Sockets.TcpClient; for($attempt=0; $attempt -lt 60; $attempt++){ try { $c=New-Object System.Net.Sockets.TcpClient; $iar=$c.BeginConnect('127.0.0.1',3000,$null,$null); if($iar.AsyncWaitHandle.WaitOne(500) -and $c.Connected){ $c.Close(); Start-Process $url; exit 0 } } catch {}; try { $c.Close() } catch {}; Start-Sleep -Milliseconds 500 }"
 call npm run dev
 set "EXITCODE=%ERRORLEVEL%"
 >>"%~dp0start-last.log" echo [%date% %time%] npm exited code=%EXITCODE%

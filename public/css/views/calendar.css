@@ -153,8 +153,9 @@
 }
 
 .calendar-item {
-  display: grid;
-  gap: 1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -212,11 +213,6 @@
   border-left-color: var(--danger);
 }
 
-.calendar-item-platform {
-  color: var(--text-tertiary);
-  font-size: 0.68rem;
-  font-weight: 800;
-}
 
 .calendar-item-title {
   overflow: hidden;

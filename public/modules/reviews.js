@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { hasPermission, state } from './state.js';
 import { loadPost } from './drafts.js';
 import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+import { refreshNavBadges } from './overview.js';
 
 let reviewPage = 1;
 
@@ -22,6 +23,7 @@ function titleOf(post) {
 export function renderReviewQueue() {
   const list = document.getElementById('reviewQueueList');
   if (!list) return;
+  refreshNavBadges();
   if (!state.reviewQueue.length) {
     removeListPager(list);
     list.className = 'list-empty review-list-empty';

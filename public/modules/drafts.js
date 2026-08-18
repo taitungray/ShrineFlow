@@ -1,6 +1,7 @@
 import { $, escapeHtml, formatDate, isVideoPath, setPreviewMessage, showToast } from './dom.js';
 import { api } from './api.js';
-import { state, mediaPathsOf, PLATFORM_NAMES } from './state.js';
+import { state, mediaPathsOf } from './state.js';
+import { platformChipHtml } from './platform-icon.js';
 import { previewMediaSrc } from './media-preview.js';
 import { markEditorDirty, renderGenerated, restoreRecoverySnapshotForPost } from './editor.js';
 import { setActiveView } from './tabs.js';
@@ -56,13 +57,6 @@ function matchesFilters(post) {
 
 function statusLabel(status) {
   return postStatusLabel(status);
-}
-
-function platformLabel(platformId) {
-  if (platformId === 'facebook') return 'Facebook';
-  if (platformId === 'instagram') return 'Instagram';
-  if (platformId === 'threads') return 'Threads';
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
 }
 
 function renderEmpty(container, isFiltered) {
@@ -212,13 +206,13 @@ export function renderPosts() {
     const targets = targetsOf(post);
     const scheduleTarget = targets.find((target) => target.scheduledAt);
     const platformChips = targets.slice(0, 3)
-      .map((target) => '<span class="platform-chip" data-platform="' + escapeHtml(target.platformId) + '">' + escapeHtml(platformLabel(target.platformId)) + '</span>')
+      .map((target) => platformChipHtml(target.platformId))
       .join('');
     const morePlatforms = targets.length > 3 ? '<span class="platform-chip platform-chip-more">+' + (targets.length - 3) + '</span>' : '';
     const status = String(post.status || 'draft');
     const contentStage = String(post.contentStage || 'draft');
     const stageLabel = contentStageLabel(contentStage);
-    const targetSummary = targetStatusSummary(targets, PLATFORM_NAMES);
+    const targetSummary = targetStatusSummary(targets);
     const updated = post.updatedAt || post.createdAt;
     const meta = [
       updated ? formatDate(updated) : '',
@@ -243,7 +237,7 @@ export function renderPosts() {
       '</label>' +
       '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(post.id) + '" aria-label="開啟貼文 ' + escapeHtml(postTitle(post)) + '">' +
       '<span class="record-thumb">' + thumbnail + '</span>' +
-      '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small></span>' +
+      '<span class="record-body"><strong>' + escapeHtml(postTitle(post)) + '</strong><small>' + escapeHtml(meta || '尚無更新時間') + '</small><span>' + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + morePlatforms + '</span>' + (targetSummary ? '<small class="content-status-detail">' + escapeHtml(targetSummary) + '</small>' : '') + '</span>' +
       '</button>' +
       '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(badgeStatus) + '">' + escapeHtml(badgeLabel) + '</em><span class="content-card-actions">' + lifecycleActions + '<button class="content-card-action" type="button" data-post-action="duplicate" data-post-id="' + escapeHtml(post.id) + '">複製</button></span></span>' +
       '</article>';

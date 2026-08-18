@@ -19,11 +19,11 @@ export function updateCharacterCounts() {
     let isError = false;
 
     if (state.selectedPlatform === 'threads') {
-      hint = `Threads：${fbLen} / 500 字`;
+      hint = `${fbLen} / 500 字`;
       if (fbLen > 500) isWarning = true;
       if (fbLen > 10000) isError = true;
     } else if (state.selectedPlatform === 'instagram') {
-      hint = `IG：${fbLen} / 2200 字`;
+      hint = `${fbLen} / 2200 字`;
       if (fbLen > 2000) isWarning = true;
       if (fbLen > 2200) isError = true;
     } else {
@@ -109,9 +109,7 @@ export function renderPreviewPlatformTabs() {
   }
 
   const activeTarget = (state.savedPost?.targets || []).find((target) => target.id === state.activeTargetId || target.accountId === state.activeTargetId);
-  const targetHint = activeTarget
-    ? [selected.name || PLATFORM_NAMES[selected.id] || selected.id, targetStatusLabel(activeTarget.status)].join('：')
-    : '';
+  const targetHint = activeTarget ? targetStatusLabel(activeTarget.status) : '';
   const publishHint = selected.canPublish ? targetHint : '目前僅預覽版型，尚未串接真發';
   status.textContent = publishHint;
   status.hidden = !publishHint;

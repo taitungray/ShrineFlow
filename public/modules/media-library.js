@@ -1,10 +1,11 @@
 import { $, escapeHtml, formatDate, isVideoPath } from './dom.js';
 import { api } from './api.js';
-import { state, mediaPathsOf, PLATFORM_NAMES, clientQuery } from './state.js';
+import { state, mediaPathsOf, clientQuery } from './state.js';
 import { previewMediaSrc } from './media-preview.js';
 import { annotateMediaDuplicates } from './media-picker.js';
 import { loadPost } from './drafts.js';
 import { GRID_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+import { platformChipHtml } from './platform-icon.js';
 
 const filters = { query: '', type: 'all' };
 let mediaPage = 1;
@@ -12,10 +13,6 @@ let mediaAssets = [];
 
 function postTitle(post) {
   return post.title || post.internalTitle || post.contentTopic || post.godName || '未命名內容';
-}
-
-function platformLabel(platformId) {
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
 }
 
 function mediaName(path) {
@@ -110,7 +107,7 @@ export function renderMediaLibrary() {
   grid.innerHTML = paged.items.map((item) => {
     const video = isVideoPath(item.path);
     const name = mediaName(item.path);
-    const platforms = [...item.platforms].slice(0, 3).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
+    const platforms = [...item.platforms].slice(0, 3).map((platformId) => platformChipHtml(platformId)).join('');
     const src = previewMediaSrc(item.path);
     const preview = video
       ? '<video src="' + escapeHtml(src) + '" muted playsinline preload="metadata" aria-label="' + escapeHtml(name) + '"></video>'

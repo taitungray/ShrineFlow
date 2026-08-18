@@ -1,5 +1,6 @@
 import { $, escapeHtml, formatDate } from './dom.js';
-import { state, mediaPathsOf, PLATFORM_NAMES, currentClient } from './state.js';
+import { state, mediaPathsOf, currentClient } from './state.js';
+import { platformChipHtml } from './platform-icon.js';
 import { buildConnectionStatus } from './connection-status.js';
 import { postStatusLabel } from './status.js';
 
@@ -12,38 +13,41 @@ function targetsOf(post) {
   return [{ platformId: post.channel || 'facebook', status: post.status || 'draft' }];
 }
 
-function updateNavBadges({ draftsCount, scheduledCount, reviewCount, attentionCount, unreadInboxCount }) {
-  const draftsBadge = $('#navDraftsBadge');
-  if (draftsBadge) {
-    draftsBadge.textContent = draftsCount > 0 ? String(draftsCount) : '';
-    draftsBadge.hidden = draftsCount <= 0;
-  }
+function setNavBadge(element, count, type) {
+  if (!element) return;
+  const value = Number(count) || 0;
+  element.textContent = value > 0 ? String(value) : '';
+  element.hidden = value <= 0;
+  if (value > 0 && type) element.dataset.type = type;
+  else delete element.dataset.type;
+}
 
-  const scheduleBadge = $('#navScheduleBadge');
-  if (scheduleBadge) {
-    scheduleBadge.textContent = scheduledCount > 0 ? String(scheduledCount) : '';
-    scheduleBadge.hidden = scheduledCount <= 0;
-  }
+function attentionStatuses() {
+  return new Set(['failed', 'retrying']);
+}
 
-  const reviewsBadge = $('#navReviewsBadge');
-  if (reviewsBadge) {
-    reviewsBadge.textContent = reviewCount > 0 ? String(reviewCount) : '';
-    reviewsBadge.hidden = reviewCount <= 0;
-    if (reviewCount > 0) reviewsBadge.dataset.type = 'warning';
-  }
+function publishingAttentionCount() {
+  const schedules = state.schedule || [];
+  const posts = state.posts || [];
+  const failedSchedules = schedules.filter((item) => attentionStatuses().has(item.status));
+  const attentionTargetPostIds = new Set(failedSchedules.map((item) => item.postId).filter(Boolean));
+  const partialPosts = posts.filter((post) => post.status === 'partial_success' && !attentionTargetPostIds.has(post.id));
+  const fbNotConnected = state.facebookStatus && state.facebookStatus.configured && !state.facebookStatus.connected;
+  return failedSchedules.length + partialPosts.length + (fbNotConnected ? 1 : 0);
+}
 
-  const publishingBadge = $('#navPublishingBadge');
-  if (publishingBadge) {
-    publishingBadge.textContent = attentionCount > 0 ? String(attentionCount) : '';
-    publishingBadge.hidden = attentionCount <= 0;
-    if (attentionCount > 0) publishingBadge.dataset.type = 'danger';
-  }
+function inboxAttentionCount() {
+  const sources = state.inbox?.sources || [];
+  return sources.reduce((sum, source) => {
+    const items = Array.isArray(source.items) ? source.items : [];
+    return sum + items.filter((item) => item.unread || item.needsReply).length;
+  }, 0);
+}
 
-  const inboxBadge = $('#navInboxBadge');
-  if (inboxBadge) {
-    inboxBadge.textContent = unreadInboxCount > 0 ? String(unreadInboxCount) : '';
-    inboxBadge.hidden = unreadInboxCount <= 0;
-  }
+export function refreshNavBadges() {
+  setNavBadge($('#navReviewsBadge'), (state.reviewQueue || []).length, 'warning');
+  setNavBadge($('#navPublishingBadge'), publishingAttentionCount(), 'danger');
+  setNavBadge($('#navInboxBadge'), inboxAttentionCount());
 }
 
 function healthHref(key) {
@@ -83,9 +87,8 @@ function renderOverviewNext(scheduledItems, posts) {
   root.innerHTML = '<p class="overview-next-label">接下來</p>'
     + upcoming.map((item) => {
       const post = posts.find((record) => record.id === item.postId) || {};
-      const platform = PLATFORM_NAMES[item.channel] || item.channel || '';
       return '<a class="overview-next-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar">'
-        + '<span class="platform-chip" data-platform="' + escapeHtml(item.channel || '') + '">' + escapeHtml(platform) + '</span>'
+        + platformChipHtml(item.channel)
         + '<strong>' + escapeHtml(recentTitle(post)) + '</strong>'
         + '<time datetime="' + escapeHtml(item.scheduledAt) + '">' + escapeHtml(formatDate(item.scheduledAt)) + '</time>'
         + '</a>';
@@ -105,19 +108,16 @@ export function renderOverview() {
   const schedules = state.schedule || [];
   const posts = state.posts || [];
   const reviewQueue = state.reviewQueue || [];
-  const notifications = state.notifications || [];
 
-  const attentionStatuses = new Set(['failed', 'retrying']);
-  const failedSchedules = schedules.filter((item) => attentionStatuses.has(item.status));
+  const failedSchedules = schedules.filter((item) => attentionStatuses().has(item.status));
   const scheduledItems = schedules.filter((item) => ['scheduled', 'pending'].includes(item.status));
-  const draftPosts = posts.filter((post) => post.status === 'draft' || !post.status);
   
   const attentionTargetPostIds = new Set(failedSchedules.map((item) => item.postId).filter(Boolean));
   const partialPosts = posts.filter((post) => post.status === 'partial_success' && !attentionTargetPostIds.has(post.id));
 
   const fbNotConnected = state.facebookStatus && state.facebookStatus.configured && !state.facebookStatus.connected;
   
-  const totalAttention = failedSchedules.length + partialPosts.length + (fbNotConnected ? 1 : 0);
+  const totalAttention = publishingAttentionCount();
 
   if (postCount) postCount.textContent = String(posts.length);
   if (scheduledCount) scheduledCount.textContent = String(scheduledItems.length);
@@ -131,14 +131,7 @@ export function renderOverview() {
     attentionCardSub.textContent = totalAttention > 0 ? `${totalAttention} 項需處理` : '運作正常';
   }
 
-  // Update Nav badges across the app
-  updateNavBadges({
-    draftsCount: draftPosts.length,
-    scheduledCount: scheduledItems.length,
-    reviewCount: reviewQueue.length,
-    attentionCount: totalAttention,
-    unreadInboxCount: notifications.length,
-  });
+  refreshNavBadges();
 
   renderOverviewHealth();
   renderOverviewNext(scheduledItems, posts);
@@ -230,11 +223,7 @@ export function renderOverview() {
     const statusText = postStatusLabel(postStatus);
     const targets = targetsOf(post);
     
-    const platformChips = targets.map((target) => {
-      const pId = target.platformId || 'facebook';
-      const label = PLATFORM_NAMES[pId] || pId;
-      return '<span class="platform-chip" data-platform="' + escapeHtml(pId) + '">' + escapeHtml(label) + '</span>';
-    }).join('');
+    const platformChips = targets.map((target) => platformChipHtml(target.platformId || 'facebook')).join('');
 
     return '<a class="overview-recent-item" href="#/content" data-view-target="drafts" data-route-target="content">'
       + '<span class="overview-recent-icon" aria-hidden="true">' + (mediaCount ? '▧' : '✦') + '</span>'

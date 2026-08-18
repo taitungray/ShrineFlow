@@ -1,16 +1,13 @@
 import { $, escapeHtml, formatDate, showToast, bindDialogDismiss } from './dom.js';
 import { api } from './api.js';
-import { state, PLATFORM_NAMES, currentClient } from './state.js';
+import { state, currentClient } from './state.js';
 import { setActiveView } from './tabs.js';
 import { renderTargetAccountControls } from './targets-ui.js';
 import { GRID_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+import { platformChipHtml } from './platform-icon.js';
 
 const filters = { query: '' };
 let templatesPage = 1;
-
-function platformLabel(platformId) {
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
-}
 
 function templatePlatforms(template) {
   return Array.isArray(template.platforms) && template.platforms.length ? template.platforms : ['facebook'];
@@ -51,7 +48,7 @@ export function renderTemplates() {
   templatesPage = paged.page;
   grid.className = 'templates-grid';
   grid.innerHTML = paged.items.map((template) => {
-    const platforms = templatePlatforms(template).map((platformId) => '<span class="platform-chip" data-platform="' + escapeHtml(platformId) + '">' + escapeHtml(platformLabel(platformId)) + '</span>').join('');
+    const platforms = templatePlatforms(template).map((platformId) => platformChipHtml(platformId)).join('');
     const hashtags = (template.hashtags || []).map((tag) => escapeHtml(tag)).join(' ');
     return '<article class="template-card">'
       + '<div class="template-card-heading"><span class="template-icon" aria-hidden="true">◇</span><div><h3>' + escapeHtml(template.name) + '</h3><span class="template-type">' + escapeHtml(postTypeLabel(template.postType)) + '</span></div></div>'

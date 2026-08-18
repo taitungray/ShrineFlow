@@ -13,3 +13,5 @@ Please strictly follow the master agent guidelines in `AGENTS.md` and Skills und
 8. **Testing**: Run targeted tests only when modifying specific backend modules.
 9. **Version Synchronization**: Always sync `package.json` version (`version: "0.2.0"`) with dynamic `/api/config` and UI tags.
 10. **Social Publishing Admin**: For composer / calendar / draft-schedule-publish / multi-platform admin work, follow `.agents/skills/social-publishing-ROUTING.md` and the matching Skill under `.agents/skills/`.
+11. **Platform identity**: Scan/select/tag platforms → official FB/IG/Threads icons in `public/icons/`. Help, settings copy, field labels, toasts, errors → text names. No hand-drawn fakes or color-only dots. See `.cursor/rules/platform-brand-icons.mdc`.
+12. **Nav badges**: Sidebar `.nav-badge` only for actionable counts (failed publish, pending review, unread/needs-reply). Never inventory (drafts, scheduled). Hide at 0. See `.cursor/rules/nav-badges.mdc`.

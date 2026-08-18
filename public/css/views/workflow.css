@@ -90,20 +90,36 @@
 
 /* UI-1: Content list filters and platform metadata */
 .content-toolbar {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.4fr) auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px 12px;
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
+.content-search-field {
+  flex: 1 1 100%;
+  max-width: none;
+}
+
+.content-toolbar-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 .content-toolbar-end {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+  margin-left: auto;
 }
 
 .content-toolbar-end .btn-text {
@@ -111,9 +127,21 @@
   min-height: 44px;
 }
 
-.content-more-filters {
+.content-more-filters.disclosure.compact {
   margin: 0;
-  align-self: end;
+  border: none;
+  overflow: visible;
+  align-self: center;
+}
+
+.content-more-filters summary {
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
 }
 
 .content-more-filters .disclosure-body {
@@ -205,6 +233,10 @@
   margin: 0;
 }
 
+.content-toolbar-main .content-filter-field {
+  flex: 1 1 420px;
+}
+
 .content-search-field input {
   min-height: 44px;
 }
@@ -218,9 +250,17 @@
 }
 
 .content-filter-pills .radio-pill span {
-  min-height: 38px;
-  padding: 7px 10px;
+  min-height: 44px;
+  padding: 8px 10px;
   font-size: 0.72rem;
+}
+
+.content-filter-pills .radio-pill.radio-pill-platform > span {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
 }
 
 .content-batch-bar {
@@ -327,24 +367,9 @@
   white-space: normal !important;
 }
 
-.platform-chip {
-  display: inline-flex;
-  min-height: 22px;
-  align-items: center;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-full);
-  color: var(--text-secondary);
-  background: var(--bg-card);
-  font-size: 0.7rem !important;
-  font-weight: 700;
-  line-height: 1.3;
+.platform-chip-more {
   white-space: nowrap !important;
 }
-
-.platform-chip[data-platform="facebook"] { color: #2859a7; border-color: #b9cbed; background: #edf3ff; }
-.platform-chip[data-platform="instagram"] { color: #9d3b73; border-color: #e8b8d2; background: #fff0f7; }
-.platform-chip[data-platform="threads"] { color: var(--text-primary); background: var(--bg-subtle); }
 
 .content-card-side {
   display: flex;
@@ -439,20 +464,26 @@ a.content-card-action {
 }
 
 @media (max-width: 1099px) {
-  .content-toolbar {
-    grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
+  .content-search-field {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .content-toolbar-main {
+    flex: 1 1 100%;
   }
 
   .content-toolbar-end,
   .content-more-filters,
   .content-platform-filter-field {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .content-toolbar-end {
     flex-wrap: wrap;
     justify-content: stretch;
     width: 100%;
+    margin-left: 0;
   }
 
   .content-more-filters {
@@ -479,7 +510,6 @@ a.content-card-action {
 
 @media (max-width: 767px) {
   .content-toolbar {
-    grid-template-columns: 1fr;
     gap: 10px;
     padding-bottom: 12px;
   }
@@ -526,19 +556,28 @@ a.content-card-action {
   }
 
   .content-filter-pills {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
   }
 
   .content-filter-pills .radio-pill {
-    flex: none;
-    width: 100%;
+    flex: 0 1 auto;
+    width: auto;
   }
 
   .content-filter-pills .radio-pill span {
     min-height: 40px;
     padding: 8px 10px;
+  }
+
+  .content-filter-pills .radio-pill.radio-pill-platform > span {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
   }
 
   .content-card {
@@ -802,14 +841,12 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 
 .platform-strategy-icon {
   display: grid;
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  margin-top: 5px;
   place-items: center;
-  border-radius: 50%;
-  color: var(--accent);
-  background: var(--bg-card);
-  font-weight: 800;
+  background: transparent;
 }
 
 .platform-strategy-card strong {
@@ -953,8 +990,15 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
 
 @media (max-width: 767px) {
   html:has(#composerPanel:not(.is-hidden)) {
+    /* 2-row dock: 10+44+10+44 + hint 28 + pad 10 + 30 air */
+    --composer-dock-clearance: calc(176px + env(safe-area-inset-bottom, 0px));
     overflow-x: clip;
     overflow-y: auto;
+    scroll-padding-bottom: var(--composer-dock-clearance);
+  }
+
+  html:has(#composerPanel:not(.is-hidden)):has(#approvalActions:not(.is-hidden)) {
+    --composer-dock-clearance: calc(232px + env(safe-area-inset-bottom, 0px));
   }
 
   body:has(#composerPanel:not(.is-hidden)) {
@@ -964,6 +1008,7 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
     overflow-x: clip;
     overflow-y: auto;
     padding-bottom: 0;
+    scroll-padding-bottom: var(--composer-dock-clearance);
   }
 
   body:has(#composerPanel:not(.is-hidden)) .shell,
@@ -995,7 +1040,7 @@ body:has(#composerPanel:not(.is-hidden)) .composer-panel {
     min-height: 0;
     overflow: visible;
     flex: none;
-    padding-bottom: 96px;
+    padding-bottom: var(--composer-dock-clearance, calc(176px + env(safe-area-inset-bottom, 0px)));
   }
 
   .composer-editor-pane,

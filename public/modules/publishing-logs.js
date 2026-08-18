@@ -1,11 +1,12 @@
 import { $, escapeHtml, formatDate, isVideoPath, showToast } from './dom.js';
-import { state, PLATFORM_NAMES, mediaPathsOf, clientQuery } from './state.js';
+import { state, mediaPathsOf, clientQuery } from './state.js';
 import { api, createIdempotencyKey } from './api.js';
 import { publishTargetWithRecovery } from './long-task.js';
 import { loadPost } from './drafts.js';
 import { previewMediaSrc } from './media-preview.js';
-import { publishingStatusGroup, targetStatusLabel, targetStatusSummary } from './status.js';
+import { publishingStatusGroup, targetStatusLabel } from './status.js';
 import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
+import { platformChipHtml } from './platform-icon.js';
 
 const filters = { status: 'all', platform: 'all' };
 let publishingPage = 1;
@@ -32,13 +33,6 @@ function logText(post, item) {
 
 function groupOf(status) {
   return publishingStatusGroup(status);
-}
-
-function platformLabel(platformId) {
-  if (platformId === 'facebook') return 'Facebook';
-  if (platformId === 'instagram') return 'Instagram';
-  if (platformId === 'threads') return 'Threads';
-  return PLATFORM_NAMES[platformId] || platformId || '未指定平台';
 }
 
 function contentTypeLabel(item) {
@@ -118,19 +112,13 @@ export function renderPublishingLogs() {
       item.publishedAt ? '發布：' + formatDate(item.publishedAt) : '',
       item.attempts > 1 ? '第 ' + item.attempts + ' 次' : '',
     ].filter(Boolean).join(' · ');
-    const platformChips = '<span class="platform-chip" data-platform="' + escapeHtml(item.channel || '') + '">'
-      + escapeHtml(platformLabel(item.channel)) + '</span>';
-    const targetSummary = targetStatusSummary([{
-      platformId: item.channel,
-      status,
-    }], PLATFORM_NAMES);
+    const platformChips = platformChipHtml(item.channel);
     const title = postTitle(post);
     return '<article class="record-card content-card publishing-log-card" data-status="' + escapeHtml(status) + '">'
       + '<button class="record-card-main" type="button" data-open-post="' + escapeHtml(item.postId || '') + '" aria-label="開啟貼文 ' + escapeHtml(title) + '">'
       + '<span class="record-thumb">' + thumbnail + '</span>'
       + '<span class="record-body"><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta) + '</small><span>'
-      + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips
-      + '</span><small class="content-status-detail">' + escapeHtml(targetSummary) + '</small>' + error + '</span>'
+      + (excerpt || '尚未填寫文案') + '</span><span class="content-platforms">' + platformChips + '</span>' + error + '</span>'
       + '</button>'
       + '<span class="content-card-side"><em class="content-status" data-status="' + escapeHtml(status) + '">'
       + escapeHtml(targetStatusLabel(status)) + '</em><span class="content-card-actions">'

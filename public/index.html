@@ -43,7 +43,7 @@
       })();
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.72" />
+    <link rel="stylesheet" href="/style.css?v=0.6.81" />
   </head>
   <body class="auth-required">
     <script>
@@ -80,7 +80,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.72</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.81</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -116,7 +116,7 @@
           <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="連線狀態">
             <span class="status-cluster-label">連線</span>
             <a class="status-dot" data-status="ai" href="#/settings/gemini" title="檢查連線中…">Gemini</a>
-            <a class="status-dot" data-status="fb" href="#/settings/facebook" title="檢查連線中…">Facebook</a>
+            <a class="status-dot status-dot-platform" data-status="fb" data-platform="facebook" href="#/settings/facebook" title="檢查連線中…" aria-label="Facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /></a>
           </div>
           <div class="topbar-account">
             <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
@@ -138,9 +138,9 @@
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span> 新增內容</a>
       <nav class="app-nav" aria-label="工作區導覽">
         <p class="nav-group-label">工作區</p>
-        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span>內容<span class="nav-badge" id="navDraftsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span>內容</a>
         <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-publishing" /></svg></span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span>日曆<span class="nav-badge" id="navScheduleBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span>日曆</a>
         <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-inbox" /></svg></span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
         <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-media" /></svg></span>素材庫</a>
         <a class="app-nav-item permission-hidden" id="reviewNavItem" href="#/reviews" data-view-target="reviews" data-route-target="reviews" data-required-any="content.approve,content.submit_review"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-reviews" /></svg></span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
@@ -401,7 +401,7 @@
                 <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
               </div>
               <div class="platform-strategy-card" id="platformStrategyCard" aria-live="polite">
-                <span class="platform-strategy-icon" aria-hidden="true">◎</span>
+                <span class="platform-strategy-icon" aria-hidden="true"></span>
                 <div><strong>平台內容策略</strong><p id="platformStrategyText">選取平台後顯示文案與素材建議。</p></div>
               </div>
               <div class="field" id="targetScheduleField">
@@ -462,9 +462,9 @@
           <nav class="settings-tabs" role="tablist" aria-label="設定分頁">
             <button type="button" class="settings-tab active" role="tab" id="settingsTabGemini" data-settings-page="gemini" data-required-permission="system.manage" aria-controls="settingsPageGemini" aria-selected="true">Gemini</button>
             <button type="button" class="settings-tab" role="tab" id="settingsTabBrand" data-settings-page="brand" data-required-permission="system.manage" aria-controls="settingsPageBrand" aria-selected="false">品牌</button>
-            <button type="button" class="settings-tab" role="tab" id="settingsTabFacebook" data-settings-page="facebook" data-required-permission="account.manage" aria-controls="settingsPageFacebook" aria-selected="false">Facebook</button>
-            <button type="button" class="settings-tab" role="tab" id="settingsTabInstagram" data-settings-page="instagram" data-required-permission="account.manage" aria-controls="settingsPageInstagram" aria-selected="false">Instagram</button>
-            <button type="button" class="settings-tab" role="tab" id="settingsTabThreads" data-settings-page="threads" data-required-permission="account.manage" aria-controls="settingsPageThreads" aria-selected="false">Threads</button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="settingsTabFacebook" data-settings-page="facebook" data-required-permission="account.manage" aria-controls="settingsPageFacebook" aria-selected="false" aria-label="Facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /></button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="settingsTabInstagram" data-settings-page="instagram" data-required-permission="account.manage" aria-controls="settingsPageInstagram" aria-selected="false" aria-label="Instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /></button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="settingsTabThreads" data-settings-page="threads" data-required-permission="account.manage" aria-controls="settingsPageThreads" aria-selected="false" aria-label="Threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /></button>
             <button type="button" class="settings-tab" role="tab" id="settingsTabBackup" data-settings-page="backup" data-required-permission="system.manage" aria-controls="settingsPageBackup" aria-selected="false">備份</button>
           </nav>
 
@@ -568,7 +568,6 @@
             <div class="action-box">
               <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 Facebook 連線</button>
               <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
-              <button type="button" class="btn-test" data-open-business-suite data-business-suite-dest="home" aria-label="開啟 Meta Business Suite 官網或 App">開啟 Business Suite</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
             <details class="disclosure compact">
@@ -780,43 +779,45 @@
               <label for="contentSearch" class="field-label">搜尋內容</label>
               <input id="contentSearch" type="search" placeholder="搜尋標題、文案或備註…" autocomplete="off" />
             </div>
-            <div class="field content-filter-field">
-              <span id="contentStatusFilterLabel" class="field-label">狀態</span>
-              <div class="radio-pill-group content-filter-pills" id="contentStatusFilter" role="radiogroup" aria-labelledby="contentStatusFilterLabel">
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="all" checked /><span>目前</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="draft" /><span>草稿</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="scheduled" /><span>已排程</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="published" /><span>已發布</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="partial_success" /><span>部分成功</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
-                <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
-              </div>
-            </div>
-            <div class="content-toolbar-end">
-            <details class="disclosure compact content-more-filters">
-              <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
-              <div class="disclosure-body">
-                <div class="field content-filter-field">
-                  <span id="contentStageFilterLabel" class="field-label">內容階段</span>
-                  <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
-                    <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
-                    <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
-                    <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
-                  </div>
-                </div>
-                <div class="field content-filter-field content-platform-filter-field">
-                  <span id="contentPlatformFilterLabel" class="field-label">平台</span>
-                  <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
-                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
-                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="facebook" /><span>Facebook</span></label>
-                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="instagram" /><span>Instagram</span></label>
-                    <label class="radio-pill"><input type="radio" name="contentPlatform" value="threads" /><span>Threads</span></label>
-                  </div>
+            <div class="content-toolbar-main">
+              <div class="field content-filter-field">
+                <span id="contentStatusFilterLabel" class="field-label">狀態</span>
+                <div class="radio-pill-group content-filter-pills" id="contentStatusFilter" role="radiogroup" aria-labelledby="contentStatusFilterLabel">
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="all" checked /><span>目前</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="draft" /><span>草稿</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="scheduled" /><span>已排程</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="published" /><span>已發布</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="partial_success" /><span>部分成功</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
                 </div>
               </div>
-            </details>
-            <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+              <div class="content-toolbar-end">
+                <details class="disclosure compact content-more-filters">
+                  <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
+                  <div class="disclosure-body">
+                    <div class="field content-filter-field">
+                      <span id="contentStageFilterLabel" class="field-label">內容階段</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+                      </div>
+                    </div>
+                    <div class="field content-filter-field content-platform-filter-field">
+                      <span id="contentPlatformFilterLabel" class="field-label">平台</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+              </div>
             </div>
           </div>
           <form id="ideaCaptureForm" class="idea-capture-bar">
@@ -923,9 +924,9 @@
               <div class="field is-hidden" id="crisisPausePlatformField">
                 <span class="field-label">平台</span>
                 <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停平台">
-                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="facebook" checked /><span>Facebook</span></label>
-                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="instagram" /><span>Instagram</span></label>
-                  <label class="radio-pill"><input type="radio" name="crisisPausePlatform" value="threads" /><span>Threads</span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="facebook" checked /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
                 </div>
               </div>
               <div class="field"><label for="crisisPauseReason" class="field-label">原因 <span class="field-optional">(選填)</span></label><input id="crisisPauseReason" type="text" maxlength="500" placeholder="例：活動內容需要全面檢查" /></div>
@@ -1005,9 +1006,9 @@
               <span id="publishingPlatformFilterLabel" class="field-label">平台</span>
               <div class="radio-pill-group module-filter-pills" id="publishingPlatformFilter" role="radiogroup" aria-labelledby="publishingPlatformFilterLabel">
                 <label class="radio-pill"><input type="radio" name="publishingPlatform" value="all" checked /><span>全部平台</span></label>
-                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="facebook" /><span>Facebook</span></label>
-                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="instagram" /><span>Instagram</span></label>
-                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="threads" /><span>Threads</span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
               </div>
             </div>
           </div>
@@ -1015,23 +1016,27 @@
         </section>
         <section class="panel module-panel is-hidden" id="insightsPanel" data-view-panel="insights">
           <div class="panel-heading compact">
-            <p class="panel-lede">先查看本機營運摘要；外部平台成效只顯示已同步的真實資料。</p>
+            <p class="panel-lede">依 Facebook、Instagram、Threads 分頁查看本機發布漏斗與平台真實成效。沒同步到的數字不會用猜測補上。</p>
             <a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">管理平台 →</a>
           </div>
-          <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="營運摘要"></div>
-          <div id="insightsSourceNotice" class="insights-source-note" role="note"></div>
-          <div class="module-toolbar insights-toolbar" aria-label="成效檢視範圍">
+          <div class="module-toolbar insights-toolbar" aria-label="成效平台與區間">
             <div class="field module-filter-field">
-              <span id="insightsScopeLabel" class="field-label">查看範圍</span>
-              <div class="radio-pill-group module-filter-pills" id="insightsScopeFilter" role="radiogroup" aria-labelledby="insightsScopeLabel">
-                <label class="radio-pill"><input type="radio" name="insightsScope" value="account" checked /><span>平台總覽</span></label>
-                <label class="radio-pill"><input type="radio" name="insightsScope" value="posts" /><span>已發布內容</span></label>
+              <span id="insightsPlatformLabel" class="field-label">平台</span>
+              <div class="radio-pill-group module-filter-pills" id="insightsPlatformTabs" role="tablist" aria-labelledby="insightsPlatformLabel"></div>
+            </div>
+            <div class="field">
+              <span id="insightsRangeLabel" class="field-label">帳號區間</span>
+              <div class="radio-pill-group module-filter-pills" id="insightsRangeFilter" role="radiogroup" aria-labelledby="insightsRangeLabel">
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="7" checked /><span>近 7 日</span></label>
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="28" /><span>近 28 日</span></label>
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="90" /><span>近 90 日</span></label>
               </div>
             </div>
-            <button type="button" id="btnRefreshInsights" class="btn-test" aria-label="重新同步平台成效">↻ 重新同步</button>
+            <button type="button" id="btnRefreshInsights" class="btn-test" aria-label="重新同步此平台成效">↻ 重新同步</button>
           </div>
-          <div id="insightsPlatformGrid" class="insights-platform-grid" aria-live="polite"></div>
-          <div id="insightsTargetGrid" class="insights-target-grid is-hidden" aria-live="polite"></div>
+          <div id="insightsSourceNotice" class="insights-source-note" role="note"></div>
+          <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="此平台營運摘要"></div>
+          <div id="insightsPlatformDetail" class="insights-platform-detail" aria-live="polite"></div>
           <section class="form-group-card best-times-card" id="bestTimesCard" aria-live="polite"></section>
           <section class="form-group-card repurpose-card" id="repurposeCard" aria-live="polite"></section>
         </section>
@@ -1417,9 +1422,9 @@
           <div class="field">
             <span id="templatePlatformLabel" class="field-label">適用發布平台</span>
             <div class="checkbox-pill-group" id="templatePlatformChecks" role="group" aria-labelledby="templatePlatformLabel">
-              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="facebook" checked /><span>Facebook</span></label>
-              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="instagram" /><span>Instagram</span></label>
-              <label class="radio-pill"><input type="checkbox" name="templatePlatform" value="threads" /><span>Threads</span></label>
+              <label class="radio-pill radio-pill-platform"><input type="checkbox" name="templatePlatform" value="facebook" checked /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+              <label class="radio-pill radio-pill-platform"><input type="checkbox" name="templatePlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+              <label class="radio-pill radio-pill-platform"><input type="checkbox" name="templatePlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
             </div>
           </div>
         </fieldset>
@@ -1503,6 +1508,6 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.72" type="module"></script>
+    <script src="/app.js?v=0.6.81" type="module"></script>
   </body>
 </html>

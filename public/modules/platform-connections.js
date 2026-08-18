@@ -1,5 +1,6 @@
 import { $, escapeHtml } from './dom.js';
 import { currentClient, PLATFORM_NAMES, state } from './state.js';
+import { platformMarkHtml } from './platform-icon.js';
 
 function platformName(platform) {
   return platform.shortName || platform.name || PLATFORM_NAMES[platform.id] || platform.id;
@@ -57,7 +58,7 @@ export function renderPlatformConnections() {
     const statusLabel = configured ? '已連線' : platform.enabled ? '可設定' : '尚未連線';
     const types = (platform.contentTypes || []).map((type) => '<span class="platform-capability">' + escapeHtml(type.name) + '</span>').join('');
     return '<article class="platform-connection-card" data-status="' + status + '">'
-      + '<div class="platform-connection-heading"><span class="platform-mark" data-platform="' + escapeHtml(platform.id) + '">' + escapeHtml((platformName(platform)[0] || '?').toUpperCase()) + '</span><div><h3>' + escapeHtml(platformName(platform)) + '</h3><span class="platform-connection-status" data-status="' + status + '">' + statusLabel + '</span></div></div>'
+      + '<div class="platform-connection-heading">' + platformMarkHtml(platform.id) + '<div><h3>' + escapeHtml(platformName(platform)) + '</h3><span class="platform-connection-status" data-status="' + status + '">' + statusLabel + '</span></div></div>'
       + '<p>' + escapeHtml(platform.description || '此平台尚未提供連線說明。') + '</p>'
       + '<div class="platform-capabilities" aria-label="可用格式">' + (types || '<span class="helper">尚未取得格式</span>') + '</div>'
       + '<div class="platform-capabilities platform-capability-statuses" aria-label="能力狀態">' + capabilityPills(platform, accounts) + '</div>'
