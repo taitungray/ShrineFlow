@@ -31,11 +31,20 @@
 .panel-heading > .primary-button,
 .panel-heading > .btn-text,
 .panel-heading > a,
-.panel-heading > .badge {
+.panel-heading > .badge,
+.panel-heading > .panel-heading-actions {
   flex: 0 0 auto;
   width: auto;
   margin-left: auto;
   white-space: nowrap;
+}
+
+.panel-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .panel-heading.compact {
@@ -469,9 +478,22 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
   .panel-heading > .primary-button,
   .panel-heading > .btn-text,
   .panel-heading > a,
-  .panel-heading > .badge {
+  .panel-heading > .badge,
+  .panel-heading > .panel-heading-actions {
     margin-left: 0;
     width: 100%;
+    justify-content: center;
+  }
+
+  .panel-heading-actions {
+    justify-content: stretch;
+  }
+
+  .panel-heading-actions > .btn-secondary,
+  .panel-heading-actions > .btn-text,
+  .panel-heading-actions > a {
+    flex: 1 1 8.5rem;
+    min-height: 44px;
     justify-content: center;
   }
 

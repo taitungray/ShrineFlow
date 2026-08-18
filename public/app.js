@@ -59,6 +59,7 @@ import { initHelp } from './modules/help.js';
 import { initDateTime24h } from './modules/datetime-24h.js';
 import { renderBestTimes } from './modules/best-times.js';
 import { renderRemoteSchedule } from './modules/remote-schedule.js';
+import { initBusinessSuiteButtons } from './modules/business-suite.js';
 
 async function refreshLists() {
   const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
@@ -372,6 +373,7 @@ async function initApp() {
   initAuthListeners();
   initTabs({ onStartCreate: startNewComposer });
   initDateTime24h();
+  initBusinessSuiteButtons();
   initHelp();
   initInsightsListeners();
   initInboxListeners();

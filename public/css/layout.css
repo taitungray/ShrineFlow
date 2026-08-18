@@ -477,8 +477,17 @@ a.status-dot:focus-visible {
 
 .status-cluster,
 .user-identity,
-#authLogoutButton {
+#authLogoutButton,
+.topbar-business-suite {
   flex-shrink: 0;
+}
+
+.topbar-business-suite {
+  padding: 8px 12px;
+}
+
+.topbar-business-suite-short {
+  display: none;
 }
 
 .shell {
@@ -1076,6 +1085,20 @@ a.status-dot:focus-visible {
     min-width: 0;
     align-items: center;
     gap: 6px;
+  }
+
+  .topbar-business-suite {
+    min-width: 44px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+  }
+
+  .topbar-business-suite-full {
+    display: none;
+  }
+
+  .topbar-business-suite-short {
+    display: inline;
   }
 
   #authLogoutButton {

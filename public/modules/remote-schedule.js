@@ -22,7 +22,7 @@ export function renderRemoteSchedule() {
     ? sources.map((source) => `${source.accountId}：${sourceStatusLabel(source)}`).join(' · ')
     : '目前品牌沒有可檢查的 Facebook 帳號。';
   card.dataset.status = unavailable ? 'unavailable' : 'synced';
-  card.innerHTML = '<div class="remote-schedule-heading"><div><span class="section-tag">META PLANNER</span><h3>遠端排程唯讀對帳</h3></div><button class="btn-test" id="refreshRemoteScheduleButton" type="button">檢查</button></div>'
+  card.innerHTML = '<div class="remote-schedule-heading"><div><span class="section-tag">META PLANNER</span><h3>遠端排程唯讀對帳</h3></div><div class="remote-schedule-actions"><button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="scheduled" aria-label="開啟 Meta Business Suite 排程">開啟 Business Suite</button><button class="btn-test" id="refreshRemoteScheduleButton" type="button">檢查</button></div></div>'
     + '<p class="helper">此功能只顯示已驗證 connector 回傳的資料，不會把本機空日曆解讀成遠端沒有排程，也不會修改或刪除 Meta 排程。</p>'
     + '<p class="remote-schedule-status" data-status="' + (unavailable ? 'unavailable' : 'synced') + '">' + escapeHtml(statusText) + '</p>'
     + (unavailable ? '<p class="remote-schedule-sources"><a class="btn-text" href="#/settings/facebook">更新粉專 Token</a> · <a class="btn-text" href="#/help/facebook-token-expired">查看說明</a></p>' : '')

@@ -43,7 +43,7 @@
       })();
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.63" />
+    <link rel="stylesheet" href="/style.css?v=0.6.72" />
   </head>
   <body class="auth-required">
     <script>
@@ -80,7 +80,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.63</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.72</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -109,6 +109,10 @@
             <label for="currentClientSelect" class="field-label">品牌</label>
             <select id="currentClientSelect" aria-label="切換品牌"></select>
           </div>
+          <button class="btn-text topbar-business-suite" id="openBusinessSuiteButton" type="button" data-open-business-suite data-business-suite-dest="home" aria-label="開啟 Meta Business Suite 官網或 App" title="開啟 Meta Business Suite 官網或 App">
+            <span class="topbar-business-suite-full">Business Suite</span>
+            <span class="topbar-business-suite-short" aria-hidden="true">Suite</span>
+          </button>
           <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="連線狀態">
             <span class="status-cluster-label">連線</span>
             <a class="status-dot" data-status="ai" href="#/settings/gemini" title="檢查連線中…">Gemini</a>
@@ -135,24 +139,24 @@
       <nav class="app-nav" aria-label="工作區導覽">
         <p class="nav-group-label">工作區</p>
         <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span>內容<span class="nav-badge" id="navDraftsBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-publishing" /></svg></span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
         <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span>日曆<span class="nav-badge" id="navScheduleBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-inbox" /></svg></span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
         <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-media" /></svg></span>素材庫</a>
         <a class="app-nav-item permission-hidden" id="reviewNavItem" href="#/reviews" data-view-target="reviews" data-route-target="reviews" data-required-any="content.approve,content.submit_review"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-reviews" /></svg></span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-publishing" /></svg></span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-inbox" /></svg></span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
         <p class="nav-group-label nav-group-label-spaced">管理</p>
         <a class="app-nav-item nav-secondary active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span>總覽</a>
-        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-templates" /></svg></span>模板</a>
-        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-campaigns" /></svg></span>活動</a>
         <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-insights" /></svg></span>成效</a>
+        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-campaigns" /></svg></span>活動</a>
+        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-templates" /></svg></span>模板</a>
       </nav>
       <nav class="sidebar-footer" aria-label="系統導覽">
         <p class="nav-group-label">系統</p>
-        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-platforms" /></svg></span>平台連線</a>
         <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-settings" /></svg></span>設定</a>
+        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-platforms" /></svg></span>平台連線</a>
+        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-help" /></svg></span>幫助</a>
         <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-team" /></svg></span>團隊與權限</a>
         <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-errors" /></svg></span>錯誤記錄<span class="nav-badge" id="navErrorsBadge" hidden></span></a>
-        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-help" /></svg></span>幫助</a>
       </nav>
     </aside>
     <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
@@ -564,6 +568,7 @@
             <div class="action-box">
               <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 Facebook 連線</button>
               <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
+              <button type="button" class="btn-test" data-open-business-suite data-business-suite-dest="home" aria-label="開啟 Meta Business Suite 官網或 App">開啟 Business Suite</button>
               <span id="testFacebookResult" class="test-result"></span>
             </div>
             <details class="disclosure compact">
@@ -887,6 +892,7 @@
               <label class="radio-pill"><input type="radio" name="calendarView" value="week" /><span>週</span></label>
               <label class="radio-pill"><input type="radio" name="calendarView" value="list" /><span>列表</span></label>
             </div>
+            <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="scheduled" aria-label="開啟 Meta Business Suite 排程">開啟 Business Suite</button>
           </div>
           <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
           <div class="calendar-agenda">
@@ -1031,11 +1037,15 @@
         </section>
         <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
           <div class="panel-heading compact">
-            <p class="panel-lede">集中查看平台最近對話與回覆；只顯示 API 真實回傳，不建立永久訊息倉儲。</p>
-            <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
+            <p class="panel-lede">依平台分頁查看最近 50 則對話與來回內容。對方名稱來自平台參加者，不是本機猜測。</p>
+            <div class="panel-heading-actions">
+              <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="inbox" aria-label="開啟 Meta Business Suite 收件匣">開啟 Business Suite</button>
+              <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
+            </div>
           </div>
             <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註、同步 cursor 與 webhook 同步提示只保存本機 metadata，不建立永久訊息倉儲。Webhook 會讓下一次讀取從最新資料重新同步。</span></div>
           <div class="inbox-toolbar" aria-label="收件匣篩選">
+            <div class="radio-pill-group" id="inboxPlatformTabs" role="tablist" aria-label="收件匣平台"></div>
             <div class="radio-pill-group" id="inboxFilters" role="radiogroup" aria-label="收件匣篩選">
               <label class="radio-pill"><input type="radio" name="inboxFilter" value="all" checked /><span>全部已讀取</span></label>
               <label class="radio-pill"><input type="radio" name="inboxFilter" value="unread" /><span>只看未讀</span></label>
@@ -1189,29 +1199,31 @@
             <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
             <a class="btn-text" href="#/settings" data-view-target="settings" data-route-target="settings">前往設定 →</a>
           </div>
-          <div class="action-box" data-required-permission="system.manage">
-            <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
-            <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
-            <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
-          </div>
-          <div class="field inline-field" data-required-permission="system.manage">
-            <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
-            <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
-              <label class="radio-pill">
-                <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
-                <span>未修正</span>
-              </label>
-              <label class="radio-pill">
-                <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
-                <span>已修正</span>
-              </label>
-              <label class="radio-pill">
-                <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
-                <span>全部</span>
-              </label>
+          <div class="error-log-toolbar" data-required-permission="system.manage">
+            <div class="action-box">
+              <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
+              <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
+              <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
             </div>
+            <div class="field inline-field">
+              <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
+              <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
+                <label class="radio-pill">
+                  <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
+                  <span>未修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
+                  <span>已修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
+                  <span>全部</span>
+                </label>
+              </div>
+            </div>
+            <p id="errorLogMessage" class="test-result" aria-live="polite"></p>
           </div>
-          <p id="errorLogMessage" class="test-result" aria-live="polite"></p>
           <div id="errorLogList" class="backup-list error-log-list" aria-live="polite"></div>
         </section>
 
@@ -1491,6 +1503,6 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.63" type="module"></script>
+    <script src="/app.js?v=0.6.72" type="module"></script>
   </body>
 </html>
