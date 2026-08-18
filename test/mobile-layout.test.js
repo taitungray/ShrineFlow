@@ -137,6 +137,17 @@ test('list pager wraps and keeps 44px tap targets', async () => {
   assert.match(css, /\.list-pager-nav,\s*\.list-pager-page\s*\{[^}]*min-height\s*:\s*44px/, 'pager buttons must stay 44px');
 });
 
+test('phone content cards wrap actions instead of shoving them off-screen', async () => {
+  const css = await loadCss('public/style.css');
+  const phone = [mediaBlocks(css, 767), mediaBlocks(css, 768)].join('\n');
+  const card = lastDecls(phone, '.content-card');
+  const side = lastDecls(phone, '.content-card-side');
+
+  assert.match(card, /flex-wrap\s*:\s*wrap/, 'nowrap content cards push 封存/隱藏/複製 past the phone viewport');
+  assert.doesNotMatch(card, /flex-wrap\s*:\s*nowrap/, 'phone content-card must not keep the desktop single-row lock');
+  assert.match(side, /flex\s*:\s*1\s+1\s+100%|flex-basis\s*:\s*100%|width\s*:\s*100%/, 'action column must drop to its own row on phone');
+});
+
 test('phone chrome uses the header and does not double-pad the bottom nav', async () => {
   const css = await loadCss('public/style.css');
   const phone = mediaBlocks(css, 767);
@@ -171,7 +182,7 @@ test('desktop CSS keeps sidebar shell, anti-jitter panels, and dual-pane compose
   assert.match(desktopPanel, /min-height\s*:\s*540px/, 'desktop panels must keep anti-jitter min-height');
   assert.doesNotMatch(phone, /\.panel\s*\{[^}]*min-height\s*:\s*540px/, 'phone must not inherit 540px panel lock');
   assert.match(composerLock, /height\s*:\s*100dvh/, 'desktop composer keeps the dual-pane height lock');
-  assert.match(shell, /margin-left:\s*248px|margin:\s*0\s+0\s+60px\s+248px/, 'desktop shell sits beside the 248px sidebar');
+  assert.match(css, /@media \(min-width:\s*1100px\)[\s\S]*\.shell\s*\{[^}]*margin:\s*0\s+0\s+60px\s+248px/, 'desktop shell sits beside the 248px sidebar');
   assert.match(sidebar, /width:\s*248px/, 'desktop sidebar stays a fixed 248px column');
   assert.match(workspace, /min-height\s*:\s*560px/, 'desktop workspace keeps anti-jitter min-height');
   assert.match(css, /grid-template-columns\s*:\s*minmax\(\s*0\s*,\s*1\.05fr\s*\)\s+minmax\(\s*360px\s*,\s*0\.95fr\s*\)/, 'desktop composer is editor + preview, not a single squeezed column');

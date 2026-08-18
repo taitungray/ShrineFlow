@@ -160,6 +160,12 @@ function auditPage() {
         variants[index]();
         if (name === 'drafts') {
           const host = document.getElementById('postsList');
+          if (host) {
+            host.className = 'record-list content-list';
+            if (!host.querySelector('.content-card')) {
+              host.innerHTML = '<article class="record-card content-card" data-status="draft"><label class="content-select-label"><input type="checkbox" class="content-select-checkbox" aria-label="選取貼文" /></label><button class="record-card-main" type="button"><span class="record-thumb">🖼</span><span class="record-body"><strong>週末工坊體驗與預約邀請</strong><small>2026-08-18 21:10 · 排程：2026-08-20 10:00</small><span>尚未填寫文案</span><span class="content-platforms"><span class="platform-chip" data-platform="facebook">Facebook</span><span class="platform-chip" data-platform="instagram">Instagram</span></span></span></button><span class="content-card-side"><em class="content-status" data-status="draft">草稿</em><span class="content-card-actions"><button class="content-card-action" type="button">封存</button><button class="content-card-action" type="button">隱藏</button><button class="content-card-action" type="button">複製</button></span></span></article>';
+            }
+          }
           if (host && !document.querySelector('.list-pager')) {
             const nav = document.createElement('nav');
             nav.className = 'list-pager';

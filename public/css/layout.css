@@ -430,7 +430,7 @@ a.status-dot:focus-visible {
 
 .app-header-fixed {
   z-index: 200;
-  margin-left: 248px;
+  margin-left: 0;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg-app) 88%, transparent);
@@ -483,8 +483,18 @@ a.status-dot:focus-visible {
 
 .shell {
   width: auto;
-  margin: 0 0 60px 248px;
+  margin: 0 0 60px 0;
   padding: 24px 24px 0;
+}
+
+@media (min-width: 1100px) {
+  .app-header-fixed {
+    margin-left: 248px;
+  }
+
+  .shell {
+    margin: 0 0 60px 248px;
+  }
 }
 
 .workspace-grid {
@@ -1014,10 +1024,12 @@ a.status-dot:focus-visible {
   .app-header-fixed {
     margin-left: 0;
     padding-top: max(8px, env(safe-area-inset-top));
+    overflow-x: clip;
   }
 
   .topbar {
     width: calc(100% - 32px);
+    max-width: 100%;
     margin: 0 auto;
     min-height: 48px;
     gap: 6px;
@@ -1060,10 +1072,16 @@ a.status-dot:focus-visible {
 
   .topbar-actions {
     display: flex;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     min-width: 0;
     align-items: center;
     gap: 6px;
+  }
+
+  #authLogoutButton {
+    min-width: 44px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
   .client-switcher .field-label,
