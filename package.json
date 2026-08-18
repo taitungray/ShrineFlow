@@ -1,6 +1,6 @@
 {
   "name": "shrineflow",
-  "version": "0.6.58",
+  "version": "0.6.60",
   "private": true,
   "description": "本機 JSON 版多平台社群發布工作台：建立內容、平台預覽與排程資料。",
   "type": "module",

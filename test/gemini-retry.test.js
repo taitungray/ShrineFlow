@@ -41,3 +41,19 @@ test('turns transient failures into a user-friendly message', () => {
   const message = describeGeminiError(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), ['primary']);
   assert.match(message, /忙碌|暫時無法服務/);
 });
+
+test('generateWithFallback times out a hung model call', { timeout: 200 }, async () => {
+  await assert.rejects(
+    () => generateWithFallback({
+      models: ['primary'],
+      maxAttempts: 1,
+      timeoutMs: 20,
+      generate: () => new Promise(() => {}),
+    }),
+    (error) => {
+      assert.equal(error.status, 504);
+      assert.match(String(error.message), /timed out|TIMEOUT|逾時/i);
+      return true;
+    },
+  );
+});

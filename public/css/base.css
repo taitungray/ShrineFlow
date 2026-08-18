@@ -25,6 +25,17 @@ html {
   scroll-behavior: auto;
   width: 100%;
   max-width: 100%;
+  background-color: var(--bg-app);
+}
+
+html.is-booting *,
+html.is-booting *::before,
+html.is-booting *::after,
+html.is-resuming *,
+html.is-resuming *::before,
+html.is-resuming *::after {
+  transition: none !important;
+  animation: none !important;
 }
 
 *, *::before, *::after {

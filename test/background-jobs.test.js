@@ -26,3 +26,27 @@ test('background job store expires old jobs so polling cannot revive stale work'
   now = 12_000;
   assert.equal(store.get(created.id), null);
 });
+
+test('background job store fails hung queued or running jobs on read', () => {
+  let now = 1_000;
+  const store = createBackgroundJobStore({ now: () => now, runTimeoutMs: 50 });
+  const created = store.create({ type: 'generate' });
+  store.update(created.id, { status: 'running' });
+  now = 1_060;
+  const view = store.publicView(store.get(created.id));
+  assert.equal(view.status, 'failed');
+  assert.equal(view.error.code, 'JOB_TIMEOUT');
+  assert.match(view.error.message, /逾時|再按一次/);
+});
+
+test('background job store ignores a late success after the job already failed', () => {
+  let now = 1_000;
+  const store = createBackgroundJobStore({ now: () => now, runTimeoutMs: 50 });
+  const created = store.create({ type: 'generate' });
+  store.update(created.id, { status: 'running' });
+  now = 1_060;
+  assert.equal(store.get(created.id).status, 'failed');
+  store.update(created.id, { status: 'succeeded', result: { facebook: '遲到結果' } });
+  assert.equal(store.get(created.id).status, 'failed');
+  assert.equal(store.get(created.id).result, null);
+});

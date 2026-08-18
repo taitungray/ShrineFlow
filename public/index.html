@@ -15,13 +15,46 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-      body.auth-required > :not(#authGate):not(.nav-sprite):not(#portraitLock) { display: none !important; }
+      html, body { background-color: #f7f1eb; }
+      @media (prefers-color-scheme: dark) {
+        html, body { background-color: #141211; }
+      }
+      html[data-theme="dark"], html[data-theme="dark"] body { background-color: #141211; }
+      html[data-theme="light"], html[data-theme="light"] body { background-color: #f7f1eb; }
+      html.is-booting *, html.is-resuming * { transition: none !important; animation: none !important; }
+      html:not(.has-session) body.auth-required > :not(#authGate):not(.nav-sprite):not(#portraitLock) { display: none !important; }
+      html.has-session #authGate { display: none !important; }
       .is-hidden { display: none !important; }
     </style>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('is-booting');
+        var theme = null;
+        try { theme = localStorage.getItem('shrineflow.theme'); } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        root.dataset.theme = theme;
+        try { localStorage.setItem('shrineflow.theme', theme); } catch (e) {}
+        try {
+          if (localStorage.getItem('shrineflow.signedIn') === '1') root.classList.add('has-session');
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.58" />
+    <link rel="stylesheet" href="/style.css?v=0.6.60" />
   </head>
   <body class="auth-required">
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('shrineflow.signedIn') === '1') {
+            document.body.classList.remove('auth-required');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
@@ -47,7 +80,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.58</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.60</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -286,7 +319,10 @@
             </div>
 
           <div class="composer-generate-action">
-            <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
+            <div class="composer-generate-buttons">
+              <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
+              <button class="btn-secondary" type="button" id="cancelGenerateButton" hidden aria-label="取消等待 AI 產生">取消等待</button>
+            </div>
             <p class="form-hint" id="formMessage"></p>
           </div>
           </fieldset>
@@ -1455,6 +1491,6 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.58" type="module"></script>
+    <script src="/app.js?v=0.6.60" type="module"></script>
   </body>
 </html>

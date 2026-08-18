@@ -16,7 +16,16 @@ export function isPublishInProgressError(error = {}) {
 
 export function writePendingLongTask(task, storage = globalThis.sessionStorage) {
   if (!storage?.setItem || !task) return;
-  storage.setItem(PENDING_LONG_TASK_KEY, JSON.stringify(task));
+  const existing = readPendingLongTask(storage);
+  const sameTask = existing
+    && existing.type === task.type
+    && existing.jobId === task.jobId
+    && existing.postId === task.postId
+    && existing.targetId === task.targetId;
+  const startedAt = Number(task.startedAt)
+    || (sameTask ? Number(existing.startedAt) : 0)
+    || Date.now();
+  storage.setItem(PENDING_LONG_TASK_KEY, JSON.stringify({ ...task, startedAt }));
 }
 
 export function readPendingLongTask(storage = globalThis.sessionStorage) {
@@ -51,8 +60,38 @@ export function whenDocumentVisible(documentRef = globalThis.document) {
   });
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms, signal) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    if (!signal) return;
+    const onAbort = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+export function isBackgroundJobGoneError(error = {}) {
+  return Number(error.status) === 404 || error.code === 'JOB_NOT_FOUND';
+}
+
+function throwIfLongTaskAborted(signal, storage) {
+  if (!signal?.aborted) return;
+  clearPendingLongTask(storage);
+  const error = new Error('已取消等待，可再按一次產生。');
+  error.code = 'LONG_TASK_ABORTED';
+  throw error;
+}
+
+function throwIfLongTaskTimedOut(started, timeoutMs, now, storage) {
+  if (now() - started < timeoutMs) return;
+  clearPendingLongTask(storage);
+  throw new Error('文案產生逾時，請再按一次產生。');
 }
 
 export async function waitForBackgroundJob(jobId, {
@@ -63,13 +102,18 @@ export async function waitForBackgroundJob(jobId, {
   timeoutMs = 300_000,
   now = Date.now,
   storage = globalThis.sessionStorage,
+  signal,
 } = {}) {
   if (!jobId) throw new Error('缺少背景工作識別碼。');
   if (typeof api !== 'function') throw new Error('api is required');
   writePendingLongTask({ type, jobId }, storage);
-  const started = now();
+  const started = Number(readPendingLongTask(storage)?.startedAt) || now();
+  throwIfLongTaskAborted(signal, storage);
+  throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
   while (now() - started < timeoutMs) {
+    throwIfLongTaskAborted(signal, storage);
     await whenDocumentVisible(documentRef);
+    throwIfLongTaskAborted(signal, storage);
     try {
       const job = await api(`/api/generate/jobs/${encodeURIComponent(jobId)}`);
       if (job.status === 'succeeded') {
@@ -84,12 +128,31 @@ export async function waitForBackgroundJob(jobId, {
         throw error;
       }
     } catch (error) {
-      if (!isTransientNetworkError(error)) throw error;
+      if (error?.code === 'LONG_TASK_ABORTED' || error?.name === 'AbortError') {
+        throwIfLongTaskAborted(signal, storage);
+        clearPendingLongTask(storage);
+        const aborted = new Error('已取消等待，可再按一次產生。');
+        aborted.code = 'LONG_TASK_ABORTED';
+        throw aborted;
+      }
+      if (isBackgroundJobGoneError(error)) {
+        clearPendingLongTask(storage);
+        const gone = new Error('先前的文案產生已中斷，請再按一次產生。');
+        gone.status = 404;
+        gone.code = 'JOB_NOT_FOUND';
+        throw gone;
+      }
+      if (!isTransientNetworkError(error)) {
+        clearPendingLongTask(storage);
+        throw error;
+      }
     }
     await whenDocumentVisible(documentRef);
-    await sleep(intervalMs);
+    throwIfLongTaskAborted(signal, storage);
+    await sleep(intervalMs, signal);
   }
-  throw new Error('等待結果逾時，請重新整理後再試。');
+  throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
+  throw new Error('文案產生逾時，請再按一次產生。');
 }
 
 export function resolvePublishOutcome(post, targetId) {
@@ -141,12 +204,13 @@ export async function waitForPublishTarget({
     await whenDocumentVisible(documentRef);
     await sleep(intervalMs);
   }
+  clearPendingLongTask(storage);
   throw new Error('等待發布結果逾時，請到內容列表確認狀態。');
 }
 
-export async function startAndWaitGenerate(formData, { api, ...waitOptions } = {}) {
-  const started = await api('/api/generate', { method: 'POST', body: formData });
-  if (started?.jobId) return waitForBackgroundJob(started.jobId, { api, ...waitOptions });
+export async function startAndWaitGenerate(formData, { api, signal, ...waitOptions } = {}) {
+  const started = await api('/api/generate', { method: 'POST', body: formData, signal });
+  if (started?.jobId) return waitForBackgroundJob(started.jobId, { api, signal, ...waitOptions });
   return started;
 }
 

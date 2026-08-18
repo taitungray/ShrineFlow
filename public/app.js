@@ -46,6 +46,7 @@ import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
 import { initErrorLogs } from './modules/error-log-page.js';
 import { initializeAuth, initAuthListeners, renderUserIdentity } from './modules/auth.js';
+import { initResumeStability, endBooting } from './modules/boot-stability.js';
 import { initClientErrorReporter } from './modules/client-error-reporter.js';
 import { renderClientSwitcher, initClientListeners, loadClientFacebookFields } from './modules/clients-ui.js';
 import { renderTargetAccountControls, applyActiveTargetToEditor, initTargetListeners } from './modules/targets-ui.js';
@@ -126,11 +127,38 @@ function applyClientAccounts() {
   updateLivePreview();
 }
 
+let activeLongTaskAbort = null;
+
 function setLoading(isLoading) {
   const button = $('#generateButton');
-  if (!button) return;
-  button.disabled = isLoading;
-  button.innerHTML = isLoading ? '<span class="spinner"></span> AI 產文中…' : '<span>✦</span> AI 產生文案';
+  const cancel = $('#cancelGenerateButton');
+  if (button) {
+    button.disabled = isLoading;
+    button.innerHTML = isLoading ? '<span class="spinner"></span> AI 產文中…' : '<span>✦</span> AI 產生文案';
+  }
+  if (cancel) {
+    cancel.hidden = !isLoading;
+    cancel.disabled = !isLoading;
+  }
+}
+
+function beginLongTaskWait() {
+  activeLongTaskAbort?.abort();
+  activeLongTaskAbort = new AbortController();
+  return activeLongTaskAbort;
+}
+
+function endLongTaskWait(controller) {
+  if (activeLongTaskAbort === controller) activeLongTaskAbort = null;
+}
+
+function reportGenerateError(error) {
+  if (error?.code === 'LONG_TASK_ABORTED' || error?.name === 'AbortError') {
+    setFormMessage(error.message || '已取消等待，可再按一次產生。');
+    return;
+  }
+  setFormMessage(error.message, 'error');
+  showToast(error.message, 'error');
 }
 
 async function loadPostById(postId) {
@@ -146,19 +174,20 @@ async function resumePendingLongTask() {
     return;
   }
   if (pending.type === 'generate' && pending.jobId) {
+    const controller = beginLongTaskWait();
     setLoading(true);
-    setFormMessage('正在恢復先前的文案產生…');
+    setFormMessage('正在恢復先前的文案產生…可按「取消等待」中止。');
     try {
-      const generated = await waitForBackgroundJob(pending.jobId, { api });
+      const generated = await waitForBackgroundJob(pending.jobId, { api, signal: controller.signal });
       state.savedPost = null;
       renderGenerated(generated, { syncSelectedMedia: true });
       setActiveView('review');
       setFormMessage('文案已產生，請檢查預覽後儲存。', 'success');
     } catch (error) {
       clearPendingLongTask();
-      setFormMessage(error.message, 'error');
-      showToast(error.message, 'error');
+      reportGenerateError(error);
     } finally {
+      endLongTaskWait(controller);
       setLoading(false);
     }
     return;
@@ -423,6 +452,16 @@ async function initApp() {
     });
   }
 
+  const cancelGenerateButton = $('#cancelGenerateButton');
+  if (cancelGenerateButton) {
+    cancelGenerateButton.addEventListener('click', () => {
+      activeLongTaskAbort?.abort();
+      clearPendingLongTask();
+      setLoading(false);
+      setFormMessage('已取消等待，可再按一次產生。');
+    });
+  }
+
   const generateForm = $('#generateForm');
   if (generateForm) {
     generateForm.addEventListener('submit', async (event) => {
@@ -433,13 +472,14 @@ async function initApp() {
       mediaPayload.files.forEach((file) => formData.append('media', file));
       if (mediaPayload.sequence.length) formData.set('mediaSequence', JSON.stringify(mediaPayload.sequence));
       if (state.currentClientId) formData.set('clientId', state.currentClientId);
+      const controller = beginLongTaskWait();
       setLoading(true);
       const hasLibrary = mediaPayload.sequence.some((entry) => entry.kind === 'library');
       setFormMessage(mediaPayload.files.length
-        ? '正在讀取 ' + mediaPayload.files.length + ' 個媒體並撰寫文案；切到背景也會繼續，回來會自動接上。'
-        : (hasLibrary ? '正在沿用素材庫檔案並撰寫文案；切到背景也會繼續。' : '正在根據文字資訊撰寫文案；切到背景也會繼續。'));
+        ? '正在讀取 ' + mediaPayload.files.length + ' 個媒體並撰寫文案。可按「取消等待」中止畫面等待。'
+        : (hasLibrary ? '正在沿用素材庫檔案並撰寫文案。可按「取消等待」中止畫面等待。' : '正在根據文字資訊撰寫文案。可按「取消等待」中止畫面等待。'));
       try {
-        const generated = await startAndWaitGenerate(formData, { api });
+        const generated = await startAndWaitGenerate(formData, { api, signal: controller.signal });
         state.savedPost = null;
         renderGenerated(generated, { syncSelectedMedia: true });
         setActiveView('review');
@@ -451,9 +491,10 @@ async function initApp() {
           'success',
         );
       } catch (error) {
-        setFormMessage(error.message, 'error');
-        showToast(error.message, 'error');
+        clearPendingLongTask();
+        reportGenerateError(error);
       } finally {
+        endLongTaskWait(controller);
         setLoading(false);
       }
     });
@@ -540,5 +581,6 @@ function lockPhonePortrait() {
 
 document.addEventListener('DOMContentLoaded', () => {
   lockPhonePortrait();
-  initApp();
+  initResumeStability();
+  initApp().finally(() => endBooting());
 });

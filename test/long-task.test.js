@@ -103,7 +103,95 @@ test('pending long-task snapshot survives a background round-trip', async () => 
   const storage = installSessionStorage();
   const { writePendingLongTask, readPendingLongTask, clearPendingLongTask } = await import('../public/modules/long-task.js');
   writePendingLongTask({ type: 'generate', jobId: 'job-9' }, storage);
-  assert.deepEqual(readPendingLongTask(storage), { type: 'generate', jobId: 'job-9' });
+  const pending = readPendingLongTask(storage);
+  assert.equal(pending.type, 'generate');
+  assert.equal(pending.jobId, 'job-9');
+  assert.equal(typeof pending.startedAt, 'number');
   clearPendingLongTask(storage);
+  assert.equal(readPendingLongTask(storage), null);
+});
+
+test('waitForBackgroundJob timeout clears pending and tells the user to generate again', async () => {
+  const storage = installSessionStorage();
+  const { waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');
+  await assert.rejects(
+    () => waitForBackgroundJob('job-timeout', {
+      api: async () => ({ status: 'running' }),
+      intervalMs: 5,
+      timeoutMs: 20,
+      storage,
+      document: createVisibilityDocument('visible').document,
+    }),
+    (error) => {
+      assert.match(error.message, /逾時|再按一次/);
+      assert.doesNotMatch(error.message, /重新整理/);
+      return true;
+    },
+  );
+  assert.equal(readPendingLongTask(storage), null);
+});
+
+test('waitForBackgroundJob honors persisted startedAt so refresh cannot reset the timeout', async () => {
+  const storage = installSessionStorage();
+  const { writePendingLongTask, waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');
+  writePendingLongTask({ type: 'generate', jobId: 'job-stale', startedAt: Date.now() - 10_000 }, storage);
+  let calls = 0;
+  await assert.rejects(
+    () => waitForBackgroundJob('job-stale', {
+      api: async () => {
+        calls += 1;
+        return { status: 'running' };
+      },
+      intervalMs: 5,
+      timeoutMs: 50,
+      storage,
+      document: createVisibilityDocument('visible').document,
+    }),
+    /逾時|中斷|再按一次/,
+  );
+  assert.equal(calls, 0);
+  assert.equal(readPendingLongTask(storage), null);
+});
+
+test('waitForBackgroundJob treats a missing job as terminal and clears pending', async () => {
+  const storage = installSessionStorage();
+  const { waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');
+  const missing = new Error('找不到這項背景工作。');
+  missing.status = 404;
+  missing.code = 'JOB_NOT_FOUND';
+  await assert.rejects(
+    () => waitForBackgroundJob('job-gone', {
+      api: async () => {
+        throw missing;
+      },
+      intervalMs: 5,
+      timeoutMs: 200,
+      storage,
+      document: createVisibilityDocument('visible').document,
+    }),
+    (error) => {
+      assert.equal(error.status, 404);
+      assert.match(error.message, /中斷|再按一次|找不到/);
+      return true;
+    },
+  );
+  assert.equal(readPendingLongTask(storage), null);
+});
+
+test('waitForBackgroundJob abort clears pending so the composer can unlock', async () => {
+  const storage = installSessionStorage();
+  const { waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');
+  const controller = new AbortController();
+  const promise = waitForBackgroundJob('job-cancel', {
+    api: async () => ({ status: 'running' }),
+    intervalMs: 15,
+    timeoutMs: 500,
+    storage,
+    signal: controller.signal,
+    document: createVisibilityDocument('visible').document,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  controller.abort();
+  await assert.rejects(promise, /取消/);
   assert.equal(readPendingLongTask(storage), null);
 });

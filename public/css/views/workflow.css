@@ -673,6 +673,18 @@ a.content-card-action {
   margin: 12px 0 0;
 }
 
+.composer-generate-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.composer-generate-buttons .primary-button,
+.composer-generate-buttons .btn-secondary {
+  min-height: 44px;
+}
+
 .composer-generate-action .form-hint {
   min-height: 20px;
   margin: 0;

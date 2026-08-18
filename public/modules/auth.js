@@ -1,5 +1,6 @@
 import { $, showToast } from './dom.js';
 import { api, setReauthHandler, storeReauthToken } from './api.js';
+import { rememberSignedIn } from './boot-stability.js';
 import { currentMembership, state } from './state.js';
 
 const FIREBASE_SDK_VERSION = '12.16.0';
@@ -15,6 +16,8 @@ function setGateVisible(visible) {
   if (!gate) return;
   gate.classList.toggle('is-hidden', !visible);
   document.body.classList.toggle('auth-required', visible);
+  document.documentElement.classList.toggle('has-session', !visible);
+  rememberSignedIn(!visible);
   if (visible) gate.setAttribute('aria-busy', 'false');
   else gate.removeAttribute('aria-busy');
 }
@@ -108,6 +111,7 @@ async function exchangeFirebaseSession(user, auth, signOut) {
   });
   await signOut(auth).catch(() => {});
   clearInviteToken();
+  rememberSignedIn(true);
   window.location.reload();
 }
 
@@ -260,6 +264,7 @@ function bindLegacyPasswordLogin(form) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: input?.value || '' }),
       });
+      rememberSignedIn(true);
       window.location.reload();
     } catch (error) {
       setAuthMessage(error.message);
@@ -330,6 +335,7 @@ export function initAuthListeners() {
   $('#authLogoutButton')?.addEventListener('click', async () => {
     try {
       storeReauthToken('');
+      rememberSignedIn(false);
       await api('/api/auth/logout', { method: 'POST' });
       window.location.reload();
     } catch (error) {

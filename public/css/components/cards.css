@@ -181,7 +181,7 @@ h4 {
 }
 
 .auth-gate.is-hidden { display: none; }
-.auth-required > :not(#authGate):not(#portraitLock) { display: none !important; }
+html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { display: none !important; }
 .auth-card {
   width: min(100%, 420px);
   padding: 28px;
@@ -488,6 +488,17 @@ h4 {
 
   .list-pager-nav {
     flex: 1 1 auto;
+  }
+}
+
+@media (hover: none) {
+  .panel,
+  .portrait-lock {
+    backdrop-filter: none;
+  }
+
+  .ambient {
+    display: none;
   }
 }
 
