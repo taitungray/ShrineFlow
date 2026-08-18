@@ -94,6 +94,27 @@ function throwIfLongTaskTimedOut(started, timeoutMs, now, storage) {
   throw new Error('文案產生逾時，請再按一次產生。');
 }
 
+function remainingMs(started, timeoutMs, now) {
+  return Math.max(0, timeoutMs - (now() - started));
+}
+
+async function waitUntilVisibleOrDeadline(documentRef, started, timeoutMs, now, signal) {
+  await Promise.race([
+    whenDocumentVisible(documentRef),
+    sleep(remainingMs(started, timeoutMs, now), signal),
+  ]);
+}
+
+async function waitPollInterval(documentRef, intervalMs, started, timeoutMs, now, signal) {
+  await Promise.race([
+    (async () => {
+      await whenDocumentVisible(documentRef);
+      await sleep(intervalMs, signal);
+    })(),
+    sleep(remainingMs(started, timeoutMs, now), signal),
+  ]);
+}
+
 export async function waitForBackgroundJob(jobId, {
   api,
   type = 'generate',
@@ -112,8 +133,10 @@ export async function waitForBackgroundJob(jobId, {
   throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
   while (now() - started < timeoutMs) {
     throwIfLongTaskAborted(signal, storage);
-    await whenDocumentVisible(documentRef);
+    throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
+    await waitUntilVisibleOrDeadline(documentRef, started, timeoutMs, now, signal);
     throwIfLongTaskAborted(signal, storage);
+    throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
     try {
       const job = await api(`/api/generate/jobs/${encodeURIComponent(jobId)}`);
       if (job.status === 'succeeded') {
@@ -147,9 +170,7 @@ export async function waitForBackgroundJob(jobId, {
         throw error;
       }
     }
-    await whenDocumentVisible(documentRef);
-    throwIfLongTaskAborted(signal, storage);
-    await sleep(intervalMs, signal);
+    await waitPollInterval(documentRef, intervalMs, started, timeoutMs, now, signal);
   }
   throwIfLongTaskTimedOut(started, timeoutMs, now, storage);
   throw new Error('文案產生逾時，請再按一次產生。');
@@ -210,6 +231,7 @@ export async function waitForPublishTarget({
 
 export async function startAndWaitGenerate(formData, { api, signal, ...waitOptions } = {}) {
   const started = await api('/api/generate', { method: 'POST', body: formData, signal });
+  if (started?.facebook || started?.reel) return started;
   if (started?.jobId) return waitForBackgroundJob(started.jobId, { api, signal, ...waitOptions });
   return started;
 }

@@ -78,12 +78,13 @@ export function clearUploadPreview(renderSavedMediaFn) {
 }
 
 export function syncSelectedMediaFiles() {
+  const input = $('#imageInput');
+  if (!input || typeof DataTransfer === 'undefined') return;
   const transfer = new DataTransfer();
   state.selectedMediaItems.forEach((item) => {
     if (item.file) transfer.items.add(item.file);
   });
-  const input = $('#imageInput');
-  if (input) input.files = transfer.files;
+  input.files = transfer.files;
 }
 
 export function refreshSelectedMediaPreview(renderSavedMediaFn) {

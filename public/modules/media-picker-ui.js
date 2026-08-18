@@ -6,6 +6,7 @@ import {
   MAX_MEDIA_ITEMS,
   collectPickerAssets,
   filterPickerAssets,
+  assetsInSelectionOrder,
   mediaItemFromAsset,
   mergeSelectedMedia,
   pickerSelectionMessage,
@@ -55,10 +56,12 @@ function renderPickerGrid() {
   }
   const paged = paginate(visible, { page: picker.page, pageSize: PICKER_PAGE_SIZE });
   picker.page = paged.page;
+  const selectedOrder = [...picker.selected];
   grid.className = 'media-picker-grid';
   grid.innerHTML = paged.items.map((asset) => {
     const path = asset.mediaPath;
     const selected = picker.selected.has(path);
+    const order = selected ? selectedOrder.indexOf(path) + 1 : 0;
     const video = isVideoPath(path) || String(asset.mimeType || '').startsWith('video/');
     const name = escapeHtml(asset.originalName || path);
     const src = escapeHtml(previewMediaSrc(path));
@@ -68,8 +71,10 @@ function renderPickerGrid() {
     const disabled = !selected && picker.selected.size >= cap;
     return '<button type="button" class="media-picker-card" data-media-path="' + escapeHtml(path) + '" aria-pressed="' + String(selected) + '"'
       + (disabled ? ' disabled' : '')
-      + ' aria-label="' + name + (selected ? '，已選取' : '') + '">'
-      + '<span class="media-picker-preview" data-type="' + (video ? 'video' : 'image') + '">' + preview + '</span>'
+      + ' aria-label="' + name + (selected ? '，已選第 ' + order + ' 張' : '') + '">'
+      + '<span class="media-picker-preview" data-type="' + (video ? 'video' : 'image') + '">' + preview
+      + (order ? '<span class="media-picker-order" aria-hidden="true">' + order + '</span>' : '')
+      + '</span>'
       + '<strong>' + name + '</strong></button>';
   }).join('');
   syncListPager(grid, paged, {
@@ -121,7 +126,7 @@ async function openMediaPicker() {
 }
 
 function confirmMediaPicker(renderSavedMediaFn) {
-  const selectedAssets = picker.assets.filter((asset) => picker.selected.has(asset.mediaPath));
+  const selectedAssets = assetsInSelectionOrder(picker.assets, [...picker.selected]);
   state.selectedMediaItems = seedSelectedMedia(
     state.selectedMediaItems,
     mediaPathsOf(state.generated || state.savedPost || {}),

@@ -92,6 +92,17 @@ export function filterPickerAssets(items = [], { query = '', type = 'all' } = {}
   });
 }
 
+export function assetsInSelectionOrder(assets = [], selectedPaths = []) {
+  const byPath = new Map();
+  (Array.isArray(assets) ? assets : []).forEach((asset) => {
+    const path = trim(asset.mediaPath);
+    if (path) byPath.set(path, asset);
+  });
+  return (Array.isArray(selectedPaths) ? selectedPaths : [])
+    .map((path) => byPath.get(trim(path)))
+    .filter(Boolean);
+}
+
 export function selectedMediaKey(item = {}) {
   if (item.serverPath) return 'path:' + item.serverPath;
   if (item.mediaId) return 'id:' + item.mediaId;

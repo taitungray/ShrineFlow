@@ -57,7 +57,14 @@ export const PLATFORM_DESCRIPTIONS = {
 
 export function mediaPathsOf(record = {}) {
   if (Array.isArray(record.mediaPaths) && record.mediaPaths.length) return record.mediaPaths;
-  return record.imagePath ? [record.imagePath] : [];
+  if (record.imagePath) return [record.imagePath];
+  const fromTargets = [];
+  for (const target of record.targets || []) {
+    if (Array.isArray(target?.mediaPaths) && target.mediaPaths.length) {
+      fromTargets.push(...target.mediaPaths);
+    }
+  }
+  return fromTargets;
 }
 
 export function currentClient() {

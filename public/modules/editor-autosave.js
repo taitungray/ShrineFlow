@@ -1,5 +1,5 @@
 import { $, showToast, setPreviewMessage, fieldValue, formatDate } from './dom.js';
-import { state } from './state.js';
+import { state, mediaPathsOf } from './state.js';
 import { api } from './api.js';
 
 const SAVED_TIME = new Intl.DateTimeFormat('zh-TW', {
@@ -165,7 +165,12 @@ export function restoreRecoverySnapshotForPost(post) {
   if (!post || post.status === 'archived') return null;
   const snapshot = readRecoverySnapshot(post.id);
   if (!snapshot || typeof snapshot !== 'object') return null;
-  return { ...post, ...snapshot };
+  const merged = { ...post, ...snapshot };
+  if (!mediaPathsOf(merged).length && mediaPathsOf(post).length) {
+    merged.mediaPaths = mediaPathsOf(post);
+    merged.imagePath = post.imagePath || merged.mediaPaths[0] || '';
+  }
+  return merged;
 }
 
 function draftValidationMessage(draft) {

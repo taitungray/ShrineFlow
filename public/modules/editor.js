@@ -6,8 +6,8 @@ import {
   readCreateContentSettings,
   readTargetContentSettings,
 } from './platform-ui.js';
-import { clearUploadPreview } from './upload.js';
-import { bindPersistedMediaItems } from './media-picker.js';
+import { clearUploadPreview, refreshSelectedMediaPreview } from './upload.js';
+import { bindPersistedMediaItems, seedSelectedMedia } from './media-picker.js';
 import { api, createIdempotencyKey } from './api.js';
 import { startAndWaitRewrite, publishTargetWithRecovery } from './long-task.js';
 import {
@@ -372,10 +372,12 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
       if (String(item.source || '').startsWith('blob:')) URL.revokeObjectURL(item.source);
     });
     state.selectedMediaItems = bindPersistedMediaItems(state.selectedMediaItems, paths);
+  } else {
+    state.selectedMediaItems.forEach((item) => {
+      if (String(item.source || '').startsWith('blob:')) URL.revokeObjectURL(item.source);
+    });
+    state.selectedMediaItems = seedSelectedMedia([], mediaPathsOf(generated));
   }
-  const previewItems = state.selectedMediaItems.length
-    ? state.selectedMediaItems
-    : mediaPathsOf(generated);
   const fbText = $('#facebookText');
   if (fbText) fbText.value = generated.facebook || '';
   const reelText = $('#reelText');
@@ -416,7 +418,7 @@ export function renderGenerated(generated, { syncSelectedMedia = false } = {}) {
   if (saveBtn) saveBtn.disabled = state.savedPost?.status === 'archived';
   const scheduleBtn = $('#scheduleButton');
   if (scheduleBtn) scheduleBtn.disabled = !state.savedPost || state.editorDirty;
-  renderSavedMedia(previewItems);
+  refreshSelectedMediaPreview(renderSavedMedia);
   updateLivePreview();
   renderPreviewPlatformTabs();
   syncEditorActions();

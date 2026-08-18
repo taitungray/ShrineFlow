@@ -66,3 +66,38 @@ test('restoreRecoverySnapshotForPost merges local snapshot onto saved post', asy
   assert.equal(restoreRecoverySnapshotForPost({ ...post, status: 'archived' }), null);
   assert.equal(restoreRecoverySnapshotForPost({ id: 'post-missing', status: 'draft' }), null);
 });
+
+test('restoreRecoverySnapshotForPost keeps saved media when snapshot media is empty', async () => {
+  installStorage();
+  const { state } = await import('../public/modules/state.js');
+  const {
+    setAutosaveDependencies,
+    writeRecoverySnapshot,
+    restoreRecoverySnapshotForPost,
+  } = await import('../public/modules/editor-autosave.js');
+
+  const post = {
+    id: 'post-media',
+    status: 'scheduled',
+    version: 3,
+    facebook: '伺服器文案',
+    mediaPaths: ['/uploads/statue-1.jpg'],
+    imagePath: '/uploads/statue-1.jpg',
+  };
+  state.currentClientId = 'client-a';
+  state.savedPost = post;
+  state.editorDirty = true;
+  setAutosaveDependencies({
+    getDraft: () => ({
+      facebook: '本機未存文案',
+      mediaPaths: [],
+      imagePath: '',
+    }),
+  });
+  writeRecoverySnapshot();
+
+  const recovered = restoreRecoverySnapshotForPost(post);
+  assert.equal(recovered.facebook, '本機未存文案');
+  assert.deepEqual(recovered.mediaPaths, ['/uploads/statue-1.jpg']);
+  assert.equal(recovered.imagePath, '/uploads/statue-1.jpg');
+});

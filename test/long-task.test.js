@@ -178,6 +178,23 @@ test('waitForBackgroundJob treats a missing job as terminal and clears pending',
   assert.equal(readPendingLongTask(storage), null);
 });
 
+test('waitForBackgroundJob times out even if the tab stays hidden', async () => {
+  const storage = installSessionStorage();
+  const visibility = createVisibilityDocument('hidden');
+  const { waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');
+  await assert.rejects(
+    () => waitForBackgroundJob('job-hidden', {
+      api: async () => ({ status: 'running' }),
+      intervalMs: 5,
+      timeoutMs: 30,
+      storage,
+      document: visibility.document,
+    }),
+    /逾時|再按一次/,
+  );
+  assert.equal(readPendingLongTask(storage), null);
+});
+
 test('waitForBackgroundJob abort clears pending so the composer can unlock', async () => {
   const storage = installSessionStorage();
   const { waitForBackgroundJob, readPendingLongTask } = await import('../public/modules/long-task.js');

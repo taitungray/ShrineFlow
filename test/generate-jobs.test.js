@@ -5,20 +5,10 @@ import express from 'express';
 import { createBackgroundJobStore } from '../lib/background-jobs.js';
 import { createGenerateRouter } from '../lib/routes/generate.js';
 
-async function waitForJob(baseUrl, jobId, { timeoutMs = 1_000 } = {}) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    const response = await fetch(`${baseUrl}/generate/jobs/${jobId}`);
-    const body = await response.json();
-    if (body.status === 'succeeded' || body.status === 'failed') return { response, body };
-    await new Promise((resolve) => setTimeout(resolve, 15));
-  }
-  throw new Error('timed out waiting for generate job');
-}
-
-test('generate starts a background job that stays recoverable after the start request ends', async () => {
+test('generate keeps the start request open until Gemini finishes', async () => {
   let release;
   const gate = new Promise((resolve) => { release = resolve; });
+  let generateStarted = false;
   const jobStore = createBackgroundJobStore();
   const app = express();
   app.use('/api', createGenerateRouter({
@@ -27,6 +17,7 @@ test('generate starts a background job that stays recoverable after the start re
       configured: true,
       async generatePostCopy(input) {
         assert.equal(input.files.length, 0);
+        generateStarted = true;
         await gate;
         return { facebook: '背景完成', reel: '背景完成短影音' };
       },
@@ -37,31 +28,28 @@ test('generate starts a background job that stays recoverable after the start re
   try {
     const form = new FormData();
     form.set('contentTopic', '新產品');
-    const started = await fetch(`${baseUrl}/generate`, { method: 'POST', body: form });
-    assert.equal(started.status, 202);
-    const startBody = await started.json();
-    assert.ok(startBody.jobId);
-    assert.equal(startBody.status, 'queued');
-
-    const pending = await fetch(`${baseUrl}/generate/jobs/${startBody.jobId}`);
-    assert.equal(pending.status, 200);
-    const pendingBody = await pending.json();
-    assert.ok(['queued', 'running'].includes(pendingBody.status));
-    assert.equal(pendingBody.result, null);
+    const pending = fetch(`${baseUrl}/generate`, { method: 'POST', body: form });
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    assert.equal(generateStarted, true);
+    const raced = await Promise.race([
+      pending.then(() => 'resolved'),
+      new Promise((resolve) => setTimeout(() => resolve('waiting'), 20)),
+    ]);
+    assert.equal(raced, 'waiting');
 
     release();
-    const finished = await waitForJob(baseUrl, startBody.jobId);
-    assert.equal(finished.body.status, 'succeeded');
-    assert.equal(finished.body.result.facebook, '背景完成');
-    assert.deepEqual(finished.body.result.mediaPaths, []);
+    const started = await pending;
+    assert.equal(started.status, 200);
+    const body = await started.json();
+    assert.equal(body.facebook, '背景完成');
+    assert.equal(body.jobId, undefined);
+    assert.deepEqual(body.mediaPaths, []);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
 });
 
-test('rewrite starts a background job and exposes the rewritten copy on the job', async () => {
-  let release;
-  const gate = new Promise((resolve) => { release = resolve; });
+test('rewrite keeps the start request open until the copy is ready', async () => {
   const jobStore = createBackgroundJobStore();
   const app = express();
   app.use(express.json());
@@ -70,7 +58,6 @@ test('rewrite starts a background job and exposes the rewritten copy on the job'
     aiService: {
       configured: true,
       async rewritePlatformCopy() {
-        await gate;
         return { platformId: 'threads', contentType: 'post', copy: '改寫完成', source: 'ai_rewrite' };
       },
     },
@@ -83,11 +70,10 @@ test('rewrite starts a background job and exposes the rewritten copy on the job'
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ platformId: 'threads', contentType: 'post', sourceCopy: '母稿內容' }),
     });
-    assert.equal(started.status, 202);
-    const { jobId } = await started.json();
-    release();
-    const finished = await waitForJob(baseUrl, jobId);
-    assert.equal(finished.body.result.copy, '改寫完成');
+    assert.equal(started.status, 200);
+    const body = await started.json();
+    assert.equal(body.copy, '改寫完成');
+    assert.equal(body.jobId, undefined);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

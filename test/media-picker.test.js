@@ -7,6 +7,7 @@ import {
   filterPickerAssets,
   mediaItemFromAsset,
   mergeSelectedMedia,
+  assetsInSelectionOrder,
   buildGenerateMediaPayload,
   seedSelectedMedia,
   findReadyAssetByChecksum,
@@ -61,6 +62,26 @@ test('filterPickerAssets matches name and type', () => {
   const items = collectPickerAssets({ assets: [readyPhoto, readyVideo], clientId: 'brand-a' });
   assert.deepEqual(filterPickerAssets(items, { type: 'video' }).map((item) => item.id), ['asset-video']);
   assert.deepEqual(filterPickerAssets(items, { query: 'altar' }).map((item) => item.id), ['asset-photo']);
+});
+
+test('assetsInSelectionOrder follows click order, not library newest-first', () => {
+  const assets = collectPickerAssets({
+    assets: [readyPhoto, readyVideo],
+    clientId: 'brand-a',
+  });
+  assert.deepEqual(assets.map((item) => item.mediaPath), [
+    '/uploads/altar.jpg',
+    '/uploads/rite.mp4',
+  ]);
+  const clickedFirst = assetsInSelectionOrder(assets, [
+    '/uploads/rite.mp4',
+    '/uploads/altar.jpg',
+  ]).map(mediaItemFromAsset);
+  const result = mergeSelectedMedia([], clickedFirst);
+  assert.deepEqual(result.items.map((item) => item.serverPath), [
+    '/uploads/rite.mp4',
+    '/uploads/altar.jpg',
+  ]);
 });
 
 test('mergeSelectedMedia appends library items, skips duplicates, and stops at 10', () => {
