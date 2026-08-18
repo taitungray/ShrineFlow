@@ -146,11 +146,17 @@ test('normalizeTarget preserves queue, pause and child delivery metadata', () =>
     pauseState: 'paused',
     pauseReason: 'temporary stop',
     notificationState: 'notification_required',
+    publishingStartedAt: '2026-08-18T12:00:00.000Z',
+    leaseId: 'lease-1',
+    leaseExpiresAt: '2026-08-18T12:05:00.000Z',
     delivery: {
       firstComment: { status: 'failed', text: '補充內容', lastError: { code: 'COMMENT_FAILED' } },
     },
   });
   assert.equal(target.scheduleMode, 'queue');
+  assert.equal(target.publishingStartedAt, '2026-08-18T12:00:00.000Z');
+  assert.equal(target.leaseId, 'lease-1');
+  assert.equal(target.leaseExpiresAt, '2026-08-18T12:05:00.000Z');
   assert.equal(target.scheduleSource, 'local');
   assert.equal(target.queueSequence, 3);
   assert.equal(target.pauseState, 'paused');

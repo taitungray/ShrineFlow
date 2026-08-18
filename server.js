@@ -277,6 +277,9 @@ const staticOptions = {
 app.get('/favicon.ico', (_request, response) => {
   response.redirect(301, '/favicon.svg');
 });
+app.get('/.well-known/assetlinks.json', (_request, response) => {
+  response.type('application/json').status(200).send('[]');
+});
 app.use(express.static(path.join(__dirname, 'public'), staticOptions));
 app.use('/uploads', express.static(directories.uploads, staticOptions));
 

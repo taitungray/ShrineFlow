@@ -74,6 +74,26 @@ test('claims due Instagram and Threads targets for local publishing', () => {
   }
 });
 
+test('claims stale publishing targets that never received an externalId', () => {
+  const now = new Date('2026-08-19T00:00:00.000Z');
+  assert.equal(
+    shouldClaimTargetForLocalPublish({
+      platformId: 'facebook',
+      status: 'publishing',
+      externalId: null,
+    }, now),
+    true,
+  );
+  assert.equal(
+    shouldClaimTargetForLocalPublish({
+      platformId: 'facebook',
+      status: 'publishing',
+      leaseExpiresAt: '2026-08-19T00:01:00.000Z',
+    }, now),
+    false,
+  );
+});
+
 test('does not claim targets paused by the scheduling safety valve', () => {
   const now = new Date('2026-08-13T08:00:00.000Z');
   for (const pauseState of ['paused', 'remote_cancel_failed']) {

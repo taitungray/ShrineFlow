@@ -411,6 +411,63 @@ test('POST /schedule rejects a second schedule after success without calling Fac
   }
 });
 
+test('POST /schedule reclaims a stale publishing lock without externalId', async () => {
+  let publishCalls = 0;
+  const app = express();
+  app.use(express.json());
+  app.use('/api', createScheduleRouter({
+    publishingPlatforms: getPublishingPlatforms(true),
+    resolveFacebookPublisher: async () => ({
+      configured: true,
+      async publish() {
+        publishCalls += 1;
+        return { externalId: 'graph-reclaimed' };
+      },
+    }),
+  }));
+  const server = app.listen(0);
+
+  try {
+    await writeJson(jsonFiles.clients, [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }]);
+    await writeJson(jsonFiles.posts, [{
+      id: 'post-stale',
+      clientId: 'client-1',
+      facebook: '過期鎖重排',
+      targets: [{
+        id: 'target-stale',
+        accountId: 'facebook:1',
+        platformId: 'facebook',
+        contentType: 'post',
+        status: 'publishing',
+        scheduledAt: '2026-08-18T12:00:00.000Z',
+        externalId: null,
+      }],
+    }]);
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postId: 'post-stale',
+        targetId: 'target-stale',
+        accountId: 'facebook:1',
+        channel: 'facebook',
+        contentType: 'post',
+        scheduledAt: '2026-08-21T01:00:00.000Z',
+      }),
+    });
+    assert.equal(response.status, 201);
+    assert.equal(publishCalls, 1);
+    const posts = await readJson(jsonFiles.posts, []);
+    assert.equal(posts[0].targets[0].status, 'scheduled');
+    assert.equal(posts[0].targets[0].externalId, 'graph-reclaimed');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test('POST /schedule replays the same idempotency key without a second Facebook publish', async () => {
   let publishCalls = 0;
   const app = express();

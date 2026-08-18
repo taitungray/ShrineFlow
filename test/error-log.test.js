@@ -148,6 +148,13 @@ test('shouldRecordHttpError keeps favicon 404 and drops probe noise', () => {
   assert.equal(shouldRecordHttpError(503, '/api/system/readiness'), false);
   assert.equal(shouldRecordHttpError(503, '/system/readiness'), false);
   assert.equal(shouldRecordHttpError(401, '/api/auth/login'), false);
+  assert.equal(shouldRecordHttpError(401, '/system/error-log/abc/resolve'), false);
+  assert.equal(shouldRecordHttpError(401, '/api/settings'), false);
+  assert.equal(shouldRecordHttpError(403, '/auth/session'), false);
+  assert.equal(shouldRecordHttpError(404, '/robots.txt'), false);
+  assert.equal(shouldRecordHttpError(404, '/.well-known/assetlinks.json'), false);
+  assert.equal(shouldRecordHttpError(404, '/system/error-log/abc/resolve'), false);
+  assert.equal(shouldRecordHttpError(500, '/system/error-log/abc/resolve'), true);
   assert.equal(shouldRecordHttpError(500, '/api/posts'), true);
   assert.equal(shouldRecordHttpError(200, '/api/posts'), false);
   assert.equal(shouldRecordHttpError(429, '/api/system/client-errors'), false);
