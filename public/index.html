@@ -43,7 +43,7 @@
       })();
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.88" />
+    <link rel="stylesheet" href="/style.css?v=0.6.90" />
   </head>
   <body class="auth-required">
     <script>
@@ -80,7 +80,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.88</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.90</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -616,7 +616,16 @@
                   <ol class="guide-list">
                     <li>前往 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> ➔ 點右上角 <span class="guide-pill">建立應用程式</span> ➔ 類型選擇 <strong style="color:#e05a2b;">企業 (Business)</strong>。</li>
                     <li>在「使用案例」勾選：<span class="guide-pill-blue">管理粉絲專頁的所有內容</span>（若要發 IG 順便勾選「管理 Instagram 訊息與內容」）。</li>
-                    <li>建立完成後，到左側選單點 <strong style="color:var(--text-primary);">使用案例 ➔ Pages API ➔ 權限</strong> ➔ 找到 <code class="guide-code-box">pages_manage_posts</code> 與 <code class="guide-code-box">pages_read_engagement</code> 點擊 <span class="guide-pill-green">+ 新增</span>。</li>
+                    <li>建立完成後，到左側選單點 <strong style="color:var(--text-primary);">使用案例 ➔ Pages API ➔ 權限</strong> ➔ 確認並新增：
+                      <ul>
+                        <li><code class="guide-code-box">pages_manage_posts</code>（發布與排程貼文）</li>
+                        <li><code class="guide-code-box">pages_read_engagement</code>（讀取互動與成效）</li>
+                        <li><code class="guide-code-box">pages_show_list</code>（列出管理的粉專）</li>
+                        <li><code class="guide-code-box">pages_messaging</code>（收件匣回覆私訊）</li>
+                        <li><code class="guide-code-box">pages_manage_metadata</code>（即時 Webhook 通知）</li>
+                        <li><code class="guide-code-box">business_management</code>（企業帳號管理）</li>
+                      </ul>
+                    </li>
                   </ol>
                 </div>
 
@@ -627,7 +636,18 @@
                     <span class="guide-step-title">取得粉專 ID 與 Access Token（三動搞定）</span>
                   </div>
                   <ol class="guide-list">
-                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API 測試工具</a> ➔ 最上方「Meta 應用程式」選剛剛建立的 App ➔ 點右邊藍色按鈕 <span class="guide-pill-blue">產生存取權杖</span>（登入並勾選你的粉專）。</li>
+                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API 測試工具</a> ➔ 最上方「Meta 應用程式」選剛剛建立的 App。</li>
+                    <li><strong>確認加入 6 項權限</strong>：在右側「權限 (Permissions)」清單中確認已勾選（若沒有請按 <span class="guide-pill-blue">Add a Permission</span> 搜尋加入）：
+                      <ul>
+                        <li><span class="guide-pill-green">pages_manage_posts</span>（發文必備）</li>
+                        <li><span class="guide-pill-green">pages_read_engagement</span>（成效必備）</li>
+                        <li><span class="guide-pill-green">pages_show_list</span>（取得粉專清單）</li>
+                        <li><span class="guide-pill-green">pages_messaging</span>（收件匣私訊）</li>
+                        <li><span class="guide-pill-green">pages_manage_metadata</span>（Webhook 通知）</li>
+                        <li><span class="guide-pill-green">business_management</span>（企業管理）</li>
+                      </ul>
+                    </li>
+                    <li>點擊右上方藍色按鈕 <span class="guide-pill-blue">產生存取權杖 (Generate Access Token)</span> ➔ 在跳出視窗中登入並<strong>勾選授權你的粉絲專頁</strong>。</li>
                     <li>將中間的網址輸入框換成這段代碼（點擊全選複製）：<br /><code class="guide-code-box">me/accounts?fields=id,name,access_token</code><br />然後按右邊的 <span class="guide-pill-blue">提交 (Submit)</span> 按鈕。</li>
                     <li>在下方回應的內容中，找到你的粉專名稱：
                       <ul>
@@ -697,12 +717,12 @@
                 <div class="guide-step-card">
                   <ol class="guide-list">
                     <li><strong>先決條件</strong>：IG 帳號需為 <span class="guide-pill">專業／商業帳號</span>，並已在手機 IG 設定中綁定此品牌的 Facebook 粉專。</li>
-                    <li><strong>加開權限</strong>：到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta App 後台</a> 的 Instagram 使用案例中，確認權限已勾選 <code class="guide-code-box">instagram_basic</code> 與 <code class="guide-code-box">instagram_content_publish</code>。</li>
-                    <li><strong>查詢 User ID</strong>：打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> ➔ 輸入 <code class="guide-code-box">me/accounts?fields=id,name,instagram_business_account</code> ➔ 按「提交」。</li>
+                    <li><strong>加開權限</strong>：在 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> 右側「權限」清單中，確認已勾選 <span class="guide-pill-green">instagram_basic</span> 與 <span class="guide-pill-green">instagram_content_publish</span>（若無請按「Add a Permission」搜尋加入），並重新產生權杖。</li>
+                    <li><strong>查詢 User ID</strong>：網址輸入 <code class="guide-code-box">me/accounts?fields=id,name,instagram_business_account</code> ➔ 按「提交」。</li>
                     <li><strong>填入資料</strong>：
                       <ul>
                         <li>把 <code class="guide-code-box">instagram_business_account.id</code> 的數字貼到 <strong>Instagram User ID</strong>。</li>
-                        <li><strong>Access Token</strong> 直接貼上 Facebook 的 Page Access Token 即可。</li>
+                        <li><strong>Access Token</strong> 直接貼上已包含 IG 權限的 Page Access Token 即可。</li>
                       </ul>
                     </li>
                   </ol>
@@ -1546,6 +1566,6 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.88" type="module"></script>
+    <script src="/app.js?v=0.6.90" type="module"></script>
   </body>
 </html>
