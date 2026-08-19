@@ -1193,7 +1193,7 @@
   height: 48px;
   border-radius: var(--r-md);
   font-family: Outfit, sans-serif;
-  font-size: 0.95rem;
+  font-size: 1.25rem;
   font-weight: 800;
   background: var(--bg-card);
   color: var(--text-primary);
@@ -1404,7 +1404,7 @@
   .leaderboard-rank-badge {
     width: 40px;
     height: 40px;
-    font-size: 0.82rem;
+    font-size: 1.1rem;
   }
 
   .leaderboard-stats,

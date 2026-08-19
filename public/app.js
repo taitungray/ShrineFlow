@@ -61,38 +61,55 @@ import { renderBestTimes } from './modules/best-times.js';
 import { renderRemoteSchedule } from './modules/remote-schedule.js';
 import { initBusinessSuiteButtons } from './modules/business-suite.js';
 
-async function refreshLists() {
-  const insightsPlatform = state.insightsPlatform || 'facebook';
-  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [posts, schedule, templates, campaigns, insights, inbox, notifications, savedReplies, crisisPause, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
-    api(clientQuery('/api/posts')).then((value) => (Array.isArray(value) ? value : [])),
-    api(clientQuery('/api/schedule')).then((value) => (Array.isArray(value) ? value : [])),
-    api(clientQuery('/api/templates')).then((value) => (Array.isArray(value) ? value : [])),
-    api(clientQuery('/api/campaigns')).then((value) => (Array.isArray(value) ? value : [])),
-    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
-    api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
+let listsGeneration = 0;
+
+function beginListsGeneration() {
+  listsGeneration += 1;
+  return listsGeneration;
+}
+
+function isCurrentListsGeneration(generation) {
+  return generation === listsGeneration;
+}
+
+async function fetchCoreLists() {
+  const [posts, schedule, templates, campaigns, notifications, savedReplies, crisisPause] = await Promise.all([
+    api(clientQuery('/api/posts')).then(asArray),
+    api(clientQuery('/api/schedule')).then(asArray),
+    api(clientQuery('/api/templates')).then(asArray),
+    api(clientQuery('/api/campaigns')).then(asArray),
     api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
     api(clientQuery('/api/saved-replies')).catch(() => []),
     api(clientQuery('/api/crisis-pause')).catch(() => null),
-    api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
-    api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-    api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
   ]);
   state.posts = posts;
   state.schedule = schedule;
   state.templates = templates;
   state.campaigns = campaigns;
+  state.notifications = asArray(notifications);
+  state.savedReplies = asArray(savedReplies);
+  state.crisisPause = crisisPause;
+}
+
+async function fetchSecondaryLists() {
+  const insightsPlatform = state.insightsPlatform || 'facebook';
+  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
+  const [insights, inbox, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
+    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
+    api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
+    api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
+    api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
+  ]);
   state.insights = insights;
   state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
-  state.notifications = Array.isArray(notifications) ? notifications : [];
-  state.savedReplies = Array.isArray(savedReplies) ? savedReplies : [];
-  state.crisisPause = crisisPause;
   state.bestTimes = bestTimes;
   state.remoteSchedule = remoteSchedule;
   state.repurposeCandidates = repurposeCandidates;
-  await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
-  await loadMediaLibraryAssets().catch(() => {});
+}
+
+function renderCoreLists() {
   renderPosts();
   renderSchedule();
   renderOverview();
@@ -103,10 +120,40 @@ async function refreshLists() {
   renderCrisisPause();
   renderTemplates();
   renderCampaigns();
+}
+
+function renderSecondaryLists() {
   renderInsights();
   renderInbox();
   renderBestTimes();
   renderRemoteSchedule();
+  renderOverview();
+}
+
+async function hydrateBackgroundLists(generation) {
+  await Promise.all([
+    fetchSecondaryLists().then(() => {
+      if (!isCurrentListsGeneration(generation)) return;
+      renderSecondaryLists();
+    }),
+    loadReviewQueue().catch(() => {
+      if (!isCurrentListsGeneration(generation)) return;
+      state.reviewQueue = [];
+      renderReviewQueue();
+    }),
+    loadMediaLibraryAssets().then(() => {
+      if (!isCurrentListsGeneration(generation)) return;
+      renderMediaLibrary();
+    }).catch(() => {}),
+  ]);
+}
+
+async function refreshLists() {
+  const generation = beginListsGeneration();
+  await fetchCoreLists();
+  if (!isCurrentListsGeneration(generation)) return;
+  renderCoreLists();
+  void hydrateBackgroundLists(generation);
 }
 
 function applyClientAccounts() {
@@ -240,26 +287,16 @@ async function loadData() {
   if (config?.version && $('#appVersion')) {
     $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
   }
-  let posts = [];
-  let schedule = [];
-  let templates = [];
-  let campaigns = [];
-  let insights = { status: 'unavailable', sources: [] };
-  let inbox = { status: 'unavailable', sources: [] };
-  let notifications = [];
-  let savedReplies = [];
-  let crisisPause = null;
-  let bestTimes = { status: 'unavailable', slots: [] };
-  let remoteSchedule = { status: 'remote_schedule_unavailable', sources: [] };
-  let repurposeCandidates = { status: 'insufficient_data', candidates: [] };
-  let facebookStatus = {
+  const generation = beginListsGeneration();
+  state.config = config;
+  state.platforms = asArray(config.publishingPlatforms);
+  state.facebookStatus = {
     configured: Boolean(config.facebookConfigured),
     connected: false,
     error: '',
   };
 
   try {
-    state.config = config;
     state.clients = await resolveClientsFromConfig(config);
     if (!state.currentClientId || !state.clients.some((client) => client.id === state.currentClientId)) {
       setCurrentClientId(state.clients[0]?.id || '');
@@ -267,45 +304,10 @@ async function loadData() {
     renderClientSwitcher();
     renderUserIdentity();
     applyPermissionUi();
-
-    const insightsPlatform = state.insightsPlatform || 'facebook';
-    const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-    [
-      posts,
-      schedule,
-      templates,
-      campaigns,
-      insights,
-      inbox,
-      notifications,
-      savedReplies,
-      crisisPause,
-      bestTimes,
-      remoteSchedule,
-      repurposeCandidates,
-    ] = await Promise.all([
-      api(clientQuery('/api/posts')).then(asArray),
-      api(clientQuery('/api/schedule')).then(asArray),
-      api(clientQuery('/api/templates')).then(asArray),
-      api(clientQuery('/api/campaigns')).then(asArray),
-      api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
-      api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
-      api(clientQuery('/api/system/notifications?unreadOnly=true&limit=50')).catch(() => []),
-      api(clientQuery('/api/saved-replies')).catch(() => []),
-      api(clientQuery('/api/crisis-pause')).catch(() => null),
-      api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
-      api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-      api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
-    ]);
-
-    facebookStatus = await api(clientQuery('/api/facebook/status')).catch((error) => ({
-      configured: config.facebookConfigured,
-      connected: false,
-      error: error.message,
-    }));
-
-    if (!state.clients.length && posts.length) {
-      const clientIds = [...new Set(posts.map((post) => post.clientId).filter(Boolean))];
+    await fetchCoreLists();
+    if (!isCurrentListsGeneration(generation)) return;
+    if (!state.clients.length && state.posts.length) {
+      const clientIds = [...new Set(state.posts.map((post) => post.clientId).filter(Boolean))];
       if (clientIds.length) {
         showToast('品牌列表異常，已用貼文品牌暫時還原。請重新整理。', 'error');
         state.clients = clientIds.map((id) => ({ id, name: id, accounts: [] }));
@@ -315,61 +317,47 @@ async function loadData() {
     }
   } catch (error) {
     showToast(error.message || '載入資料失敗', 'error');
-  } finally {
-    state.posts = asArray(posts);
-    state.schedule = asArray(schedule);
-    state.templates = asArray(templates);
-    state.campaigns = asArray(campaigns);
-    state.insights = insights;
-    state.insightsScope = insights.scope || state.insightsScope || 'account';
-    state.inbox = inbox;
-    state.notifications = asArray(notifications);
-    state.savedReplies = asArray(savedReplies);
-    state.crisisPause = crisisPause;
-    state.bestTimes = bestTimes;
-    state.remoteSchedule = remoteSchedule;
-    state.repurposeCandidates = repurposeCandidates;
-    state.facebookStatus = facebookStatus;
-    state.config = { ...config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
-    state.platforms = asArray(config.publishingPlatforms);
-    applyClientAccounts();
-    try { await loadQueueSettings(); } catch { /* keep UI usable */ }
-    try { await loadCrisisPause(); } catch { /* keep UI usable */ }
-    loadClientFacebookFields();
-
-    if (config.version && $('#appVersion')) {
-      $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
-    }
-
-    renderPreviewPlatformTabs();
-    renderPlatformOptions(config.publishingPlatforms);
-    renderContentTypeOptions('facebook');
-    renderCreatePublishSpec();
-    renderPosts();
-    renderSchedule();
-    renderOverview();
-    renderMediaLibrary();
-    renderPublishingLogs();
-    renderPlatformConnections();
-    renderQueueSettings();
-    renderCrisisPause();
-    renderTemplates();
-    renderCampaigns();
-    renderInsights();
-    renderInbox();
-    renderBestTimes();
-    renderRemoteSchedule();
-    try { await loadTeamManagement(); } catch { /* keep UI usable */ }
-    await loadReviewQueue().catch(() => { state.reviewQueue = []; renderReviewQueue(); });
-
-    renderApiStatus();
-
-    if (config.aiConfigured) {
-      setFormMessage('先選品牌，再建立內容；每個平台都能各自覆寫與排程。');
-    } else {
-      setFormMessage('未連線 Gemini；可到「⚙️ 設定」填入 API Key。', 'error');
-    }
   }
+
+  if (!isCurrentListsGeneration(generation)) return;
+  applyClientAccounts();
+  renderPreviewPlatformTabs();
+  renderPlatformOptions(config.publishingPlatforms);
+  renderContentTypeOptions('facebook');
+  renderCreatePublishSpec();
+  renderCoreLists();
+  renderApiStatus();
+  setFormMessage(
+    config.aiConfigured
+      ? '先選品牌，再建立內容；每個平台都能各自覆寫與排程。'
+      : '未連線 Gemini；可到「⚙️ 設定」填入 API Key。',
+    config.aiConfigured ? undefined : 'error',
+  );
+  void hydrateBackgroundLists(generation);
+  void api(clientQuery('/api/facebook/status')).then((facebookStatus) => {
+    if (!isCurrentListsGeneration(generation)) return;
+    state.facebookStatus = facebookStatus;
+    state.config = { ...state.config, facebookConnected: facebookStatus.connected, facebookPage: facebookStatus.page };
+    renderApiStatus();
+    renderPlatformConnections();
+    renderOverview();
+  }).catch((error) => {
+    if (!isCurrentListsGeneration(generation)) return;
+    state.facebookStatus = {
+      configured: Boolean(config.facebookConfigured),
+      connected: false,
+      error: error.message,
+    };
+    renderApiStatus();
+  });
+  void loadQueueSettings().then(() => {
+    if (isCurrentListsGeneration(generation)) renderQueueSettings();
+  }).catch(() => {});
+  void loadCrisisPause().then(() => {
+    if (isCurrentListsGeneration(generation)) renderCrisisPause();
+  }).catch(() => {});
+  void loadTeamManagement().catch(() => {});
+  loadClientFacebookFields();
 }
 
 async function initApp() {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import express from 'express';
 
 import { createInsightsRouter } from '../lib/routes/insights.js';
+import { pickRepurposeMetric } from '../lib/repurpose.js';
 
 test('repurpose candidates rank only published targets with saved post Insights', async () => {
   const app = express();
@@ -65,4 +66,11 @@ test('repurpose candidates rank only published targets with saved post Insights'
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('pickRepurposeMetric reads Graph total_value', () => {
+  const metric = pickRepurposeMetric('facebook', [
+    { name: 'post_media_view', total_value: { value: 88 } },
+  ]);
+  assert.deepEqual(metric, { name: 'post_media_view', value: 88 });
 });

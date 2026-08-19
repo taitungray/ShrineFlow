@@ -2,6 +2,7 @@ import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
 import { clientQuery, currentClient, hasPermission, state, PLATFORM_NAMES } from './state.js';
 import { renderBestTimes } from './best-times.js';
+import { extractAllMetrics, metricDisplayValue } from './insights-metrics.js';
 import { platformChipHtml, platformPillHtml } from './platform-icon.js';
 import { setActiveView } from './tabs.js';
 
@@ -142,8 +143,6 @@ const POST_METRIC_GROUPS = {
   ],
 };
 
-const SNAPSHOT_METRICS = new Set(['page_fans', 'page_follows', 'follower_count', 'followers_count']);
-
 let insightsLoadToken = 0;
 let insightsLoading = false;
 let aiAnalysisLoading = false;
@@ -164,18 +163,6 @@ function formatShortDay(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return String(date.getMonth() + 1).padStart(2, '0') + '/' + String(date.getDate()).padStart(2, '0');
-}
-
-function metricDisplayValue(metric) {
-  if (metric?.value !== undefined && metric?.value !== null && metric?.value !== '') return metric.value;
-  const values = Array.isArray(metric?.values) ? metric.values : [];
-  if (!values.length) return undefined;
-  const name = String(metric.name || '');
-  if (SNAPSHOT_METRICS.has(name) || values.some((item) => item?.value && typeof item.value === 'object')) {
-    return values[values.length - 1]?.value;
-  }
-  const numbers = values.map((item) => Number(item.value)).filter((value) => Number.isFinite(value));
-  return numbers.length ? numbers.reduce((sum, value) => sum + value, 0) : values[values.length - 1]?.value;
 }
 
 function metricHasDisplayValue(value) {
@@ -414,30 +401,6 @@ function postPreview(post, target) {
   return text.length > 140 ? text.slice(0, 140) + '…' : text;
 }
 
-function extractMetricVal(source, metricNames = []) {
-  if (!source?.data || !Array.isArray(source.data)) return 0;
-  for (const name of metricNames) {
-    const found = source.data.find((m) => m.name === name);
-    if (found) {
-      const v = metricDisplayValue(found);
-      const num = Number(v);
-      if (Number.isFinite(num)) return num;
-    }
-  }
-  return 0;
-}
-
-function extractAllMetrics(source) {
-  if (!source?.data || !Array.isArray(source.data)) return { likes: 0, comments: 0, shares: 0, reach: 0, total: 0 };
-  const likes = extractMetricVal(source, ['likes', 'reactions', 'post_reactions_like_total', 'page_actions_post_reactions_like_total']);
-  const comments = extractMetricVal(source, ['comments', 'replies']);
-  const shares = extractMetricVal(source, ['shares', 'reposts']);
-  const saves = extractMetricVal(source, ['saves', 'saved']);
-  const reach = extractMetricVal(source, ['reach', 'views', 'post_impressions', 'post_impressions_organic', 'page_posts_impressions_unique']);
-  const total = likes + comments + shares + saves;
-  return { likes, comments, shares, saves, reach, total };
-}
-
 /* ==========================================================================
    🔥 熱門內容表現排行榜 (Leaderboard)
    ========================================================================== */
@@ -474,11 +437,12 @@ function renderLeaderboard(platformId, platformEntries) {
     published.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   }
 
-  const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3'];
+  const rankBadges = ['🥇', '🥈', '🥉'];
 
   container.innerHTML = published.map((item, index) => {
     const rankLabel = rankBadges[index] || `#${index + 1}`;
     const rankClass = index < 3 ? `rank-top rank-${index + 1}` : 'rank-normal';
+    const rankName = `第 ${index + 1} 名`;
     const { post, target, metrics } = item;
     const canCreate = hasPermission('content.create');
     const excerpt = postPreview(post, target);
@@ -486,7 +450,7 @@ function renderLeaderboard(platformId, platformEntries) {
     const publishedLabel = formatDate(item.publishedAt);
 
     return `<article class="leaderboard-item ${rankClass}">
-      <div class="leaderboard-rank-badge">${escapeHtml(rankLabel)}</div>
+      <div class="leaderboard-rank-badge" aria-label="${escapeHtml(rankName)}">${escapeHtml(rankLabel)}</div>
       <div class="leaderboard-item-main">
         <div class="leaderboard-title-row">
           ${platformChipHtml(target.platformId)}
@@ -498,15 +462,15 @@ function renderLeaderboard(platformId, platformEntries) {
       <dl class="leaderboard-stats">
         <div class="leaderboard-stat is-hero">
           <dt>互動</dt>
-          <dd>${metrics.total ? formatMetricNumber(metrics.total) : '—'}</dd>
+          <dd>${escapeHtml(formatMetricNumber(metrics.total))}</dd>
         </div>
         <div class="leaderboard-stat">
           <dt>觸及</dt>
-          <dd>${metrics.reach ? formatMetricNumber(metrics.reach) : '—'}</dd>
+          <dd>${escapeHtml(formatMetricNumber(metrics.reach))}</dd>
         </div>
         <div class="leaderboard-stat is-detail">
           <dt>讚／留言／分享</dt>
-          <dd>${formatMetricNumber(metrics.likes || 0)} · ${formatMetricNumber(metrics.comments || 0)} · ${formatMetricNumber(metrics.shares || 0)}</dd>
+          <dd>${escapeHtml(formatMetricNumber(metrics.likes))} · ${escapeHtml(formatMetricNumber(metrics.comments))} · ${escapeHtml(formatMetricNumber(metrics.shares))}</dd>
         </div>
       </dl>
       <div class="leaderboard-item-actions">
