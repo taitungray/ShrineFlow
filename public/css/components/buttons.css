@@ -212,3 +212,21 @@
 .composer-actions > button {
   flex: 1 1 8.5rem;
 }
+
+@media (max-width: 767px) {
+  .action-row,
+  .action-box,
+  .composer-actions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .action-row > button,
+  .action-box > button,
+  .composer-actions > button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    max-width: 100%;
+  }
+}

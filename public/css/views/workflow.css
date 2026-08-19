@@ -629,9 +629,22 @@ a.content-card-action {
     width: 100%;
     min-width: 0;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .content-card-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .content-card-action {
+    display: inline-flex;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    justify-content: center;
   }
 
   .content-card-side .record-arrow {
