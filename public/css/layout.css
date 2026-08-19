@@ -17,7 +17,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  width: min(960px, calc(100% - 36px));
+  width: calc(100% - 48px);
+  max-width: none;
   margin: 0 auto;
   padding: 0;
   flex-wrap: nowrap;
@@ -457,7 +458,8 @@ a.status-dot:focus-visible {
 }
 
 .topbar {
-  width: min(1180px, calc(100% - 48px));
+  width: calc(100% - 48px);
+  max-width: none;
   min-height: 48px;
   padding: 0;
 }
@@ -525,8 +527,9 @@ a.status-dot:focus-visible {
 }
 
 .workspace-grid {
-  width: min(1180px, 100%);
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .overview-heading {

@@ -1,0 +1,16 @@
+substitutions:
+  _IMAGE: ''
+  _CACHE: ''
+steps:
+  - name: gcr.io/kaniko-project/executor:latest
+    args:
+      - --destination=${_IMAGE}
+      - --dockerfile=Dockerfile
+      - --context=dir://.
+      - --cache=true
+      - --cache-ttl=336h
+      - --cache-repo=${_CACHE}
+      - --compressed-caching=false
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -2,7 +2,7 @@ import { $, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
 import { clientQuery, currentClient, hasPermission, state, PLATFORM_NAMES } from './state.js';
 import { renderBestTimes } from './best-times.js';
-import { platformPillHtml } from './platform-icon.js';
+import { platformChipHtml, platformPillHtml } from './platform-icon.js';
 import { setActiveView } from './tabs.js';
 
 function targetsOf(post) {
@@ -481,28 +481,36 @@ function renderLeaderboard(platformId, platformEntries) {
     const rankClass = index < 3 ? `rank-top rank-${index + 1}` : 'rank-normal';
     const { post, target, metrics } = item;
     const canCreate = hasPermission('content.create');
+    const excerpt = postPreview(post, target);
+    const showExcerpt = excerpt && excerpt !== '沒有可預覽的文案。';
+    const publishedLabel = formatDate(item.publishedAt);
 
     return `<article class="leaderboard-item ${rankClass}">
       <div class="leaderboard-rank-badge">${escapeHtml(rankLabel)}</div>
       <div class="leaderboard-item-main">
-        <div class="leaderboard-item-header">
-          <div class="leaderboard-title-row">
-            <h4>${escapeHtml(postTitle(post))}</h4>
-            <span class="platform-mini-tag" data-platform="${escapeHtml(target.platformId)}">${escapeHtml(PLATFORM_NAMES[target.platformId] || target.platformId)}</span>
-          </div>
-          <small class="leaderboard-meta">發布於 ${escapeHtml(formatDate(item.publishedAt))} ${target.externalId ? `· ID ${escapeHtml(target.externalId)}` : ''}</small>
+        <div class="leaderboard-title-row">
+          ${platformChipHtml(target.platformId)}
+          <h4>${escapeHtml(postTitle(post))}</h4>
         </div>
-        <p class="leaderboard-excerpt">${escapeHtml(postPreview(post, target))}</p>
-        <div class="leaderboard-metrics-pills">
-          <span class="metric-pill" title="總互動（讚＋留言＋分享）"><span class="pill-icon">💖</span> 總互動 <strong>${metrics.total ? formatMetricNumber(metrics.total) : '—'}</strong></span>
-          <span class="metric-pill" title="按讚數"><span class="pill-icon">👍</span> 讚 <strong>${metrics.likes ? formatMetricNumber(metrics.likes) : '0'}</strong></span>
-          <span class="metric-pill" title="留言數"><span class="pill-icon">💬</span> 留言 <strong>${metrics.comments ? formatMetricNumber(metrics.comments) : '0'}</strong></span>
-          <span class="metric-pill" title="分享數"><span class="pill-icon">↗</span> 分享 <strong>${metrics.shares ? formatMetricNumber(metrics.shares) : '0'}</strong></span>
-          <span class="metric-pill" title="觸及與觀看"><span class="pill-icon">👁</span> 觸及 <strong>${metrics.reach ? formatMetricNumber(metrics.reach) : '—'}</strong></span>
-        </div>
+        <p class="leaderboard-meta">${escapeHtml(publishedLabel)}</p>
+        ${showExcerpt ? `<p class="leaderboard-excerpt">${escapeHtml(excerpt)}</p>` : ''}
       </div>
+      <dl class="leaderboard-stats">
+        <div class="leaderboard-stat is-hero">
+          <dt>互動</dt>
+          <dd>${metrics.total ? formatMetricNumber(metrics.total) : '—'}</dd>
+        </div>
+        <div class="leaderboard-stat">
+          <dt>觸及</dt>
+          <dd>${metrics.reach ? formatMetricNumber(metrics.reach) : '—'}</dd>
+        </div>
+        <div class="leaderboard-stat is-detail">
+          <dt>讚／留言／分享</dt>
+          <dd>${formatMetricNumber(metrics.likes || 0)} · ${formatMetricNumber(metrics.comments || 0)} · ${formatMetricNumber(metrics.shares || 0)}</dd>
+        </div>
+      </dl>
       <div class="leaderboard-item-actions">
-        ${canCreate ? `<button type="button" class="btn-secondary" data-repurpose-post="${escapeHtml(post.id)}">🔁 建立再製</button>` : ''}
+        ${canCreate ? `<button type="button" class="btn-secondary" data-repurpose-post="${escapeHtml(post.id)}">建立再製</button>` : ''}
       </div>
     </article>`;
   }).join('');

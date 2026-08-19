@@ -27,9 +27,10 @@ Gemini Key 可以現在做成 `shrineflow-gemini-key`，也可以部署後在後
 
 ## 丟上去
 
-在專案根目錄執行：
+第一次（或服務還不存在）在專案根目錄執行完整參數。之後日常更新**只需** `-ProjectId`：跳過 IAM／開 API／Scheduler，用 Kaniko 層快取建 image（`package-lock.json` 沒變就不會重跑 `npm ci`）。
 
 ```powershell
+# 第一次，或改 IAM／Secret／Scheduler
 .\deploy\deploy-cloud.ps1 `
   -ProjectId YOUR_PROJECT_ID `
   -R2AccountId YOUR_CLOUDFLARE_ACCOUNT_ID `
@@ -38,9 +39,14 @@ Gemini Key 可以現在做成 `shrineflow-gemini-key`，也可以部署後在後
   -FirebaseAuthDomain YOUR_PROJECT_ID.firebaseapp.com `
   -FirebaseAppId YOUR_FIREBASE_WEB_APP_ID `
   -OwnerEmails you@example.com
+
+# 日常（服務已存在）
+.\deploy\deploy-cloud.ps1 -ProjectId YOUR_PROJECT_ID
 ```
 
-腳本會：啟用 API、沒有 Firestore 就建立 Native database、沒有 scheduler／master key Secret 就自動產生、給 Cloud Run 服務帳號 Firestore 權限、部署 `shrineflow-api`、建立 3 個 Scheduler job。缺 R2 Secret 會直接停並講缺哪一個。
+已存在的服務再部署時：只建 cached image 並換 Cloud Run revision，沿用現有 env／Secret。改環境變數加 `-UpdateConfig`（仍要 R2／Firebase 參數）。重做 IAM／API 加 `-Bootstrap`。只刷新 Scheduler 加 `-UpdateScheduler`。
+
+第一次會：啟用 API、沒有 Firestore 就建立 Native database、建立 Artifact Registry `shrineflow`、沒有 scheduler／master key Secret 就自動產生、給 Cloud Run 服務帳號 Firestore 權限、部署 `shrineflow-api`、建立 3 個 Scheduler job。缺 R2 Secret 會直接停並講缺哪一個。從舊的 `--source` 部署切過來時，先跑一次帶完整參數的指令（或 `-Bootstrap`）以建立 Registry。
 
 部署完成後，用腳本印出的 Cloud Run URL 開後台。
 

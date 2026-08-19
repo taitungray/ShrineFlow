@@ -107,6 +107,27 @@ test('every workspace view panel and inner tab exists in index.html', async () =
   for (const section of INNER_TABS.team) {
     assert.match(html, new RegExp(`data-team-section="${section}"`), `missing team tab ${section}`);
   }
+
+  for (const id of ['insightsPanel', 'inboxPanel', 'platformsPanel', 'draftsPanel', 'schedulePanel']) {
+    const hits = html.match(new RegExp(`id=["']${id}["']`, 'g')) || [];
+    assert.equal(hits.length, 1, `${id} must exist once; duplicates stack two toolbars`);
+  }
+  assert.doesNotMatch(html, /^(<<<<<<<|=======|>>>>>>>)/m, 'unresolved merge markers break the workspace');
+});
+
+test('insights leaderboard stays scannable on desktop and stacks cleanly on phone', async () => {
+  const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const js = await fs.readFile(path.join(root, 'public', 'modules', 'insights.js'), 'utf8');
+  const css = await loadCss('public/style.css');
+  const phone = mediaBlocks(css, 767);
+
+  assert.doesNotMatch(html, /id="btnTriggerAiAnalysis"/, 'one AI CTA is enough; in-card duplicate clutters both desktop and phone');
+  assert.match(js, /platformChipHtml\(target\.platformId\)/, 'leaderboard must scan platform with official icon');
+  assert.doesNotMatch(js, /ID \$\{/, 'long external IDs must not sit in the leaderboard meta line');
+  assert.match(css, /\.leaderboard-item\s*\{[^}]*grid-template-columns\s*:\s*48px minmax\(0,\s*1fr\) auto auto/, 'desktop row is rank | copy | stats | action');
+  assert.match(css, /\.leaderboard-sort-pills \.radio-pill\s*\{[^}]*flex\s*:\s*0\s+1\s+auto/, 'sort pills must not stretch to full card width');
+  assert.match(lastDecls(phone, '.insights-toolbar-group'), /flex-direction\s*:\s*column/, 'phone toolbar groups stack label over pills');
+  assert.match(lastDecls(phone, '.leaderboard-item'), /grid-template-columns\s*:\s*40px minmax\(0,\s*1fr\)/, 'phone leaderboard drops the desktop four-column row');
 });
 
 test('mobile layout drops desktop min-heights that leave empty space', async () => {
@@ -227,6 +248,8 @@ test('desktop CSS keeps sidebar shell, anti-jitter panels, and dual-pane compose
   assert.match(css, /@media \(min-width:\s*1100px\)[\s\S]*\.shell\s*\{[^}]*margin:\s*0\s+0\s+60px\s+248px/, 'desktop shell sits beside the 248px sidebar');
   assert.match(sidebar, /width:\s*248px/, 'desktop sidebar stays a fixed 248px column');
   assert.match(workspace, /min-height\s*:\s*560px/, 'desktop workspace keeps anti-jitter min-height');
+  assert.doesNotMatch(workspace, /min\(\s*1180px/, 'desktop workspace fills the shell instead of a 1180px reading column');
+  assert.match(css, /\.topbar\s*\{[^}]*width:\s*calc\(100%\s*-\s*48px\)/, 'desktop topbar fills the header instead of a 1180px column');
   assert.match(css, /grid-template-columns\s*:\s*minmax\(\s*0\s*,\s*1\.05fr\s*\)\s+minmax\(\s*360px\s*,\s*0\.95fr\s*\)/, 'desktop composer is editor + preview, not a single squeezed column');
 });
 
