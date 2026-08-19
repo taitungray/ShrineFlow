@@ -1,4 +1,5 @@
 import { $$, $ } from './dom.js';
+import { LEGACY_SETTINGS_PLATFORM_PATHS } from './settings-page.js';
 
 const VIEW_ROUTES = {
   overview: 'overview',
@@ -50,7 +51,9 @@ export function routeFromHash(hash = typeof window !== 'undefined' ? window.loca
   const withoutHash = String(hash || '#/overview').replace(/^#\/?/, '');
   const path = withoutHash.split('?')[0].replace(/\/+$/, '') || 'overview';
   if (path === 'help' || path.startsWith('help/')) return { view: 'help', path };
+  if (LEGACY_SETTINGS_PLATFORM_PATHS[path]) return { view: 'platforms', path: LEGACY_SETTINGS_PLATFORM_PATHS[path] };
   if (path === 'settings' || path.startsWith('settings/')) return { view: 'settings', path };
+  if (path === 'platforms' || path.startsWith('platforms/')) return { view: 'platforms', path };
   if (path === 'content/new') return { view: 'create', path };
   if (path.startsWith('content/')) return { view: 'review', path };
   if (path === 'content') return { view: 'drafts', path };

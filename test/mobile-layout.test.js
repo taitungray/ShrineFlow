@@ -29,7 +29,8 @@ const VIEW_PANELS = [
 ];
 
 const INNER_TABS = {
-  settings: ['gemini', 'brand', 'facebook', 'instagram', 'threads', 'backup'],
+  settings: ['gemini', 'brand', 'backup'],
+  platforms: ['overview', 'facebook', 'instagram', 'threads'],
   composerModes: ['edit', 'preview'],
   calendar: ['month', 'week', 'list'],
   team: ['members', 'invitations', 'audit'],
@@ -90,6 +91,11 @@ test('every workspace view panel and inner tab exists in index.html', async () =
   for (const page of INNER_TABS.settings) {
     assert.match(html, new RegExp(`data-settings-page="${page}"`), `missing settings tab ${page}`);
   }
+  for (const page of INNER_TABS.platforms) {
+    assert.match(html, new RegExp(`data-platforms-page="${page}"`), `missing platforms tab ${page}`);
+  }
+  assert.doesNotMatch(html, /id="settingsPageFacebook"/, 'Facebook credentials must live under platforms, not settings');
+  assert.match(html, /id="platformsPageFacebook"/, 'Facebook credentials page missing from platforms');
   for (const mode of INNER_TABS.composerModes) {
     assert.match(html, new RegExp(`data-composer-mode="${mode}"`), `missing composer mode ${mode}`);
   }

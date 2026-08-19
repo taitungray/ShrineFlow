@@ -51,35 +51,50 @@ function renderPills(target, name, options, selected) {
   )).join('');
 }
 
-function relatedHtml(links = []) {
-  if (!links.length) return '';
-  return '<p class="help-related-label">相關畫面</p><p class="help-related">'
-    + links.map((link) => '<a class="field-link" href="' + escapeHtml(link.href) + '">' + escapeHtml(link.label) + '</a>').join('')
-    + '</p>';
+function formatHelpText(text) {
+  return escapeHtml(String(text || '')).replace(/「([^」]+)」/g, '<strong class="help-term">「$1」</strong>');
 }
 
-function stepsHtml(steps = []) {
+function helpBlock(kind, label, inner) {
+  return '<section class="help-block help-block-' + kind + '">'
+    + '<h3 class="help-section-label">' + escapeHtml(label) + '</h3>'
+    + inner
+    + '</section>';
+}
+
+function relatedHtml(links = []) {
+  if (!links.length) return '';
+  return helpBlock(
+    'related',
+    '相關畫面',
+    '<p class="help-related">'
+    + links.map((link) => '<a class="field-link" href="' + escapeHtml(link.href) + '">' + escapeHtml(link.label) + '</a>').join('')
+    + '</p>',
+  );
+}
+
+export function renderHelpStepsHtml(steps = []) {
   if (!steps.length) return '';
-  return '<ol class="setup-steps">' + steps.map((step) => '<li>' + escapeHtml(step) + '</li>').join('') + '</ol>';
+  return '<ol class="help-steps">' + steps.map((step) => '<li><span class="help-step-copy">' + formatHelpText(step) + '</span></li>').join('') + '</ol>';
 }
 
 function articleCard(article, { open = false } = {}) {
+  const kind = KIND_LABEL[article.kind] ? article.kind : 'guide';
   const advanced = Array.isArray(article.advancedSteps) && article.advancedSteps.length
     ? '<details class="disclosure compact"><summary>完整步驟 <span class="chevron" aria-hidden="true">›</span></summary><div class="disclosure-body">'
-      + stepsHtml(article.advancedSteps) + '</div></details>'
+      + renderHelpStepsHtml(article.advancedSteps) + '</div></details>'
     : '';
   return '<article class="help-article">'
     + '<details class="help-article-fold"' + (open ? ' open' : '') + ' data-help-id="' + escapeHtml(article.id) + '">'
     + '<summary>'
-    + '<span class="help-kind-tag">' + escapeHtml(KIND_LABEL[article.kind] || article.kind) + '</span>'
+    + '<span class="help-kind-tag help-kind-tag--' + kind + '">' + escapeHtml(KIND_LABEL[kind]) + '</span>'
     + '<strong>' + escapeHtml(article.title) + '</strong>'
     + '<small>' + escapeHtml(article.summary) + '</small>'
     + '</summary>'
     + '<div class="help-article-body">'
-    + '<p class="help-section-label">這是什麼／你看到什麼</p><p>' + escapeHtml(article.symptoms) + '</p>'
-    + '<p class="help-section-label">為什麼</p><p>' + escapeHtml(article.cause) + '</p>'
-    + '<p class="help-section-label">怎麼做</p>' + stepsHtml(article.steps)
-    + advanced
+    + helpBlock('symptom', '現象', '<p>' + formatHelpText(article.symptoms) + '</p>')
+    + helpBlock('key', '重點', '<p>' + formatHelpText(article.cause) + '</p>')
+    + helpBlock('steps', '步驟', renderHelpStepsHtml(article.steps) + advanced)
     + relatedHtml(article.related)
     + '</div></details></article>';
 }

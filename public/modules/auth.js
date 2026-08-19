@@ -279,8 +279,10 @@ export async function initializeAuth() {
     let status;
     try {
       status = await api('/api/auth/status');
-      if (status?.version && $('#authAppVersion')) {
-        $('#authAppVersion').textContent = status.version.startsWith('v') ? status.version : `v${status.version}`;
+      if (status?.version) {
+        const versionText = status.version.startsWith('v') ? status.version : `v${status.version}`;
+        if ($('#authAppVersion')) $('#authAppVersion').textContent = versionText;
+        if ($('#appVersion')) $('#appVersion').textContent = versionText;
       }
     } catch (error) {
       setGateVisible(true);

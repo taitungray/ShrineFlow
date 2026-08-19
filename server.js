@@ -339,6 +339,7 @@ app.use('/api', createWebhookRouter());
 app.use('/api', createMediaRouter({ repositories }));
 app.use('/api', createBulkImportRouter({ repositories }));
 app.use('/api', (request, response, next) => createInsightsRouter({
+  aiService,
   resolveFacebookInsights,
   resolveInstagramInsights,
   resolveThreadsInsights,

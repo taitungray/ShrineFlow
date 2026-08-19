@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
+import http from 'node:http';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -413,4 +414,65 @@ test('Facebook post Insights merge object engagement fields', async () => {
   );
   assert.ok(urls.some((url) => url.includes('/page-1_99/insights')));
   assert.ok(urls.some((url) => url.includes('fields=') && url.includes('likes.summary')));
+});
+
+test('Insights router provides AI analysis endpoint with structured advice', async () => {
+  let analyzedPayload = null;
+  const fakeAiService = {
+    configured: true,
+    analyzeContentPerformance: async (payload) => {
+      analyzedPayload = payload;
+      return {
+        summary: '受眾對節慶與祈福題材反應極佳。',
+        topThemes: [{ theme: '關聖帝君誕辰', whyItWorked: '節慶共鳴強' }],
+        actionableTips: ['建議文案開頭加強祈福引言'],
+        nextPostIdeas: [{
+          title: '日常祈安文',
+          topic: '關聖帝君',
+          format: '圖文',
+          reason: '維持平日互動',
+          prompt: '撰寫一篇向關聖帝君祈求平安的文案',
+        }],
+      };
+    },
+  };
+
+  const router = createInsightsRouter({
+    aiService: fakeAiService,
+    getClient: async (id) => ({ id, name: '測試宮廟' }),
+    listClients: async () => [{ id: 'client-1', name: '測試宮廟' }],
+    listPosts: async () => [
+      {
+        id: 'post-1',
+        clientId: 'client-1',
+        contentTopic: '關聖帝君聖誕',
+        targets: [{ platformId: 'facebook', status: 'published', publishedAt: new Date().toISOString() }],
+      },
+    ],
+  });
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api', router);
+
+  const server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  const port = server.address().port;
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/insights/ai-analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: 'client-1', platform: 'facebook' }),
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.summary, '受眾對節慶與祈福題材反應極佳。');
+    assert.equal(data.topThemes.length, 1);
+    assert.equal(data.nextPostIdeas.length, 1);
+    assert.equal(analyzedPayload?.clientName, '測試宮廟');
+    assert.equal(analyzedPayload?.posts?.length, 1);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });

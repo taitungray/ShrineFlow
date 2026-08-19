@@ -51,7 +51,7 @@ export function refreshNavBadges() {
 }
 
 function healthHref(key) {
-  return key === 'ai' ? '#/settings/gemini' : '#/settings/facebook';
+  return key === 'ai' ? '#/settings/gemini' : '#/platforms/facebook';
 }
 
 function renderOverviewHealth() {
@@ -181,11 +181,11 @@ export function renderOverview() {
 
     if (fbNotConnected) {
       actionItems.push(
-        '<a class="overview-attention-item is-danger" href="#/settings" data-view-target="settings" data-route-target="settings">'
+        '<a class="overview-attention-item is-danger" href="#/platforms/facebook" data-view-target="platforms" data-route-target="platforms/facebook">'
         + '<span class="attention-icon" aria-hidden="true">⚙</span>'
         + '<div class="attention-body">'
         + '<strong>Facebook 連線異常或 Token 失效</strong>'
-        + '<small>請至設定確認 Page Access Token 狀態</small>'
+        + '<small>請至平台連線確認 Page Access Token 狀態</small>'
         + '</div>'
         + '<span class="attention-arrow" aria-hidden="true">→</span>'
         + '</a>'

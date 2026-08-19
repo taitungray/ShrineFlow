@@ -10,6 +10,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 
 test('content list puts posts before CSV import and hides extra filters', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
+  const css = await loadCss('public/style.css');
   const listAt = html.indexOf('id="postsList"');
   const csvAt = html.indexOf('id="bulkImportCsv"');
   const moreAt = html.indexOf('class="disclosure compact content-more-filters"');
@@ -20,6 +21,8 @@ test('content list puts posts before CSV import and hides extra filters', async 
   assert.ok(moreAt > 0 && stageAt > moreAt, 'stage and platform filters live behind 更多篩選');
   assert.match(html, /class="idea-capture-bar"/, 'Idea capture is a compact bar, not a full card above the list');
   assert.ok(ideaAt > 0 && ideaAt < listAt, 'Idea bar stays above the list without burying it');
+  assert.match(html, /class="idea-capture-kicker"/, 'Idea title sits above the two equal fields, not as the topic label');
+  assert.match(css, /\.idea-capture-bar\s*\{[^}]*align-items\s*:\s*start/, 'Idea fields top-align; save button sits on the input row');
 });
 
 test('content toolbar keeps status pills and trailing actions on one baseline', async () => {

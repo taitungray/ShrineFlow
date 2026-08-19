@@ -237,6 +237,9 @@ async function resolveClientsFromConfig(config) {
 
 async function loadData() {
   const config = await api('/api/config');
+  if (config?.version && $('#appVersion')) {
+    $('#appVersion').textContent = config.version.startsWith('v') ? config.version : 'v' + config.version;
+  }
   let posts = [];
   let schedule = [];
   let templates = [];

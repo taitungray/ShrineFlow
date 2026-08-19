@@ -64,6 +64,7 @@ let html = fs.readFileSync(htmlPath, 'utf8');
 html = html.replace(/href="\/style\.css(?:\?v=[^"]*)?"/, `href="/style.css?v=${version}"`);
 html = html.replace(/src="\/app\.js(?:\?v=[^"]*)?"/, `src="/app.js?v=${version}"`);
 html = html.replace(/<span class="version-tag" id="authAppVersion">[^<]*<\/span>/, `<span class="version-tag" id="authAppVersion">v${version}</span>`);
+html = html.replace(/<em class="version-tag" id="appVersion">[^<]*<\/em>/, `<em class="version-tag" id="appVersion">v${version}</em>`);
 fs.writeFileSync(htmlPath, html, 'utf8');
 console.log(`[OK] public/index.html (?v=${version})`);
 

@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { clientQuery, currentClient, hasPermission, state, PLATFORM_NAMES } from './state.js';
 import { renderBestTimes } from './best-times.js';
 import { platformPillHtml } from './platform-icon.js';
+import { setActiveView } from './tabs.js';
 
 function targetsOf(post) {
   return Array.isArray(post.targets) && post.targets.length
@@ -141,12 +142,15 @@ const POST_METRIC_GROUPS = {
   ],
 };
 
-const SNAPSHOT_METRICS = new Set(['page_follows', 'page_fans', 'follower_count', 'followers_count']);
+const SNAPSHOT_METRICS = new Set(['page_fans', 'page_follows', 'follower_count', 'followers_count']);
 
 let insightsLoadToken = 0;
 let insightsLoading = false;
+let aiAnalysisLoading = false;
+let currentLeaderboardSort = 'engagement';
 
 function formatMetricNumber(value) {
+  if (value === undefined || value === null || value === '') return '—';
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return Object.entries(value)
       .map(([key, inner]) => (METRIC_LABELS[key] || key) + ' ' + formatMetricNumber(inner))
@@ -253,36 +257,38 @@ function sourceStatusText(source) {
 function rangeText(source) {
   const since = source?.range?.since;
   const until = source?.range?.until;
-  if (!since || !until) return '帳號區間 ' + String(state.insightsRange || 7) + ' 日';
-  return formatDate(since) + ' → ' + formatDate(until);
+  if (since && until) return `${formatShortDay(since)} ～ ${formatShortDay(until)}`;
+  return '帳號區間 ' + String(state.insightsRange || 7) + ' 日';
 }
 
 function insightsQuery(extra = '') {
   const platform = state.insightsPlatform || 'facebook';
   const days = Number(state.insightsRange || 7);
-  const until = new Date();
-  const since = new Date(until.getTime() - days * 24 * 60 * 60 * 1000);
-  return extra
-    + (extra.includes('?') ? '&' : '?')
-    + 'platform=' + encodeURIComponent(platform)
-    + '&since=' + encodeURIComponent(since.toISOString())
-    + '&until=' + encodeURIComponent(until.toISOString());
+  const now = new Date();
+  const until = Math.floor(now.getTime() / 1000);
+  const since = until - days * 86400;
+  const base = '?platform=' + encodeURIComponent(platform)
+    + '&since=' + encodeURIComponent(String(since))
+    + '&until=' + encodeURIComponent(String(until));
+  return extra ? base + '&' + extra.replace(/^\?/, '') : base;
 }
 
 function cacheKeyMatches(record) {
-  return record
+  if (!record) return false;
+  return record.clientId === (state.currentClientId || '')
     && record.platformId === (state.insightsPlatform || 'facebook')
-    && record.clientId === (state.currentClientId || record.clientId)
     && Number(record.rangeDays || state.insightsRange) === Number(state.insightsRange || 7);
 }
 
-function mergeAccountSources(payload) {
-  const incoming = Array.isArray(payload?.sources) ? payload.sources : [];
+function mergeAccountSources(accountInsights) {
+  const incoming = Array.isArray(accountInsights?.sources) ? accountInsights.sources : [];
   const platform = state.insightsPlatform || 'facebook';
   const others = (state.insights?.sources || []).filter((item) => item.platformId !== platform);
   return {
-    ...payload,
-    scope: 'account',
+    ...(state.insights || {}),
+    status: accountInsights?.status || state.insights?.status || 'unavailable',
+    clientId: state.currentClientId || accountInsights?.clientId || '',
+    fetchedAt: accountInsights?.fetchedAt || new Date().toISOString(),
     sources: [...others, ...incoming],
   };
 }
@@ -293,6 +299,7 @@ async function loadInsightsDetail({ refreshAccount = true } = {}) {
   const platform = state.insightsPlatform || 'facebook';
   const refreshButton = $('#btnRefreshInsights');
   if (refreshButton) refreshButton.disabled = true;
+
   try {
     const accountPath = clientQuery('/api/insights' + insightsQuery('?scope=account'));
     const postsPath = clientQuery('/api/insights' + insightsQuery('?scope=posts') + '&limit=50');
@@ -300,12 +307,13 @@ async function loadInsightsDetail({ refreshAccount = true } = {}) {
     const repurposePath = clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(platform));
     const [accountInsights, postInsights, bestTimes, repurposeCandidates] = await Promise.all([
       refreshAccount
-        ? api(accountPath).catch((error) => ({ status: 'error', sources: [], error: { message: error.message } }))
+        ? api(accountPath).catch(() => ({ status: 'unavailable', sources: [] }))
         : Promise.resolve(state.insights || { status: 'unavailable', sources: [] }),
-      api(postsPath).catch((error) => ({ status: 'error', sources: [], error: { message: error.message } })),
-      api(bestTimesPath).catch((error) => ({ status: 'unavailable', slots: [], error: error.message })),
+      api(postsPath).catch(() => ({ status: 'unavailable', sources: [] })),
+      api(bestTimesPath).catch(() => ({ status: 'unavailable', slots: [] })),
       api(repurposePath).catch(() => ({ status: 'insufficient_data', candidates: [] })),
     ]);
+
     if (token !== insightsLoadToken) return;
     if (refreshAccount) state.insights = mergeAccountSources(accountInsights);
     state.insightsPosts = {
@@ -317,11 +325,10 @@ async function loadInsightsDetail({ refreshAccount = true } = {}) {
     state.bestTimes = bestTimes;
     state.repurposeCandidates = repurposeCandidates;
     renderInsights();
-    renderBestTimes();
   } catch (error) {
     if (token !== insightsLoadToken) return;
     const notice = $('#insightsSourceNotice');
-    if (notice) notice.innerHTML = '<strong>成效讀取失敗</strong><span>' + escapeHtml(error.message) + '</span>';
+    if (notice) notice.innerHTML = '<strong>同步失敗</strong><span>' + escapeHtml(error.message) + '</span>';
   } finally {
     if (token === insightsLoadToken) insightsLoading = false;
     const button = $('#btnRefreshInsights');
@@ -336,7 +343,7 @@ function ensureInsightsDetail() {
 }
 
 async function createRepurposeDraft(button) {
-  const postId = button?.dataset.repurposePost;
+  const postId = button.dataset.repurposePost;
   if (!postId || button.disabled) return;
   const originalLabel = button.textContent;
   button.disabled = true;
@@ -346,7 +353,7 @@ async function createRepurposeDraft(button) {
     state.posts = [created, ...(state.posts || [])];
     button.textContent = '已建立再製草稿';
     button.dataset.created = 'true';
-    showToast('已建立再製草稿，原貼文保持不變。', 'success');
+    showToast('✨ 已建立再製草稿，原貼文保持不變。', 'success');
   } catch (error) {
     button.disabled = false;
     button.textContent = originalLabel;
@@ -361,11 +368,11 @@ function renderPlatformTabs() {
   if (!available.includes(state.insightsPlatform)) state.insightsPlatform = available[0] || 'facebook';
   const posts = state.posts || [];
   tabs.innerHTML = available.map((platformId) => {
-    const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId).length;
+    const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId && target.status === 'published').length;
     return platformPillHtml(platformId, {
       name: 'insightsPlatform',
       checked: platformId === state.insightsPlatform,
-      count: count || '',
+      count: count ? `${count} 篇` : '',
     });
   }).join('');
 }
@@ -386,40 +393,260 @@ function renderRepurpose() {
       '<article class="repurpose-candidate-card">'
       + '<div class="repurpose-candidate-heading"><div><span class="section-tag">#' + escapeHtml(String(candidate.rank || '—')) + '</span><h4>' + escapeHtml(candidate.postTitle || candidate.postId || '未命名內容') + '</h4></div>'
       + '<strong>' + escapeHtml(String(candidate.metric?.value ?? '—')) + '</strong></div>'
-      + '<p class="repurpose-candidate-meta">依 ' + escapeHtml(candidate.metric?.name || '已保存指標') + ' 排名 · 發布於 ' + escapeHtml(candidate.publishedAt ? formatDate(candidate.publishedAt) : '未知') + ' · 成效資料 ' + escapeHtml(candidate.snapshotFetchedAt ? formatDate(candidate.snapshotFetchedAt) : '未知') + '</p>'
+      + '<p class="repurpose-candidate-meta">依 ' + escapeHtml(candidate.metric?.name || '已保存指標') + ' 排名 · 發布於 ' + escapeHtml(candidate.publishedAt ? formatDate(candidate.publishedAt) : '未知') + '</p>'
       + (canCreate
-        ? '<button class="btn-secondary" type="button" data-repurpose-post="' + escapeHtml(candidate.postId) + '">建立再製草稿</button>'
+        ? '<button class="btn-secondary" type="button" data-repurpose-post="' + escapeHtml(candidate.postId) + '">🔁 建立再製草稿</button>'
         : '<span class="helper">需要內容建立權限才能建立再製草稿。</span>')
       + '</article>'
     )).join('') + '</div>'
     : '<p class="helper">' + notice + '</p>';
-  container.innerHTML = '<div class="repurpose-heading"><div><span class="section-tag">REPURPOSE CANDIDATES</span><h3>已發布再製</h3></div><span class="badge" data-status="' + escapeHtml(result.status || 'insufficient_data') + '">' + escapeHtml(result.status === 'ready' && candidates.length ? '有真實資料' : '資料不足') + '</span></div>'
+  container.innerHTML = '<div class="repurpose-heading"><div><span class="section-tag">REPURPOSE CANDIDATES</span><h3>🔁 已發布內容再製</h3></div><span class="badge" data-status="' + escapeHtml(result.status || 'insufficient_data') + '">' + escapeHtml(result.status === 'ready' && candidates.length ? '有真實成效' : '資料充足度不足') + '</span></div>'
     + '<p class="helper">' + notice + '</p>' + rows;
   container.querySelectorAll('[data-repurpose-post]').forEach((button) => {
     button.addEventListener('click', () => createRepurposeDraft(button));
   });
 }
 
-function countByStatus(targets) {
-  return targets.reduce((counts, target) => {
-    const key = target.status || 'draft';
-    counts[key] = (counts[key] || 0) + 1;
-    return counts;
-  }, {});
+function postTitle(post) {
+  return post.contentTopic || post.godName || post.id || '未命名內容';
 }
 
-function renderFunnel(targets) {
-  const counts = countByStatus(targets);
-  const order = ['draft', 'review', 'approved', 'scheduled', 'pending', 'publishing', 'published', 'failed', 'retrying', 'cancelled'];
-  const items = order
-    .filter((status) => counts[status])
-    .map((status) => '<div class="insights-funnel-item" data-status="' + escapeHtml(status) + '"><span>' + escapeHtml(STATUS_LABELS[status] || status) + '</span><strong>' + counts[status] + '</strong></div>')
-    .join('');
-  return items
-    ? '<div class="insights-funnel">' + items + '</div>'
-    : '<p class="helper">這個平台還沒有本機 target。</p>';
+function postPreview(post, target) {
+  const text = String(target?.overrideText || post.generatedCopy || post.caption || post.content || '').trim();
+  if (!text) return '沒有可預覽的文案。';
+  return text.length > 140 ? text.slice(0, 140) + '…' : text;
 }
 
+function extractMetricVal(source, metricNames = []) {
+  if (!source?.data || !Array.isArray(source.data)) return 0;
+  for (const name of metricNames) {
+    const found = source.data.find((m) => m.name === name);
+    if (found) {
+      const v = metricDisplayValue(found);
+      const num = Number(v);
+      if (Number.isFinite(num)) return num;
+    }
+  }
+  return 0;
+}
+
+function extractAllMetrics(source) {
+  if (!source?.data || !Array.isArray(source.data)) return { likes: 0, comments: 0, shares: 0, reach: 0, total: 0 };
+  const likes = extractMetricVal(source, ['likes', 'reactions', 'post_reactions_like_total', 'page_actions_post_reactions_like_total']);
+  const comments = extractMetricVal(source, ['comments', 'replies']);
+  const shares = extractMetricVal(source, ['shares', 'reposts']);
+  const saves = extractMetricVal(source, ['saves', 'saved']);
+  const reach = extractMetricVal(source, ['reach', 'views', 'post_impressions', 'post_impressions_organic', 'page_posts_impressions_unique']);
+  const total = likes + comments + shares + saves;
+  return { likes, comments, shares, saves, reach, total };
+}
+
+/* ==========================================================================
+   🔥 熱門內容表現排行榜 (Leaderboard)
+   ========================================================================== */
+function renderLeaderboard(platformId, platformEntries) {
+  const container = $('#leaderboardList');
+  if (!container) return;
+
+  const published = platformEntries
+    .filter((item) => item.target.status === 'published')
+    .map(({ post, target }) => {
+      const sources = Array.isArray(state.insightsPosts?.sources) ? state.insightsPosts.sources : [];
+      const source = sources.find((item) => item.targetId === target.id || item.externalId === target.externalId);
+      const metrics = extractAllMetrics(source);
+      return {
+        post,
+        target,
+        source,
+        metrics,
+        publishedAt: target.publishedAt || post.updatedAt || post.createdAt || 0,
+      };
+    });
+
+  if (!published.length) {
+    container.innerHTML = '<div class="leaderboard-empty"><p class="helper">目前這個平台尚未發布任何內容。完成發布後，熱門內容排行與成效數據將在此自動計算！</p></div>';
+    return;
+  }
+
+  // 排序
+  if (currentLeaderboardSort === 'engagement') {
+    published.sort((a, b) => b.metrics.total - a.metrics.total || new Date(b.publishedAt) - new Date(a.publishedAt));
+  } else if (currentLeaderboardSort === 'reach') {
+    published.sort((a, b) => b.metrics.reach - a.metrics.reach || new Date(b.publishedAt) - new Date(a.publishedAt));
+  } else {
+    published.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  }
+
+  const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3'];
+
+  container.innerHTML = published.map((item, index) => {
+    const rankLabel = rankBadges[index] || `#${index + 1}`;
+    const rankClass = index < 3 ? `rank-top rank-${index + 1}` : 'rank-normal';
+    const { post, target, metrics } = item;
+    const canCreate = hasPermission('content.create');
+
+    return `<article class="leaderboard-item ${rankClass}">
+      <div class="leaderboard-rank-badge">${escapeHtml(rankLabel)}</div>
+      <div class="leaderboard-item-main">
+        <div class="leaderboard-item-header">
+          <div class="leaderboard-title-row">
+            <h4>${escapeHtml(postTitle(post))}</h4>
+            <span class="platform-mini-tag" data-platform="${escapeHtml(target.platformId)}">${escapeHtml(PLATFORM_NAMES[target.platformId] || target.platformId)}</span>
+          </div>
+          <small class="leaderboard-meta">發布於 ${escapeHtml(formatDate(item.publishedAt))} ${target.externalId ? `· ID ${escapeHtml(target.externalId)}` : ''}</small>
+        </div>
+        <p class="leaderboard-excerpt">${escapeHtml(postPreview(post, target))}</p>
+        <div class="leaderboard-metrics-pills">
+          <span class="metric-pill" title="總互動（讚＋留言＋分享）"><span class="pill-icon">💖</span> 總互動 <strong>${metrics.total ? formatMetricNumber(metrics.total) : '—'}</strong></span>
+          <span class="metric-pill" title="按讚數"><span class="pill-icon">👍</span> 讚 <strong>${metrics.likes ? formatMetricNumber(metrics.likes) : '0'}</strong></span>
+          <span class="metric-pill" title="留言數"><span class="pill-icon">💬</span> 留言 <strong>${metrics.comments ? formatMetricNumber(metrics.comments) : '0'}</strong></span>
+          <span class="metric-pill" title="分享數"><span class="pill-icon">↗</span> 分享 <strong>${metrics.shares ? formatMetricNumber(metrics.shares) : '0'}</strong></span>
+          <span class="metric-pill" title="觸及與觀看"><span class="pill-icon">👁</span> 觸及 <strong>${metrics.reach ? formatMetricNumber(metrics.reach) : '—'}</strong></span>
+        </div>
+      </div>
+      <div class="leaderboard-item-actions">
+        ${canCreate ? `<button type="button" class="btn-secondary" data-repurpose-post="${escapeHtml(post.id)}">🔁 建立再製</button>` : ''}
+      </div>
+    </article>`;
+  }).join('');
+
+  container.querySelectorAll('[data-repurpose-post]').forEach((button) => {
+    button.addEventListener('click', () => createRepurposeDraft(button));
+  });
+}
+
+/* ==========================================================================
+   ✨ AI 社群成效顧問 (AI Insights Advisor)
+   ========================================================================== */
+export async function triggerAiAnalysis() {
+  if (aiAnalysisLoading) return;
+  aiAnalysisLoading = true;
+  const container = $('#aiInsightsContent');
+  const triggerBtn = $('#btnTriggerAiAnalysis');
+  const topBtn = $('#btnRunAiInsights');
+  if (triggerBtn) triggerBtn.disabled = true;
+  if (topBtn) topBtn.disabled = true;
+
+  if (container) {
+    container.innerHTML = `<div class="ai-insights-loading">
+      <div class="ai-spinner"></div>
+      <p>✨ <strong>AI 顧問分析中…</strong><br><span class="helper">正在深入分析近期貼文表現、受眾互動偏好與最佳主題模式，請稍候幾秒鐘。</span></p>
+    </div>`;
+  }
+
+  try {
+    const platform = state.insightsPlatform || 'all';
+    const payload = {
+      clientId: state.currentClientId || '',
+      platform,
+    };
+    const result = await api('/api/insights/ai-analysis', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    state.aiInsightsResult = result;
+    renderAiInsightsAdvisor();
+    showToast('✨ AI 社群成效分析與下一步靈感已產生！', 'success');
+  } catch (error) {
+    if (container) {
+      container.innerHTML = `<div class="ai-insights-error">
+        <p class="error-text">⚠️ AI 分析產生失敗：${escapeHtml(error.message)}</p>
+        <button type="button" id="btnRetryAiAnalysis" class="btn-secondary">重新嘗試</button>
+      </div>`;
+      $('#btnRetryAiAnalysis')?.addEventListener('click', triggerAiAnalysis);
+    }
+    showToast(error.message || 'AI 分析失敗', 'error');
+  } finally {
+    aiAnalysisLoading = false;
+    if (triggerBtn) triggerBtn.disabled = false;
+    if (topBtn) topBtn.disabled = false;
+  }
+}
+
+function applyIdeaToComposer(idea) {
+  setActiveView('create');
+  const topicInput = $('#contentTopic');
+  const notesInput = $('#extraNotes');
+  if (topicInput) topicInput.value = idea.topic || idea.title || '';
+  if (notesInput) {
+    notesInput.value = `【建議形式】：${idea.format || '圖文'}\n【發想指引】：${idea.prompt || ''}\n【推薦理由】：${idea.reason || ''}`;
+  }
+  topicInput?.focus?.();
+  showToast(`✨ 已將「${idea.title || idea.topic}」發文靈感帶入編輯器！`, 'success');
+}
+
+function renderAiInsightsAdvisor() {
+  const container = $('#aiInsightsContent');
+  if (!container) return;
+
+  const result = state.aiInsightsResult;
+  if (!result) {
+    container.innerHTML = `<div class="ai-insights-placeholder">
+      <p class="helper">點擊上方「✨ 產生 AI 分析與靈感」，AI 將自動分析現有已發布貼文與互動數據，提煉受眾喜好並提供 3 個可直接採用的下一步發文靈感。</p>
+    </div>`;
+    return;
+  }
+
+  const themesHtml = Array.isArray(result.topThemes) && result.topThemes.length
+    ? `<div class="ai-themes-grid">${result.topThemes.map((t) => `
+        <div class="ai-theme-pill">
+          <strong>🔥 ${escapeHtml(t.theme)}</strong>
+          <span>${escapeHtml(t.whyItWorked)}</span>
+        </div>`).join('')}</div>`
+    : '';
+
+  const tipsHtml = Array.isArray(result.actionableTips) && result.actionableTips.length
+    ? `<div class="ai-tips-section">
+        <h4>💡 發文經營與互動建議</h4>
+        <ul class="ai-tips-list">
+          ${result.actionableTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
+        </ul>
+      </div>`
+    : '';
+
+  const ideasHtml = Array.isArray(result.nextPostIdeas) && result.nextPostIdeas.length
+    ? `<div class="ai-ideas-section">
+        <h4>📝 推薦下一步發文靈感（點擊可直接建立草稿）</h4>
+        <div class="ai-ideas-grid">
+          ${result.nextPostIdeas.map((idea, i) => `
+            <article class="ai-idea-card">
+              <div class="ai-idea-header">
+                <span class="ai-idea-format">【${escapeHtml(idea.format || '圖文')}】</span>
+                <h5>${escapeHtml(idea.title || idea.topic)}</h5>
+              </div>
+              <p class="ai-idea-reason"><strong>推薦原因：</strong>${escapeHtml(idea.reason)}</p>
+              <p class="ai-idea-prompt"><strong>發想指引：</strong>${escapeHtml(idea.prompt)}</p>
+              <button type="button" class="primary-button btn-apply-idea" data-idea-index="${i}">📝 採用此靈感建立草稿</button>
+            </article>
+          `).join('')}
+        </div>
+      </div>`
+    : '';
+
+  container.innerHTML = `
+    <div class="ai-insights-result-wrap">
+      <div class="ai-summary-banner">
+        <span class="ai-badge">✨ 顧問總結</span>
+        <p>${escapeHtml(result.summary || '成效分析完成。')}</p>
+      </div>
+      ${themesHtml}
+      ${tipsHtml}
+      ${ideasHtml}
+    </div>
+  `;
+
+  container.querySelectorAll('.btn-apply-idea').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.ideaIndex);
+      const idea = result.nextPostIdeas?.[idx];
+      if (idea) applyIdeaToComposer(idea);
+    });
+  });
+}
+
+/* ==========================================================================
+   平台原始 API 技術指標 (折疊收納)
+   ========================================================================== */
 function accountCards(platformId) {
   const client = currentClient();
   const accounts = (client?.accounts || []).filter((account) => account.platformId === platformId);
@@ -445,16 +672,6 @@ function accountCards(platformId) {
       + '</article>';
   });
   return rows.join('');
-}
-
-function postTitle(post) {
-  return post.contentTopic || post.godName || post.id || '未命名內容';
-}
-
-function postPreview(post, target) {
-  const text = String(target?.overrideText || post.generatedCopy || post.caption || post.content || '').trim();
-  if (!text) return '沒有可預覽的文案。';
-  return text.length > 140 ? text.slice(0, 140) + '…' : text;
 }
 
 function renderPublishedPosts(platformId, targets) {
@@ -486,14 +703,83 @@ function renderPublishedPosts(platformId, targets) {
   }).join('') + '</div>';
 }
 
-function renderLocalTargets(platformId, targets) {
-  const recent = [...targets]
-    .sort((left, right) => new Date(right.target.updatedAt || right.target.publishedAt || right.post.updatedAt || 0) - new Date(left.target.updatedAt || left.target.publishedAt || left.post.updatedAt || 0))
-    .slice(0, 20);
-  if (!recent.length) return '';
-  return '<div class="insights-local-table-wrap"><table class="insights-local-table"><caption>本機最近 20 筆 target</caption><thead><tr><th>內容</th><th>狀態</th><th>帳號</th><th>時間</th><th>平台貼文 ID</th></tr></thead><tbody>'
-    + recent.map(({ post, target }) => '<tr><td>' + escapeHtml(postTitle(post)) + '</td><td>' + escapeHtml(STATUS_LABELS[target.status] || target.status || '—') + '</td><td>' + escapeHtml(target.accountId || '—') + '</td><td>' + escapeHtml(target.publishedAt || target.scheduledAt || post.updatedAt ? formatDate(target.publishedAt || target.scheduledAt || post.updatedAt) : '—') + '</td><td>' + escapeHtml(target.externalId || '—') + '</td></tr>').join('')
-    + '</tbody></table></div>';
+/* ==========================================================================
+   主渲染函式與事件監聽
+   ========================================================================== */
+export function renderInsights() {
+  renderPlatformTabs();
+  renderRepurpose();
+  renderBestTimes();
+  renderAiInsightsAdvisor();
+
+  const summary = $('#insightsOperationalSummary');
+  const detail = $('#insightsPlatformDetail');
+  const notice = $('#insightsSourceNotice');
+  if (!summary) return;
+
+  const platformId = state.insightsPlatform || 'facebook';
+  const rangeInput = document.querySelector('#insightsRangeFilter input[value="' + String(state.insightsRange || 7) + '"]');
+  if (rangeInput) rangeInput.checked = true;
+
+  const posts = state.posts || [];
+  const platformEntries = posts.flatMap((post) => targetsOf(post).map((target) => ({ post, target })))
+    .filter((item) => item.target.platformId === platformId);
+  const targets = platformEntries.map((item) => item.target);
+  const published = targets.filter((target) => target.status === 'published').length;
+  const sources = (state.insights?.sources || []).filter((source) => source.platformId === platformId);
+  const liveSource = sources.find((source) => ['synced', 'cached'].includes(source.status));
+
+  // 計算累積互動
+  const postSources = Array.isArray(state.insightsPosts?.sources) ? state.insightsPosts.sources : [];
+  let totalInteractionsCount = 0;
+  let highestInteractions = 0;
+  let topPostTitle = '—';
+
+  platformEntries.forEach(({ post, target }) => {
+    if (target.status === 'published') {
+      const s = postSources.find((item) => item.targetId === target.id || item.externalId === target.externalId);
+      const m = extractAllMetrics(s);
+      totalInteractionsCount += m.total;
+      if (m.total > highestInteractions) {
+        highestInteractions = m.total;
+        topPostTitle = postTitle(post);
+      }
+    }
+  });
+
+  // 渲染排行榜
+  renderLeaderboard(platformId, platformEntries);
+
+  // 渲染核心摘要卡片
+  summary.innerHTML = [
+    ['已發布篇數', `${published} 篇`, '此平台成功發布內容'],
+    ['累積社群互動', totalInteractionsCount ? formatMetricNumber(totalInteractionsCount) : '—', '讚、留言與分享總計'],
+    ['熱門貼文亮點', highestInteractions ? `${highestInteractions} 互動` : (published ? '最高成效' : '尚未發布'), topPostTitle !== '—' ? (topPostTitle.length > 12 ? topPostTitle.slice(0, 12) + '…' : topPostTitle) : '暫無資料'],
+    ['帳號連線狀態', liveSource ? '已連線' : '尚未同步', liveSource ? rangeText(liveSource) : '可至「平台連線」設定'],
+  ].map(([label, value, noteText]) => `<div class="module-summary-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong><small>${escapeHtml(noteText)}</small></div>`).join('');
+
+  if (notice) {
+    const liveCount = sources.filter((source) => ['synced', 'cached'].includes(source.status)).length;
+    notice.innerHTML = `<strong>✨ 內容表現數據</strong><span>${
+      liveCount
+        ? '已同步平台真實數據，結合 AI 為您提煉最佳發布策略。'
+        : '目前顯示本機發布歷史；連線平台憑證後可自動同步即時互動數據。'
+    }</span>`;
+  }
+
+  // 原始技術指標 (收納於 details 內)
+  if (detail) {
+    detail.innerHTML = '<fieldset class="form-group-card insights-section"><legend class="group-title">帳號成效與粉絲指標</legend>'
+      + '<p class="helper">粉絲、曝光、互動依帳號區間彙總。空值顯示為 —，不會改成 0 來假裝有資料。</p>'
+      + accountCards(platformId)
+      + '</fieldset>'
+      + '<fieldset class="form-group-card insights-section"><legend class="group-title">各篇貼文原始指標</legend>'
+      + '<p class="helper">每一則已發布 target 分開列：文案摘要、平台貼文 ID、同步狀態與貼文指標。</p>'
+      + renderPublishedPosts(platformId, platformEntries)
+      + '</fieldset>';
+  }
+
+  ensureInsightsDetail();
 }
 
 export function initInsightsListeners() {
@@ -517,64 +803,16 @@ export function initInsightsListeners() {
     state.insightsPosts = null;
     loadInsightsDetail({ refreshAccount: true });
   });
-}
 
-export function renderInsights() {
-  renderPlatformTabs();
-  renderRepurpose();
-  const summary = $('#insightsOperationalSummary');
-  const detail = $('#insightsPlatformDetail');
-  const notice = $('#insightsSourceNotice');
-  if (!summary || !detail) return;
+  // AI 顧問按鈕
+  $('#btnRunAiInsights')?.addEventListener('click', triggerAiAnalysis);
+  $('#btnTriggerAiAnalysis')?.addEventListener('click', triggerAiAnalysis);
 
-  const platformId = state.insightsPlatform || 'facebook';
-  const rangeInput = document.querySelector('#insightsRangeFilter input[value="' + String(state.insightsRange || 7) + '"]');
-  if (rangeInput) rangeInput.checked = true;
-
-  const posts = state.posts || [];
-  const platformEntries = posts.flatMap((post) => targetsOf(post).map((target) => ({ post, target })))
-    .filter((item) => item.target.platformId === platformId);
-  const targets = platformEntries.map((item) => item.target);
-  const published = targets.filter((target) => target.status === 'published').length;
-  const scheduled = targets.filter((target) => ['scheduled', 'pending', 'publishing'].includes(target.status)).length;
-  const failed = targets.filter((target) => ['failed', 'retrying'].includes(target.status)).length;
-  const drafts = targets.filter((target) => ['draft', 'review', 'approved'].includes(target.status)).length;
-  const sources = (state.insights?.sources || []).filter((source) => source.platformId === platformId);
-  const liveSource = sources.find((source) => ['synced', 'cached'].includes(source.status));
-
-  summary.innerHTML = [
-    ['目標', targets.length, '此平台全部 target'],
-    ['草稿／待審', drafts, '尚未進入排程'],
-    ['排程中', scheduled, '待發或發布中'],
-    ['已發布', published, '可對照貼文 Insights'],
-    ['需處理', failed, '失敗或重試'],
-    ['已同步帳號', sources.filter((source) => source.status === 'synced').length, liveSource ? rangeText(liveSource) : '尚未同步'],
-  ].map(([label, value, noteText]) => '<div class="module-summary-card"><span>' + label + '</span><strong>' + value + '</strong><small>' + noteText + '</small></div>').join('');
-
-  if (notice) {
-    const latest = posts.map((post) => post.updatedAt || post.createdAt).filter(Boolean).sort().pop();
-    const liveCount = sources.filter((source) => ['synced', 'cached'].includes(source.status)).length;
-    notice.innerHTML = '<strong>成效</strong><span>'
-      + (liveCount
-        ? '帳號數字來自 Meta API；貼文列會對照已發布 target 的真實 Insights。'
-        : '目前沒有這平台的真實帳號成效。本機漏斗仍可看，數字不會用猜測補上。')
-      + '</span>'
-      + (latest ? '<small>本機內容最後更新：' + escapeHtml(formatDate(latest)) + '</small>' : '');
-  }
-
-  detail.innerHTML = '<fieldset class="form-group-card insights-section"><legend class="group-title">本機發布漏斗</legend>'
-    + '<p class="helper">只統計目前品牌此平台的 target 狀態，不是平台後台數字。</p>'
-    + renderFunnel(targets)
-    + renderLocalTargets(platformId, platformEntries)
-    + '</fieldset>'
-    + '<fieldset class="form-group-card insights-section"><legend class="group-title">帳號成效</legend>'
-    + '<p class="helper">粉絲、曝光、互動依帳號區間彙總。空值顯示為 —，不會改成 0 來假裝有資料。</p>'
-    + accountCards(platformId)
-    + '</fieldset>'
-    + '<fieldset class="form-group-card insights-section"><legend class="group-title">已發布內容成效</legend>'
-    + '<p class="helper">每一則已發布 target 分開列：文案摘要、平台貼文 ID、同步狀態與貼文指標。</p>'
-    + renderPublishedPosts(platformId, platformEntries)
-    + '</fieldset>';
-
-  ensureInsightsDetail();
+  // 排行榜排序切換
+  $('#leaderboardSort')?.addEventListener('change', (event) => {
+    const input = event.target.closest('input[name="leaderboardSort"]');
+    if (!input) return;
+    currentLeaderboardSort = input.value;
+    renderInsights();
+  });
 }

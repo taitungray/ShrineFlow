@@ -1,7 +1,7 @@
 import { $, $$, escapeHtml, formatDate, showToast } from './dom.js';
 import { api } from './api.js';
 import { currentMembership, hasPermission, state } from './state.js';
-import { applySettingsPageFromLocation } from './settings.js';
+import { applyPlatformsPageFromLocation, applySettingsPageFromLocation } from './settings.js';
 import { LIST_PAGE_SIZE, paginate, removeListPager, syncListPager } from './pagination.js';
 
 const ROLE_LABELS = Object.freeze({
@@ -79,9 +79,9 @@ export function applyPermissionUi() {
   $('#newTemplateButton')?.classList.toggle('permission-hidden', !hasPermission('template.manage'));
   $('#newCampaignButton')?.classList.toggle('permission-hidden', !hasPermission('campaign.manage'));
   $('#teamNavItem')?.classList.toggle('permission-hidden', !(canManageTeam() || canViewAudit()));
-  $('#settingsNavItem')?.classList.toggle('permission-hidden', !(hasPermission('account.manage') || hasPermission('system.manage')));
+  $('#settingsNavItem')?.classList.toggle('permission-hidden', !hasPermission('system.manage'));
   $('#teamPanel')?.classList.toggle('permission-hidden', !(canManageTeam() || canViewAudit()));
-  $('#settingsForm')?.classList.toggle('permission-hidden', !(hasPermission('account.manage') || hasPermission('system.manage')));
+  $('#settingsForm')?.classList.toggle('permission-hidden', !hasPermission('system.manage'));
   $$('[data-required-permission]').forEach((element) => {
     element.classList.toggle('permission-hidden', !hasPermission(element.dataset.requiredPermission));
   });
@@ -90,6 +90,7 @@ export function applyPermissionUi() {
     element.classList.toggle('permission-hidden', !permissions.some(hasPermission));
   });
   applySettingsPageFromLocation();
+  applyPlatformsPageFromLocation();
 }
 
 function roleOptions(selected) {

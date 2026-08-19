@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { HELP_ARTICLES } from '../public/modules/help-articles.js';
 import { filterHelpArticles } from '../public/modules/help-search.js';
+import { renderHelpStepsHtml } from '../public/modules/help.js';
+
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 const REQUIRED_IDS = [
   'getting-started',
@@ -103,6 +109,23 @@ test('facebook connect article keeps a short summary and longer advanced steps',
   const article = HELP_ARTICLES.find((item) => item.id === 'facebook-connect');
   assert.ok(article.steps.length <= 6);
   assert.ok(Array.isArray(article.advancedSteps) && article.advancedSteps.length >= 6);
+});
+
+test('every help article keeps quoted terms inside the step copy column', async () => {
+  let quotedSteps = 0;
+  for (const article of HELP_ARTICLES) {
+    const chunks = [...(article.steps || []), ...(article.advancedSteps || [])];
+    const html = renderHelpStepsHtml(chunks);
+    if (!html) continue;
+    const items = html.match(/<li>/g) || [];
+    const wrapped = html.match(/<li><span class="help-step-copy">/g) || [];
+    assert.equal(wrapped.length, items.length, article.id + ' has an unwrapped step');
+    assert.equal(html.includes('<li><strong class="help-term">'), false, article.id + ' leaked a term into the number column');
+    quotedSteps += (html.match(/<strong class="help-term">/g) || []).length;
+  }
+  assert.ok(quotedSteps > 0, 'catalog still has quoted UI terms to protect');
+  const css = await fs.readFile(path.join(root, 'public', 'css', 'layout.css'), 'utf8');
+  assert.match(css, /\.help-steps\s*>\s*li\s*>\s*\*\s*\{[^}]*grid-column\s*:\s*2/, 'any leftover child must stay in the copy column');
 });
 
 test('facebook live article matches the not-visible-to-others symptom', () => {

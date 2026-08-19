@@ -120,7 +120,7 @@ export function renderTargetAccountControls() {
         + platformPillFaceHtml(account.platformId, { extra: accountScanExtra(account) })
         + '</label>';
     }).join('')
-    : '<p class="helper">此品牌尚未設定平台連線，請到設定新增。</p>';
+    : '<p class="helper">此品牌尚未設定平台連線，請到平台連線新增。</p>';
 
   syncSelectedTargetAccountIds();
   const activeAccounts = accounts.filter((account) => state.selectedTargetAccountIds.includes(account.id));

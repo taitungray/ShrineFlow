@@ -97,7 +97,7 @@ function renderCalendarTokenNotice() {
     notice.innerHTML = '';
     return;
   }
-  notice.innerHTML = 'Facebook Token 已過期，取消／改時間會失敗。可先隱藏本機紀錄，或<a href="#/settings/facebook">更新粉專 Token</a>。';
+  notice.innerHTML = 'Facebook Token 已過期，取消／改時間會失敗。可先隱藏本機紀錄，或<a href="#/platforms/facebook">更新粉專 Token</a>。';
 }
 
 function calendarItemMarkup(item) {

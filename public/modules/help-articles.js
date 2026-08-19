@@ -20,13 +20,14 @@ export const HELP_ARTICLES = [
     cause: '側邊功能多。沒照「連線 → 內容 → 發布」走，後面測連線或排程會卡住。',
     steps: [
       '登入後，頂欄選對品牌。沒有品牌就到設定新增。',
-      '到設定填 Gemini API Key，按測試。到平台連線／設定測 Facebook、Instagram、Threads。',
+      '到設定填 Gemini API Key，按測試。到平台連線填並測 Facebook、Instagram、Threads。',
       '按「新增內容」填主題、上傳素材（可選），用 AI 產文或自己寫母稿。',
       '存成草稿。品牌若開審核，先送審等到核准。',
       '選立刻發布、手動排程，或加入 Queue。到日曆與發布紀錄確認狀態。',
     ],
     related: [
       { label: '設定', href: '#/settings' },
+      { label: '平台連線', href: '#/platforms' },
       { label: '新增內容', href: '#/content/new' },
       { label: '日曆', href: '#/calendar' },
     ],
@@ -281,13 +282,13 @@ export const HELP_ARTICLES = [
     symptoms: 'IG／Threads 發布失敗，提到公開網址或 PUBLIC_MEDIA_BASE_URL。',
     cause: 'Meta 伺服器要能從公網把檔抓回去。本機 http://127.0.0.1 它碰不到。',
     steps: [
-      '設定 → Facebook 卡片「進階：Graph 版本與媒體網址」。',
+      '平台連線 → Facebook →「進階：Graph 版本與媒體網址」。',
       '填 HTTPS 根網址，不要加 /uploads。雲端可用 https://media.shrineflow.uk。',
-      '儲存全站設定後再發。本機開發需 tunnel 或已部署的公開媒體網域。',
+      '儲存此品牌 Facebook 連線後再發。本機開發需 tunnel 或已部署的公開媒體網域。',
       '純文字 Threads 可以不設；一旦有圖或影就必填。',
     ],
     related: [
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
       { label: '平台連線', href: '#/platforms' },
     ],
   }),
@@ -320,7 +321,7 @@ export const HELP_ARTICLES = [
     symptoms: '不知道 Page ID／Token 從哪來；測連線失敗。',
     cause: 'ShrineFlow 不跳 Facebook 登入。要手貼粉專憑證。User token 只能測「人」，不能對粉專排程發文。',
     steps: [
-      '設定 → 目前品牌的 Facebook。',
+      '平台連線 → Facebook。',
       'Graph Explorer 選你的 Meta App，勾粉專相關權限後產生存取權杖。',
       'GET me/accounts?fields=id,name,access_token&limit=100。左邊 JSON 才是粉專清單。',
       '把該粉專的 id 與 access_token 貼進欄位 → 儲存此品牌 Facebook 連線 → 測試。成功要出現粉專名稱。',
@@ -334,7 +335,7 @@ export const HELP_ARTICLES = [
       '不要在 Graph Explorer 跑 oauth/access_token（常出現錯誤 101）。App Secret 不要填進 ShrineFlow。',
     ],
     related: [
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
       { label: '粉專 ID 錯誤', href: '#/help/facebook-user-id' },
       { label: '粉絲看不到貼文', href: '#/help/facebook-app-live' },
     ],
@@ -367,7 +368,7 @@ export const HELP_ARTICLES = [
       'Development 期間已發或已排的文：粉專刪掉／取消後，Live 再重發或重排。用沒加 App 角色的帳號或無痕開粉專確認。',
     ],
     related: [
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
       { label: '怎麼接粉專', href: '#/help/facebook-connect' },
     ],
     settingsHint: 'clientFacebookCard',
@@ -390,13 +391,13 @@ export const HELP_ARTICLES = [
     symptoms: '測連線或發文出現「無法對這個 ID 發文」；或測連線說 Token 是用戶權杖。粉專 ID 看起來對仍會炸。',
     cause: '測連線以前只 GET 粉專，User token 讀名稱會過。發文要 Page token。Explorer 右側 EAA 是用戶權杖；左邊 JSON 該筆 access_token 才是 Page token。Graph 100/33 也可能是權限或 Reel／限時，不一定是貼錯 ID。',
     steps: [
-      'Access Token Debugger 貼設定裡的 Token：Type 必須是 Page，不是 User。Expires 應為 Never。',
+      'Access Token Debugger 貼平台連線裡的 Token：Type 必須是 Page，不是 User。Expires 應為 Never。',
       'GET me/accounts?fields=id,name,access_token&limit=100。同一筆：id 貼粉專 ID，access_token 貼 Page token。不要用右側用戶權杖。',
       '儲存此品牌 Facebook 連線後再測。成功要出現粉專名稱；若提示用戶權杖，Token 欄還是右側那串。',
       'Debugger 已是 Page 仍失敗：改看幫助「權限不足」，或該格式（Reel／限時）粉專不支援。',
     ],
     related: [
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
       { label: '怎麼接粉專', href: '#/help/facebook-connect' },
     ],
   }),
@@ -425,7 +426,7 @@ export const HELP_ARTICLES = [
       '貼回設定、儲存、測試，再重試發布或排程。',
     ],
     related: [
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
       { label: '怎麼接粉專', href: '#/help/facebook-connect' },
     ],
   }),
@@ -444,7 +445,7 @@ export const HELP_ARTICLES = [
       'Graph Explorer 重新勾權限、重新產 token，再走 me/accounts 換 Page token。',
       '儲存後測試連線再發。',
     ],
-    related: [{ label: '設定 · Facebook', href: '#/settings/facebook' }],
+    related: [{ label: '平台連線 · Facebook', href: '#/platforms/facebook' }],
   }),
   article({
     id: 'facebook-cannot-parse-token',
@@ -460,7 +461,7 @@ export const HELP_ARTICLES = [
       '粉專 ID 是另一個欄位的數字，不要兩欄貼同一樣東西。',
       '從 me/accounts 那筆的 access_token 欄位單獨複製。',
     ],
-    related: [{ label: '設定 · Facebook', href: '#/settings/facebook' }],
+    related: [{ label: '平台連線 · Facebook', href: '#/platforms/facebook' }],
   }),
   article({
     id: 'facebook-accounts-empty',
@@ -477,7 +478,7 @@ export const HELP_ARTICLES = [
       '把同一帳號加進 Meta App 的管理員或開發者。',
       '重新產 token 再 GET me/accounts。',
     ],
-    related: [{ label: '設定 · Facebook', href: '#/settings/facebook' }],
+    related: [{ label: '平台連線 · Facebook', href: '#/platforms/facebook' }],
   }),
   article({
     id: 'facebook-story-no-schedule',
@@ -531,7 +532,7 @@ export const HELP_ARTICLES = [
     ],
     related: [
       { label: '日曆', href: '#/calendar' },
-      { label: '設定 · Facebook', href: '#/settings/facebook' },
+      { label: '平台連線 · Facebook', href: '#/platforms/facebook' },
     ],
   }),
   article({
@@ -547,7 +548,7 @@ export const HELP_ARTICLES = [
       '日曆或內容卡片按「隱藏」。預設「目前」與日曆不再顯示。',
       '要找回：內容狀態 pill 選「已隱藏」，按取消隱藏。',
       '仍要發的排程不要只隱藏。先取消（Token 有效時會刪 Facebook），再決定要不要藏。',
-      'Token 過期：取消會失敗。先隱藏清畫面，再到設定更新粉專 Token。',
+      'Token 過期：取消會失敗。先隱藏清畫面，再到平台連線更新粉專 Token。',
     ],
     related: [
       { label: '內容', href: '#/content' },
@@ -590,7 +591,7 @@ export const HELP_ARTICLES = [
       'instagram_business_account.id 貼 User ID；Access Token 貼同一串 Page token。儲存後測試。',
     ],
     related: [
-      { label: '設定 · Instagram', href: '#/settings/instagram' },
+      { label: '平台連線 · Instagram', href: '#/platforms/instagram' },
       { label: '找不到 business account', href: '#/help/instagram-not-linked' },
     ],
   }),
@@ -608,7 +609,7 @@ export const HELP_ARTICLES = [
       'App 使用案例加入 IG 權限後，重新產 Page token。',
       '再查粉專的 instagram_business_account.id。',
     ],
-    related: [{ label: '設定 · Instagram', href: '#/settings/instagram' }],
+    related: [{ label: '平台連線 · Instagram', href: '#/platforms/instagram' }],
   }),
   article({
     id: 'instagram-schedule-local',
@@ -644,7 +645,7 @@ export const HELP_ARTICLES = [
       '對 graph.threads.net GET /me，數字 id 貼 User ID。',
       '儲存此品牌 Threads 連線並測試。有圖影還要設公開媒體網址。',
     ],
-    related: [{ label: '設定 · Threads', href: '#/settings/threads' }],
+    related: [{ label: '平台連線 · Threads', href: '#/platforms/threads' }],
   }),
   article({
     id: 'threads-schedule-local',
@@ -831,7 +832,7 @@ export const HELP_ARTICLES = [
     cause: '平台拒絕、網路逾時、權限或媒體不合格。暫時性會留 attempt 依規則重試。',
     steps: [
       '打開發布紀錄，讀完整錯誤（可複製到幫助搜尋）。',
-      '權限、Token、圖影混合、公開網址：先到設定或編輯修正。',
+      '權限、Token、圖影混合、公開網址：先到平台連線或編輯修正。',
       '像逾時、429：等一下用重試。不要在沒修好時狂按。',
     ],
     related: [
@@ -1084,14 +1085,13 @@ export const HELP_ARTICLES = [
     symptoms: '綠的以為能發，其實缺發文權限。',
     cause: '測 /me 成功只代表 ID 讀得到，不代表能 posts。',
     steps: [
-      '未設定：到設定貼該平台憑證。',
+      '未設定：到平台連線該台分頁貼憑證。',
       '需權限：Token 有效但缺發文或讀取權限，回對應幫助條目補權限。',
       '已連線：再實際測發布或排程一則測試。',
       '尚未支援：該能力產品沒做，不要期待按鈕。',
     ],
     related: [
       { label: '平台連線', href: '#/platforms' },
-      { label: '設定', href: '#/settings' },
     ],
   }),
   article({
@@ -1105,10 +1105,13 @@ export const HELP_ARTICLES = [
     cause: '測試讀的是已寫入伺服器的值，不是輸入框裡還沒存的字。',
     steps: [
       'Gemini 分頁：改 Key／模型後按「儲存 Gemini／全站設定」。',
-      'Facebook／Instagram／Threads 分頁：按該頁「儲存此品牌連線」。Facebook 進階的 Graph／媒體網址一併在此寫入。',
+      '平台連線的 Facebook／Instagram／Threads：按該頁「儲存此品牌連線」。Facebook 進階的 Graph／媒體網址一併在此寫入。',
       '儲存成功後再按測試。',
     ],
-    related: [{ label: '設定', href: '#/settings' }],
+    related: [
+      { label: '設定 · Gemini', href: '#/settings/gemini' },
+      { label: '平台連線', href: '#/platforms' },
+    ],
   }),
   article({
     id: 'backup-restore',
@@ -1122,7 +1125,7 @@ export const HELP_ARTICLES = [
     steps: [
       '設定 → 備份：建立備份。可勾是否連 uploads 素材一起複製。',
       '還原選一份備份。系統會先把目前資料再存一份保險。',
-      'Token 與 Gemini Key 仍在設定／主機環境，必要時重新貼。',
+      'Token 在平台連線、Gemini Key 在設定／主機環境，必要時重新貼。',
     ],
     related: [{ label: '設定 · 備份', href: '#/settings/backup' }],
   }),

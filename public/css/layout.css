@@ -1475,24 +1475,41 @@ a.status-dot:focus-visible {
   align-self: center;
   padding: 4px 8px;
   border-radius: 999px;
-  background: var(--bg-soft);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
   font-family: "Outfit", sans-serif;
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
+}
+
+.help-kind-tag--guide {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.help-kind-tag--troubleshoot {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.help-kind-tag--limit {
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-primary));
+  background: var(--accent-light);
 }
 
 .help-article-fold > summary strong {
   color: var(--text-primary);
   font-family: "Noto Serif TC", serif;
   font-size: 1rem;
+  font-weight: 700;
 }
 
 .help-article-fold > summary small {
   color: var(--text-tertiary);
   font-size: 0.82rem;
+  font-weight: 400;
 }
 
 .help-article-fold[open] > summary {
@@ -1502,33 +1519,124 @@ a.status-dot:focus-visible {
 .help-article-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   padding: 16px;
+}
+
+.help-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+}
+
+.help-block-symptom {
+  border-left: 3px solid var(--border);
+}
+
+.help-block-key {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  border-left: 3px solid var(--accent);
+  background: var(--accent-light);
+}
+
+.help-block-steps {
+  border-left: 3px solid var(--brand);
+  background: var(--bg-card);
+}
+
+.help-block-related {
+  background: transparent;
 }
 
 .help-section-label {
   margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 700;
+  color: var(--text-tertiary);
+  font-family: "Noto Sans TC", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.help-block-key .help-section-label {
+  color: color-mix(in srgb, var(--accent) 68%, var(--text-primary));
+}
+
+.help-block-steps .help-section-label {
+  color: var(--brand);
 }
 
 .help-article-body p {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
-.help-related-label {
-  margin: 8px 0 0;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
+.help-block-key p {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.help-term {
+  color: var(--brand);
   font-weight: 700;
+}
+
+.help-block-key .help-term {
+  color: color-mix(in srgb, var(--brand) 82%, var(--accent));
+}
+
+.help-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: help-step;
+}
+
+.help-steps > li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  counter-increment: help-step;
+}
+
+.help-steps > li > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.help-steps > li::before {
+  content: counter(help-step);
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-family: "Outfit", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.help-block-steps .disclosure {
+  margin-top: 4px;
 }
 
 .help-related {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 8px;
   margin: 0;
 }
 
@@ -1536,6 +1644,10 @@ a.status-dot:focus-visible {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
 }
 
 /* Phone portrait lock: landscape phones get tablet CSS (width > 767). Block use. */

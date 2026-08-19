@@ -5,7 +5,14 @@ import { loadClientFacebookFields } from './clients-ui.js';
 import { hasPermission } from './state.js';
 import { renderApiStatus } from './api-status.js';
 import { renderPlatformConnections } from './platform-connections.js';
-import { parseSettingsPage, SETTINGS_PAGES } from './settings-page.js';
+import {
+  parseSettingsPage,
+  parsePlatformsPage,
+  platformsHash,
+  legacySettingsToPlatformsHash,
+  SETTINGS_PAGES,
+  PLATFORMS_PAGES,
+} from './settings-page.js';
 
 function tokenHealthMessage(health) {
   if (!health) return '';
@@ -58,7 +65,7 @@ export async function loadSettings() {
 }
 
 function visibleSettingsPages() {
-  return [...$$('.settings-tab')]
+  return [...$$('#settingsForm .settings-tab')]
     .filter((tab) => !tab.classList.contains('permission-hidden'))
     .map((tab) => tab.dataset.settingsPage)
     .filter((page) => SETTINGS_PAGES.includes(page));
@@ -71,13 +78,13 @@ export function applySettingsPage(page, { syncHash = false } = {}) {
     ? requested
     : (allowedPages[0] || requested);
 
-  $$('.settings-tab').forEach((tab) => {
+  $$('#settingsForm .settings-tab').forEach((tab) => {
     const active = tab.dataset.settingsPage === activePage;
     tab.classList.toggle('active', active);
     tab.setAttribute('aria-selected', String(active));
     tab.tabIndex = active ? 0 : -1;
   });
-  $$('.settings-page').forEach((panel) => {
+  $$('#settingsForm .settings-page').forEach((panel) => {
     panel.classList.toggle('is-hidden', panel.dataset.settingsPage !== activePage);
   });
 
@@ -93,16 +100,70 @@ export function applySettingsPageFromLocation(hash = window.location.hash) {
   applySettingsPage(parsed, { syncHash: false });
 }
 
+function visiblePlatformsPages() {
+  return [...$$('#platformsPanel .settings-tab')]
+    .filter((tab) => !tab.classList.contains('permission-hidden'))
+    .map((tab) => tab.dataset.platformsPage)
+    .filter((page) => PLATFORMS_PAGES.includes(page));
+}
+
+export function applyPlatformsPage(page, { syncHash = false } = {}) {
+  const requested = PLATFORMS_PAGES.includes(page) ? page : 'overview';
+  const allowedPages = visiblePlatformsPages();
+  const activePage = allowedPages.includes(requested)
+    ? requested
+    : (allowedPages[0] || requested);
+
+  $$('#platformsPanel .settings-tab').forEach((tab) => {
+    const active = tab.dataset.platformsPage === activePage;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  });
+  $$('#platformsPanel .settings-page').forEach((panel) => {
+    panel.classList.toggle('is-hidden', panel.dataset.platformsPage !== activePage);
+  });
+
+  if (syncHash) {
+    const next = platformsHash(activePage);
+    if (window.location.hash !== next) window.history.replaceState({}, '', next);
+  }
+}
+
+export function applyPlatformsPageFromLocation(hash = window.location.hash) {
+  const redirect = legacySettingsToPlatformsHash(hash);
+  if (redirect && window.location.hash !== redirect) {
+    window.history.replaceState({}, '', redirect);
+    hash = redirect;
+  }
+  const parsed = parsePlatformsPage(hash);
+  if (!parsed) return;
+  applyPlatformsPage(parsed, { syncHash: false });
+}
+
 export function initSettingsListeners(onSettingsSavedFn) {
-  $$('.settings-tab').forEach((button) => {
+  $$('#settingsForm .settings-tab').forEach((button) => {
     button.addEventListener('click', () => {
       applySettingsPage(button.dataset.settingsPage, { syncHash: true });
       window.scrollTo(0, 0);
     });
   });
-  window.addEventListener('hashchange', () => applySettingsPageFromLocation());
-  window.addEventListener('popstate', () => applySettingsPageFromLocation());
+  $$('#platformsPanel .settings-tab').forEach((button) => {
+    button.addEventListener('click', () => {
+      applyPlatformsPage(button.dataset.platformsPage, { syncHash: true });
+      window.scrollTo(0, 0);
+    });
+  });
+  window.addEventListener('hashchange', () => {
+    applySettingsPageFromLocation();
+    applyPlatformsPageFromLocation();
+  });
+  window.addEventListener('popstate', () => {
+    applySettingsPageFromLocation();
+    applyPlatformsPageFromLocation();
+  });
   applySettingsPageFromLocation();
+  applyPlatformsPageFromLocation();
 
   const toggleGeminiKey = $('#toggleGeminiKey');
   if (toggleGeminiKey) {
