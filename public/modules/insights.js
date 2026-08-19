@@ -359,13 +359,10 @@ function renderPlatformTabs() {
   if (!tabs) return;
   const available = platformIds();
   if (!available.includes(state.insightsPlatform)) state.insightsPlatform = available[0] || 'facebook';
-  const posts = (state.posts || []).filter((post) => !post.hiddenAt && post.status !== 'archived');
   tabs.innerHTML = available.map((platformId) => {
-    const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId).length;
     return platformPillHtml(platformId, {
       name: 'insightsPlatform',
       checked: platformId === state.insightsPlatform,
-      count: count || '',
     });
   }).join('');
 }
