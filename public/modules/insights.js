@@ -227,7 +227,17 @@ function sourceStatusText(source) {
     return '已同步 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '最新資料');
   }
   if (source.status === 'cached') {
-    return '顯示已保存資料 ' + (source.fetchedAt ? formatDate(source.fetchedAt) : '') + '（非即時）';
+    const when = source.fetchedAt ? formatDate(source.fetchedAt) : '';
+    if (source.cache?.reason === 'fresh') {
+      return '顯示已保存資料 ' + when + '（額度保護，未重打 Meta）';
+    }
+    if (source.cache?.reason === 'deferred') {
+      return '沿用已保存資料 ' + when + '（本次額度預算已用完）';
+    }
+    if (source.cache?.reason === 'invalid_id') {
+      return '貼文 ID 無效，已暫停重試 ' + when;
+    }
+    return '顯示已保存資料 ' + when + '（非即時）';
   }
   if (source.status === 'error') {
     return '同步失敗：' + (source.error?.message || '請檢查平台權限與 Token');
@@ -248,7 +258,7 @@ function rangeText(source) {
   return '帳號區間 ' + String(state.insightsRange || 7) + ' 日';
 }
 
-function insightsQuery(extra = '') {
+function insightsQuery(extra = '', { liveRefresh = false } = {}) {
   const platform = state.insightsPlatform || 'facebook';
   const days = Number(state.insightsRange || 7);
   const now = new Date();
@@ -257,7 +267,8 @@ function insightsQuery(extra = '') {
   const base = '?platform=' + encodeURIComponent(platform)
     + '&since=' + encodeURIComponent(String(since))
     + '&until=' + encodeURIComponent(String(until));
-  return extra ? base + '&' + extra.replace(/^\?/, '') : base;
+  const query = extra ? base + '&' + extra.replace(/^\?/, '') : base;
+  return liveRefresh ? query + '&refresh=1' : query;
 }
 
 function cacheKeyMatches(record) {
@@ -280,7 +291,7 @@ function mergeAccountSources(accountInsights) {
   };
 }
 
-async function loadInsightsDetail({ refreshAccount = true } = {}) {
+async function loadInsightsDetail({ refreshAccount = true, liveRefresh = false } = {}) {
   const token = ++insightsLoadToken;
   insightsLoading = true;
   const platform = state.insightsPlatform || 'facebook';
@@ -288,8 +299,8 @@ async function loadInsightsDetail({ refreshAccount = true } = {}) {
   if (refreshButton) refreshButton.disabled = true;
 
   try {
-    const accountPath = clientQuery('/api/insights' + insightsQuery('?scope=account'));
-    const postsPath = clientQuery('/api/insights' + insightsQuery('?scope=posts') + '&limit=50');
+    const accountPath = clientQuery('/api/insights' + insightsQuery('?scope=account', { liveRefresh }));
+    const postsPath = clientQuery('/api/insights' + insightsQuery('?scope=posts', { liveRefresh }) + '&limit=50');
     const bestTimesPath = clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(platform));
     const repurposePath = clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(platform));
     const [accountInsights, postInsights, bestTimes, repurposeCandidates] = await Promise.all([
@@ -729,10 +740,16 @@ export function renderInsights() {
 
   if (notice) {
     const liveCount = sources.filter((source) => ['synced', 'cached'].includes(source.status)).length;
+    const deferred = postSources.some((source) => source.cache?.reason === 'deferred');
+    const freshOnly = postSources.length > 0 && postSources.every((source) => source.cache?.reason === 'fresh' || source.cache?.reason === 'invalid_id');
     notice.innerHTML = `<strong>✨ 內容表現數據</strong><span>${
-      liveCount
-        ? '已同步平台真實數據，結合 AI 為您提煉最佳發布策略。'
-        : '目前顯示本機發布歷史；連線平台憑證後可自動同步即時互動數據。'
+      deferred
+        ? '為避免打滿 Meta 額度，本次只同步最新幾則貼文。其餘沿用已保存資料；要重拉請按「重新同步」。'
+        : freshOnly
+          ? '目前顯示已保存成效（6 小時內不重打 Meta）。要最新數字再按「重新同步」。'
+          : liveCount
+            ? '已同步平台真實數據，結合 AI 為您提煉最佳發布策略。'
+            : '目前顯示本機發布歷史；連線平台憑證後可自動同步即時互動數據。'
     }</span>`;
   }
 
@@ -743,7 +760,7 @@ export function renderInsights() {
       + accountCards(platformId)
       + '</fieldset>'
       + '<fieldset class="form-group-card insights-section"><legend class="group-title">各篇貼文原始指標</legend>'
-      + '<p class="helper">每一則已發布 target 分開列：文案摘要、平台貼文 ID、同步狀態與貼文指標。</p>'
+      + '<p class="helper">每一則已發布 target 分開列。開頁先讀已保存資料；6 小時內不重打 Meta。重新同步每次最多拉最新 8 則。</p>'
       + renderPublishedPosts(platformId, platformEntries)
       + '</fieldset>';
   }
@@ -770,7 +787,7 @@ export function initInsightsListeners() {
 
   $('#btnRefreshInsights')?.addEventListener('click', () => {
     state.insightsPosts = null;
-    loadInsightsDetail({ refreshAccount: true });
+    loadInsightsDetail({ refreshAccount: true, liveRefresh: true });
   });
 
   // AI 顧問按鈕

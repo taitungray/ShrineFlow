@@ -28,6 +28,37 @@ function response(payload, status = 200) {
   };
 }
 
+async function withInsightsServer(options, run) {
+  const app = express();
+  app.use('/api', createInsightsRouter(options));
+  const server = app.listen(0);
+  try {
+    const port = server.address().port;
+    await run({
+      port,
+      fetchInsights: (query = '') => fetch(`http://127.0.0.1:${port}/api/insights${query}`),
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+function publishedPost({ id = 'post-1', targetId = 'target-1', accountId = 'facebook:1', publishedAt = '2026-08-14T00:00:00.000Z' } = {}) {
+  return {
+    id,
+    clientId: 'client-1',
+    contentTopic: id,
+    targets: [{
+      id: targetId,
+      accountId,
+      platformId: 'facebook',
+      status: 'published',
+      externalId: `fb-${targetId}`,
+      publishedAt,
+    }],
+  };
+}
+
 test('Instagram Insights adapter uses GET, metrics and bearer auth without putting token in URL', async () => {
   let request;
   const client = createInstagramInsightsClient({
@@ -231,6 +262,220 @@ test('Insights route falls back to a dated cached snapshot when live sync fails'
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('Insights route serves a fresh post snapshot without calling Graph', async () => {
+  let liveCalls = 0;
+  await withInsightsServer({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', name: '粉專', platformId: 'facebook', configured: true }],
+    }],
+    listPosts: async () => [publishedPost()],
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchPostInsights() {
+        liveCalls += 1;
+        return { platformId: 'facebook', scope: 'post', source: 'meta_graph_api', fetchedAt: new Date().toISOString(), data: [] };
+      },
+    }),
+    findSnapshot: async () => ({
+      fetchedAt: new Date().toISOString(),
+      source: 'meta_graph_api',
+      data: [{ name: 'post_clicks', values: [{ value: 4 }] }],
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }, async ({ fetchInsights }) => {
+    const result = await fetchInsights('?scope=posts');
+    const payload = await result.json();
+    assert.equal(result.status, 200);
+    assert.equal(liveCalls, 0);
+    assert.equal(payload.sources[0].status, 'cached');
+    assert.equal(payload.sources[0].cache.reason, 'fresh');
+    assert.equal(payload.sources[0].data[0].values[0].value, 4);
+    assert.equal(payload.sources[0].error, undefined);
+  });
+});
+
+test('Insights route live-syncs when refresh=1 even if the snapshot is fresh', async () => {
+  let liveCalls = 0;
+  await withInsightsServer({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }],
+    listPosts: async () => [publishedPost()],
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchPostInsights({ externalId }) {
+        liveCalls += 1;
+        return {
+          platformId: 'facebook',
+          scope: 'post',
+          externalId,
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-19T12:00:00.000Z',
+          data: [{ name: 'post_clicks', values: [{ value: 9 }] }],
+        };
+      },
+    }),
+    findSnapshot: async () => ({
+      fetchedAt: new Date().toISOString(),
+      source: 'meta_graph_api',
+      data: [{ name: 'post_clicks', values: [{ value: 4 }] }],
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }, async ({ fetchInsights }) => {
+    const result = await fetchInsights('?scope=posts&refresh=1');
+    const payload = await result.json();
+    assert.equal(liveCalls, 1);
+    assert.equal(payload.sources[0].status, 'synced');
+    assert.equal(payload.sources[0].data[0].values[0].value, 9);
+  });
+});
+
+test('Insights route caps live post syncs and defers the rest to saved snapshots', async () => {
+  const liveIds = [];
+  const posts = Array.from({ length: 5 }, (_, index) => publishedPost({
+    id: `post-${index + 1}`,
+    targetId: `target-${index + 1}`,
+    publishedAt: `2026-08-${String(15 - index).padStart(2, '0')}T00:00:00.000Z`,
+  }));
+  await withInsightsServer({
+    maxLivePostSyncs: 2,
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }],
+    listPosts: async () => posts,
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchPostInsights({ externalId }) {
+        liveIds.push(externalId);
+        return {
+          platformId: 'facebook',
+          scope: 'post',
+          externalId,
+          source: 'meta_graph_api',
+          fetchedAt: '2026-08-19T12:00:00.000Z',
+          data: [{ name: 'post_clicks', values: [{ value: 1 }] }],
+        };
+      },
+    }),
+    findSnapshot: async ({ targetId }) => ({
+      fetchedAt: '2026-01-01T00:00:00.000Z',
+      source: 'meta_graph_api',
+      data: [{ name: 'post_clicks', values: [{ value: Number(String(targetId).slice(-1)) }] }],
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }, async ({ fetchInsights }) => {
+    const payload = await (await fetchInsights('?scope=posts&limit=5')).json();
+    assert.deepEqual(liveIds, ['fb-target-1', 'fb-target-2']);
+    assert.equal(payload.sources.filter((source) => source.status === 'synced').length, 2);
+    assert.equal(payload.sources.filter((source) => source.cache?.reason === 'deferred').length, 3);
+    assert.equal(payload.sources.find((source) => source.targetId === 'target-5').data[0].values[0].value, 5);
+  });
+});
+
+test('Insights route skips Graph for InvalidID snapshots and records that skip on live failure', async () => {
+  let liveCalls = 0;
+  const saved = [];
+  await withInsightsServer({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }],
+    listPosts: async () => [publishedPost()],
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchPostInsights() {
+        liveCalls += 1;
+        throw new InsightsApiError('Unsupported get request. Object with ID does not exist', {
+          status: 400,
+          code: 100,
+          subcode: 33,
+          category: 'validation',
+        });
+      },
+    }),
+    findSnapshot: async () => null,
+    saveSnapshot: async (snapshot) => {
+      saved.push(snapshot);
+      return snapshot;
+    },
+  }, async ({ fetchInsights }) => {
+    const first = await (await fetchInsights('?scope=posts')).json();
+    assert.equal(liveCalls, 1);
+    assert.equal(saved[0].error.category, 'invalid_id');
+    assert.equal(first.sources[0].error.category, 'invalid_id');
+  });
+
+  liveCalls = 0;
+  await withInsightsServer({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', platformId: 'facebook', configured: true }],
+    }],
+    listPosts: async () => [publishedPost()],
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchPostInsights() {
+        liveCalls += 1;
+        throw new Error('should not live-sync invalid IDs');
+      },
+    }),
+    findSnapshot: async () => ({
+      fetchedAt: new Date().toISOString(),
+      source: 'meta_graph_api',
+      data: [],
+      error: { category: 'invalid_id', message: 'Object with ID does not exist' },
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }, async ({ fetchInsights }) => {
+    const payload = await (await fetchInsights('?scope=posts&refresh=1')).json();
+    assert.equal(liveCalls, 0);
+    assert.equal(payload.sources[0].status, 'cached');
+    assert.equal(payload.sources[0].cache.reason, 'invalid_id');
+  });
+});
+
+test('Insights route serves a fresh account snapshot without calling Graph', async () => {
+  let liveCalls = 0;
+  await withInsightsServer({
+    listClients: async () => [{
+      id: 'client-1',
+      accounts: [{ id: 'facebook:1', name: '粉專', platformId: 'facebook', configured: true }],
+    }],
+    resolveFacebookInsights: async () => ({
+      configured: true,
+      async fetchAccountInsights() {
+        liveCalls += 1;
+        return { platformId: 'facebook', source: 'meta_graph_api', fetchedAt: new Date().toISOString(), data: [] };
+      },
+    }),
+    findSnapshot: async () => ({
+      fetchedAt: new Date().toISOString(),
+      source: 'meta_graph_api',
+      range: { since: '2026-08-12T00:00:00.000Z', until: '2026-08-19T00:00:00.000Z' },
+      data: [{ name: 'page_impressions', values: [{ value: 80 }] }],
+    }),
+    saveSnapshot: async (snapshot) => snapshot,
+  }, async ({ fetchInsights }) => {
+    const since = Math.floor(Date.parse('2026-08-12T00:00:00.000Z') / 1000);
+    const until = Math.floor(Date.parse('2026-08-19T00:00:00.000Z') / 1000);
+    const payload = await (await fetchInsights(`?scope=account&since=${since}&until=${until}`)).json();
+    assert.equal(liveCalls, 0);
+    assert.equal(payload.sources[0].status, 'cached');
+    assert.equal(payload.sources[0].cache.reason, 'fresh');
+    assert.equal(payload.sources[0].data[0].values[0].value, 80);
+  });
+});
+
+test('insights UI only sends refresh=1 from the 重新同步 button', async () => {
+  const js = await fs.readFile(new URL('../public/modules/insights.js', import.meta.url), 'utf8');
+  assert.match(js, /liveRefresh/);
+  assert.match(js, /refresh=1/);
+  assert.match(js, /loadInsightsDetail\(\{\s*refreshAccount:\s*true,\s*liveRefresh:\s*true\s*\}\)/);
 });
 
 test('Insights route reads published targets and keeps post scope separate', async () => {
