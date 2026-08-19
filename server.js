@@ -9,7 +9,7 @@ import { createInstagramPublisher } from './lib/instagram.js';
 import { createThreadsPublisher } from './lib/threads.js';
 import { buildPublishingState } from './lib/platforms.js';
 import { createAiService } from './lib/ai-service.js';
-import { createScheduler, migrateScheduleIntoTargets } from './lib/scheduler.js';
+import { createScheduler, migrateScheduleIntoTargets, reconcilePassedNativeSchedules } from './lib/scheduler.js';
 import { getRepositories } from './lib/repositories.js';
 import { getMediaStorage } from './lib/media-storage.js';
 import { runSchemaMigrations } from './lib/schema-migrations.js';
@@ -92,6 +92,7 @@ await runSchemaMigrations({ repositories });
 await hydrateRuntimeSettings({ repositories });
 await ensureDefaultClientFromEnv();
 await migrateScheduleIntoTargets({ repositories });
+await reconcilePassedNativeSchedules({ repositories });
 if (!cloudRuntime) await cleanupOrphanUploads({ mode: 'automatic' });
 
 let facebookPublisher;

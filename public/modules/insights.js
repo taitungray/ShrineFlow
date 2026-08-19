@@ -366,13 +366,10 @@ function renderPlatformTabs() {
   if (!tabs) return;
   const available = platformIds();
   if (!available.includes(state.insightsPlatform)) state.insightsPlatform = available[0] || 'facebook';
-  const posts = state.posts || [];
   tabs.innerHTML = available.map((platformId) => {
-    const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId && target.status === 'published').length;
     return platformPillHtml(platformId, {
       name: 'insightsPlatform',
       checked: platformId === state.insightsPlatform,
-      count: count ? `${count} 篇` : '',
     });
   }).join('');
 }

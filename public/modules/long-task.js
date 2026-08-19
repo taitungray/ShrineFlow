@@ -195,11 +195,18 @@ export async function waitForPublishTarget({
   idleGraceMs = 15_000,
   now = Date.now,
   storage = globalThis.sessionStorage,
+  signal,
 } = {}) {
   if (typeof loadPost !== 'function') throw new Error('loadPost is required');
   writePendingLongTask({ type: 'publish', postId, targetId }, storage);
   const started = now();
   while (now() - started < timeoutMs) {
+    if (signal?.aborted) {
+      clearPendingLongTask(storage);
+      const aborted = new Error('發布等待已中止。');
+      aborted.code = 'PUBLISH_ABORTED';
+      throw aborted;
+    }
     await whenDocumentVisible(documentRef);
     try {
       const post = await loadPost();
@@ -220,10 +227,11 @@ export async function waitForPublishTarget({
         throw new Error('發布沒有開始，請再試一次。');
       }
     } catch (error) {
+      if (error?.code === 'PUBLISH_ABORTED' || error?.name === 'AbortError') throw error;
       if (!isTransientNetworkError(error)) throw error;
     }
     await whenDocumentVisible(documentRef);
-    await sleep(intervalMs);
+    await sleep(intervalMs, signal);
   }
   clearPendingLongTask(storage);
   throw new Error('等待發布結果逾時，請到內容列表確認狀態。');
@@ -254,6 +262,7 @@ export async function publishTargetWithRecovery({
   source = '',
   createIdempotencyKey,
   loadPost,
+  signal,
   ...waitOptions
 } = {}) {
   const idempotencyKey = typeof createIdempotencyKey === 'function'
@@ -265,11 +274,16 @@ export async function publishTargetWithRecovery({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify({ postId, targetId, ...(source ? { source } : {}) }),
+      signal,
     });
     clearPendingLongTask(waitOptions.storage);
     return result;
   } catch (error) {
+    if (signal?.aborted || error?.code === 'PUBLISH_ABORTED' || error?.name === 'AbortError') {
+      clearPendingLongTask(waitOptions.storage);
+      throw error;
+    }
     if (!isTransientNetworkError(error) && !isPublishInProgressError(error)) throw error;
-    return waitForPublishTarget({ postId, targetId, loadPost, ...waitOptions });
+    return waitForPublishTarget({ postId, targetId, loadPost, signal, ...waitOptions });
   }
 }

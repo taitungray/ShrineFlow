@@ -701,18 +701,64 @@ export function initEditorListeners(refreshListsFn) {
     const accountName = account?.name || target.accountName || '';
     const confirmed = await confirmImmediatePublish({ platformName, accountName });
     if (!confirmed) return;
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return setPreviewMessage('網路連線異常，請檢查網路連線後再試。', 'error');
+    }
+
     publishButton.dataset.busy = 'true';
+    const originalButtonHtml = publishButton.innerHTML;
+    publishButton.innerHTML = '<span class="spinner"></span> 發布中…';
     syncEditorActions();
 
-    setPreviewMessage(`正在發布到 ${platformName}…`, 'info');
+    const handlePublishBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', handlePublishBeforeUnload);
+
+    const abortController = new AbortController();
+    const timeoutThresholdMs = 45_000;
+    const timeoutTimer = window.setTimeout(() => {
+      abortController.abort(new Error('PUBLISH_TIMEOUT'));
+    }, timeoutThresholdMs);
+
+    const startTime = Date.now();
+    const updateProgressMessage = () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        setPreviewMessage('網路連線異常，請檢查網路連線後再試。', 'error');
+        publishButton.innerHTML = '<span class="spinner"></span> 連線中斷';
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      if (elapsed < 4) {
+        setPreviewMessage(`正在與 ${platformName} 連線建立貼文…`, 'info');
+      } else if (elapsed < 9) {
+        setPreviewMessage(`${platformName} 伺服器正在處理媒體與貼文（已耗時 ${elapsed} 秒），請稍候…`, 'info');
+      } else {
+        setPreviewMessage(`${platformName} 伺服器正在進行發布與同步（已耗時 ${elapsed} 秒），請勿關閉視窗…`, 'info');
+      }
+    };
+    updateProgressMessage();
+    const progressTimer = window.setInterval(updateProgressMessage, 1000);
+
+    const handleOffline = () => {
+      setPreviewMessage('網路連線異常，請檢查網路連線後再試。', 'error');
+      publishButton.innerHTML = '<span class="spinner"></span> 連線中斷';
+    };
+    window.addEventListener('offline', handleOffline);
+
     try {
       await publishTargetWithRecovery({
         api,
         postId: post.id,
         targetId: target.id,
         createIdempotencyKey,
+        signal: abortController.signal,
+        timeoutMs: timeoutThresholdMs,
         loadPost: async () => {
-          const posts = await api(clientQuery('/api/posts'));
+          const posts = await api(clientQuery('/api/posts'), { signal: abortController.signal });
           return (Array.isArray(posts) ? posts : []).find((item) => item.id === post.id) || null;
         },
       });
@@ -727,11 +773,24 @@ export function initEditorListeners(refreshListsFn) {
       setPreviewMessage(`${platformName} 已發布。`, 'success');
       showToast(`${platformName} 已發布。`, 'success');
     } catch (error) {
-      if (typeof refreshListsFn === 'function') await refreshListsFn();
-      setPreviewMessage(error.message || `${platformName} 發布失敗。`, 'error');
-      showToast(error.message || `${platformName} 發布失敗。`, 'error');
+      if (typeof refreshListsFn === 'function') await refreshListsFn().catch(() => {});
+      const isTimeout = abortController.signal.aborted || error?.message === 'PUBLISH_TIMEOUT' || error?.code === 'PUBLISH_ABORTED';
+      const isNetwork = error?.name === 'TypeError' || /failed to fetch|network/i.test(String(error?.message || ''));
+      let errorMsg = error?.message || `${platformName} 發布失敗。`;
+      if (isTimeout) {
+        errorMsg = '發布等待超時（已超過 45 秒），請檢查網路連線或至發布紀錄確認狀態。';
+      } else if (isNetwork || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+        errorMsg = '網路連線異常，請檢查網路連線後再試。';
+      }
+      setPreviewMessage(errorMsg, 'error');
+      showToast(errorMsg, 'error');
     } finally {
+      window.clearTimeout(timeoutTimer);
+      window.clearInterval(progressTimer);
+      window.removeEventListener('beforeunload', handlePublishBeforeUnload);
+      window.removeEventListener('offline', handleOffline);
       publishButton.dataset.busy = 'false';
+      publishButton.innerHTML = originalButtonHtml;
       syncEditorActions();
     }
   });

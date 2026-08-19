@@ -57,24 +57,35 @@
 
 .radio-pill.radio-pill-platform > span {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   min-width: 44px;
-  padding: 0;
-  gap: 0;
-  border-color: transparent;
-  border-radius: 14px;
-  background: transparent;
-  box-shadow: none;
+  min-height: 44px;
+  padding: 0 !important;
+  gap: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  background: var(--bg-subtle, rgba(255, 255, 255, 0.04)) !important;
+  box-shadow: none !important;
+  transition: var(--transition);
 }
 
 .radio-pill.radio-pill-platform input[type="radio"]:checked + span,
-.radio-pill.radio-pill-platform input[type="checkbox"]:checked + span,
+.radio-pill.radio-pill-platform input[type="checkbox"]:checked + span {
+  color: inherit !important;
+  border-color: var(--brand) !important;
+  background: color-mix(in srgb, var(--brand) 18%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 65%, transparent) !important;
+}
+
 .radio-pill.radio-pill-platform:hover input[type="radio"]:not(:checked):not(:disabled) + span,
 .radio-pill.radio-pill-platform:hover input[type="checkbox"]:not(:checked):not(:disabled) + span {
-  color: inherit;
-  border-color: var(--brand);
-  background: transparent;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent);
+  color: inherit !important;
+  border-color: var(--brand) !important;
+  background: color-mix(in srgb, var(--brand) 10%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 40%, transparent) !important;
 }
 
 .radio-pill.radio-pill-platform:has(.platform-pill-extra) {
@@ -85,13 +96,14 @@
 .radio-pill.radio-pill-platform:has(.platform-pill-extra) > span {
   width: auto;
   min-width: 44px;
-  padding: 0 12px;
-  gap: 8px;
+  padding: 0 12px !important;
+  gap: 8px !important;
 }
 
 .radio-pill.radio-pill-platform .platform-icon {
   width: 28px;
   height: 28px;
+  display: block;
 }
 
 .radio-pill.radio-pill-platform .platform-scan-count {

@@ -93,6 +93,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-height: 44px;
   min-width: 44px;
   padding: 10px 12px;
@@ -189,6 +190,10 @@
 }
 
 .composer-publish-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   flex: 0 0 auto;
   color: var(--danger);
   font-weight: 700;
@@ -206,4 +211,22 @@
 }
 .composer-actions > button {
   flex: 1 1 8.5rem;
+}
+
+@media (max-width: 767px) {
+  .action-row,
+  .action-box,
+  .composer-actions {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .action-row > button,
+  .action-box > button,
+  .composer-actions > button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    max-width: 100%;
+  }
 }

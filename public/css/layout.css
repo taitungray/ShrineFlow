@@ -152,28 +152,46 @@ a.status-dot:focus-visible {
   height: 8px;
   border-radius: 50%;
   background: var(--text-muted);
+  flex-shrink: 0;
+  transition: var(--transition);
 }
 
 .status-dot[data-ready="true"] {
   color: var(--success);
-  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
   background: var(--success-soft);
 }
 
 .status-dot[data-ready="true"]::before {
   background: var(--success);
+  box-shadow: 0 0 6px var(--success);
 }
 
 .status-dot[data-ready="false"] {
   color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
   background: var(--danger-soft);
 }
 
 .status-dot[data-ready="false"]::before {
   background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
 }
 
+.text-success {
+  color: var(--success) !important;
+  font-weight: 600;
+}
+
+.text-danger {
+  color: var(--danger) !important;
+  font-weight: 600;
+}
+
+.text-warning {
+  color: #f59e0b !important;
+  font-weight: 600;
+}
 
 /* Grid Layouts */
 .workspace-grid { display: grid; gap: 20px; min-height: 560px; }

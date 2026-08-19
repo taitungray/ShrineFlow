@@ -485,6 +485,19 @@
               <div class="field"><label for="settingGeminiFallbackModels" class="field-label">備援模型</label><input id="settingGeminiFallbackModels" type="text" placeholder="gemini-2.5-flash" /></div>
             </div>
 
+            <details class="disclosure compact">
+              <summary>📘 簡易教學：如何取得免費 Gemini API Key <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li>點擊前往 🔗 <a class="field-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>（使用 Google 帳號登入）。</li>
+                    <li>點擊藍色按鈕 <span class="guide-pill-blue">Create API key</span> ➔ 選擇建立新的 Key。</li>
+                    <li>將產生的長代碼（開頭為 <code class="guide-code-box">AIzaSy...</code>）複製，貼到上方的 <strong>API Key</strong> 欄位。</li>
+                    <li>點擊 <span class="guide-pill-green">🧪 測試 Gemini 連線</span>，看到綠色勾勾就完成了！🎉</li>
+                  </ol>
+                </div>
+              </div>
+            </details>
             <div class="action-box">
               <button type="button" id="btnTestGemini" class="btn-test" aria-label="測試 Gemini 連線">🧪 測試 Gemini 連線</button>
               <span id="testGeminiResult" class="test-result"></span>
@@ -495,9 +508,11 @@
             <legend class="group-title">憑證保存狀態</legend>
             <p class="helper" id="secretStorageStatus">正在檢查憑證保存狀態…</p>
             <details class="disclosure compact">
-              <summary>加密說明 <span class="chevron" aria-hidden="true">›</span></summary>
+              <summary>🔒 安全加密說明 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
-                <p class="helper">設定 `SHRINEFLOW_MASTER_KEY` 後，下一次儲存會以 AES-256-GCM 加密 `.env` 與品牌平台 Token。主密鑰遺失時無法解密，系統不會替你猜測或重設。</p>
+                <div class="guide-tip-box">
+                  💡 <strong>主密鑰功能：</strong>設定主密鑰後，系統會以高規格 <span class="guide-pill-blue">AES-256-GCM</span> 將所有平台 Token 與金鑰自動加密保存。請妥善保管密鑰，遺失無法復原。
+                </div>
               </div>
             </details>
             <div class="field-row">
@@ -1007,78 +1022,99 @@
               <span id="testFacebookResult" class="test-result"></span>
             </div>
             <details class="disclosure compact">
-              <summary>進階：Graph 版本與媒體網址 <span class="chevron" aria-hidden="true">›</span></summary>
+              <summary>⚙️ 進階設定：Graph 版本與媒體公開網址 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
                 <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
                 <div class="field">
-                  <label for="settingPublicMediaBaseUrl" class="field-label">公開媒體基底網址 <span class="field-optional">(IG／Threads 有圖影時必填)</span></label>
-                  <input id="settingPublicMediaBaseUrl" type="url" placeholder="https://your-public-host.example" />
-                  <p class="helper">HTTPS，不含 <code>/uploads</code>。雲端用 <code>https://media.shrineflow.uk</code>。本機 localhost 無效。</p>
+                  <label for="settingPublicMediaBaseUrl" class="field-label">公開媒體基底網址 <span class="field-optional">(IG／Threads 發布圖片影片時必填)</span></label>
+                  <input id="settingPublicMediaBaseUrl" type="url" placeholder="https://media.shrineflow.uk" />
+                  <div class="guide-tip-box">
+                    💡 <strong>說明：</strong>發布圖片或影片到 Instagram／Threads 時，Meta 伺服器需要能由公開網際網路讀取該圖片（例如 <code>https://media.shrineflow.uk</code>）。若只發布純文字或只發到 Facebook 則留白即可。
+                  </div>
                 </div>
               </div>
             </details>
             <details class="disclosure compact">
-              <summary>如何建 App、拿 Token、換長期 <span class="chevron" aria-hidden="true">›</span></summary>
+              <summary>📘 簡易教學：3 步驟快速拿到 Facebook 金鑰與粉專 ID <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
-                <div class="field-label-group setup-guide-actions">
-                  <span class="field-label">Meta 工具</span>
-                  <span class="field-link-row">
-                    <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">建立應用程式 →</a>
-                    <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer →</a>
-                    <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger →</a>
-                  </span>
+                <div class="guide-quick-links">
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">🔗 1. 開啟 Meta App 後台</a>
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">🔗 2. 開啟 Graph 測試工具</a>
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">🔗 3. 開啟 Token 延長工具</a>
                 </div>
-                <p class="helper">ShrineFlow 不會跳出 Facebook 登入。三個平台共用同一個 Meta App。不要把 App Secret 填在本頁。</p>
-                <p class="setup-subtitle">建 Meta App（三平台共用）</p>
-                <ol class="setup-steps">
-                  <li>到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> 建立應用程式，類型選 <strong>Business</strong>。</li>
-                  <li>你的 Facebook 帳號必須是粉專管理員，並加進這個 App 的角色（管理員或開發者）。</li>
-                  <li>
-                    使用案例要勾（精選常常沒有，改點「內容管理」或「全部」）：
-                    <ul class="setup-usecases">
-                      <li><strong>管理粉絲專頁的所有內容</strong> → Facebook</li>
-                      <li><strong>管理 Instagram 的訊息和內容</strong> → IG</li>
-                      <li><strong>存取 Threads API</strong> → Threads</li>
-                    </ul>
-                    「使用 Facebook 登入」沒出現就往下走。不要勾廣告、WhatsApp、遊戲、oEmbed、Messenger。
-                  </li>
-                  <li>商家沒有就跳過。接 Token、測連線可以先留 Development。粉絲要看得到必須切 Live，步驟在下方。</li>
-                  <li>儀表板：<strong>使用案例 → 自訂（Pages API）→ 權限</strong>。這頁才是加權限的地方。<code>pages_show_list</code> 若已「可供測試」就略過。對 <code>pages_manage_posts</code>、<code>pages_read_engagement</code> 按「+ 新增」。不要加 <code>manage_pages</code>／<code>publish_pages</code>。IG 再到 Instagram 使用案例加 <code>instagram_basic</code>、<code>instagram_content_publish</code>。</li>
-                </ol>
-                <p class="setup-subtitle">第一次：拿粉專 Token</p>
-                <ol class="setup-steps">
-                  <li>開 Graph API Explorer，App 選這個應用程式。右側勾剛加的三個權限，按「產生存取權杖」。</li>
-                  <li>右側 <code>EAA...</code> 是<strong>用戶權杖</strong>，不要貼進上面欄位。GET <code>me?fields=id,name</code>：<code>name</code> 應是人名。這份 JSON 不是 Token；<code>id</code> 不是粉專 ID。</li>
-                  <li>GET <code>me/accounts?fields=id,name,access_token&amp;limit=100</code>。左邊 JSON 的 <code>data[]</code> 才是粉專清單。下拉常常沒粉專，不要靠它，也不要為此再產一次權杖。</li>
-                  <li>對應 <code>name</code> 那筆：<code>id</code> → 粉專 ID；<code>access_token</code> → Page Access Token。貼上、儲存、測試。成功顯示粉專名稱＝已通。</li>
-                </ol>
-                <p class="setup-subtitle">之後：換成長期粉專 Token</p>
-                <p class="setup-warn">只改網址成 <code>me/accounts</code> 不會變長期。不要在 Explorer 跑 <code>oauth/access_token</code>（常出現錯誤 101）。要先延長<strong>用戶權杖</strong>，再重查粉專 Token。</p>
-                <ol class="setup-steps">
-                  <li>確認仍是用戶權杖（<code>me?fields=id,name</code> 是人名）。只複製右側 <code>EAA...</code>，不要複製 JSON 或 <code>id</code>。</li>
-                  <li>開 Token Debugger → 除錯 → 按藍色 <strong>延伸存取權杖</strong>（英文介面寫 Extend Access Token）。沒有此按鈕＝貼成粉專 token 或 App 選錯。</li>
-                  <li>延長後的用戶權杖貼回 Explorer 右側，再 GET <code>me/accounts?fields=id,name,access_token&amp;limit=100</code>。用粉專那筆 <code>access_token</code> 覆寫上面欄位 → 儲存 → 測試。</li>
-                  <li>Debugger 看<strong>粉專</strong> Token：<code>Expires</code> 為 <strong>Never</strong> 才算換成。到期日留白。改密碼、撤銷 App、失去粉專角色才會失效。</li>
-                </ol>
-                <p class="setup-note">備援：也可用 App 編號＋密鑰做 <code>grant_type=fb_exchange_token</code>，但不要在 Graph Explorer 做。密鑰不要填進本頁。</p>
-                <p class="setup-subtitle">粉絲要看得到：把 App 切 Live</p>
-                <p class="setup-warn">Development 發出去的文，只有 App 角色看得到。你看得到、別人看不到＝還沒切 Live。切 Live 前的舊文通常要刪掉重發。</p>
-                <ol class="setup-steps">
-                  <li>開 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> → 你的 App → 設定 → 基本。</li>
-                  <li>Privacy Policy URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/privacy.html</code></li>
-                  <li>Terms of Service URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/terms.html</code></li>
-                  <li>User Data Deletion URL：<code>https://shrineflow-api-mfxyiqkhza-de.a.run.app/data-deletion.html</code></li>
-                  <li>右上 <strong>Development 切成 Live</strong>。自己管的粉專通常不必先做完整 App Review。</li>
-                  <li>已發／已排的舊文：在粉專刪掉或取消，Live 後重發。用沒加 App 角色的帳號或無痕開粉專確認。</li>
-                </ol>
-                <p class="helper">完整說明在幫助：<a class="field-link" href="#/help/facebook-app-live">粉絲看不到貼文</a>。</p>
-                <p class="setup-subtitle">常見踩雷</p>
-                <ul class="setup-usecases">
-                  <li>Cannot parse access token → 貼到的是 JSON 或數字 ID，不是 <code>EAA...</code>。</li>
-                  <li><code>data</code> 空陣列 → 登入帳號必須是粉專管理員，且跟 App 角色同一個 Facebook。</li>
-                  <li>短效 Token 約 1–2 小時；發文突然失敗就重拿粉專 Token 或走長期流程。</li>
-                  <li>自己看得到、別人看不到 → App 還在 Development，照上面切 Live 並重發。</li>
-                </ul>
+
+                <!-- 步驟 1 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">1</span>
+                    <span class="guide-step-title">建立 Meta 應用程式（只需做一次）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>前往 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> ➔ 點右上角 <span class="guide-pill">建立應用程式</span> ➔ 類型選擇 <strong style="color:#e05a2b;">企業 (Business)</strong>。</li>
+                    <li>在「使用案例」勾選：<span class="guide-pill-blue">管理粉絲專頁的所有內容</span>（若要發 IG 順便勾選「管理 Instagram 訊息與內容」）。</li>
+                    <li>建立完成後，到左側選單點 <strong style="color:var(--text-primary);">使用案例 ➔ Pages API ➔ 權限</strong> ➔ 確認並新增：
+                      <ul>
+                        <li><code class="guide-code-box">pages_manage_posts</code>（發布與排程貼文）</li>
+                        <li><code class="guide-code-box">pages_read_engagement</code>（讀取互動與成效）</li>
+                        <li><code class="guide-code-box">pages_show_list</code>（列出管理的粉專）</li>
+                        <li><code class="guide-code-box">pages_messaging</code>（收件匣回覆私訊）</li>
+                        <li><code class="guide-code-box">pages_manage_metadata</code>（即時 Webhook 通知）</li>
+                        <li><code class="guide-code-box">business_management</code>（企業帳號管理）</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+
+                <!-- 步驟 2 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">2</span>
+                    <span class="guide-step-title">取得粉專 ID 與 Access Token（三動搞定）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API 測試工具</a> ➔ 最上方「Meta 應用程式」選剛剛建立的 App。</li>
+                    <li><strong>確認加入 6 項權限</strong>：在右側「權限 (Permissions)」清單中確認已勾選（若沒有請按 <span class="guide-pill-blue">Add a Permission</span> 搜尋加入）：
+                      <ul>
+                        <li><span class="guide-pill-green">pages_manage_posts</span>（發文必備）</li>
+                        <li><span class="guide-pill-green">pages_read_engagement</span>（成效必備）</li>
+                        <li><span class="guide-pill-green">pages_show_list</span>（取得粉專清單）</li>
+                        <li><span class="guide-pill-green">pages_messaging</span>（收件匣私訊）</li>
+                        <li><span class="guide-pill-green">pages_manage_metadata</span>（Webhook 通知）</li>
+                        <li><span class="guide-pill-green">business_management</span>（企業管理）</li>
+                      </ul>
+                    </li>
+                    <li>點擊右上方藍色按鈕 <span class="guide-pill-blue">產生存取權杖 (Generate Access Token)</span> ➔ 在跳出視窗中登入並<strong>勾選授權你的粉絲專頁</strong>。</li>
+                    <li>將中間的網址輸入框換成這段代碼（點擊全選複製）：<br /><code class="guide-code-box">me/accounts?fields=id,name,access_token</code><br />然後按右邊的 <span class="guide-pill-blue">提交 (Submit)</span> 按鈕。</li>
+                    <li>在下方回應的內容中，找到你的粉專名稱：
+                      <ul>
+                        <li>把 <code class="guide-code-box">"id": "123456789..."</code> 的數字複製 ➔ 貼到上方的 <strong>Facebook Page ID</strong> 欄位。</li>
+                        <li>把 <code class="guide-code-box">"access_token": "EAA..."</code> 的長字串複製 ➔ 貼到上方的 <strong>Page Access Token</strong> 欄位。</li>
+                      </ul>
+                    </li>
+                    <li>點擊本頁下方的 <span class="guide-pill-green">💾 儲存此品牌 FB 連線</span> ➔ <span class="guide-pill-green">🧪 測試連線</span>，顯示綠色粉專名稱就代表成功連線了！🎉</li>
+                  </ol>
+                </div>
+
+                <!-- 步驟 3 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">3</span>
+                    <span class="guide-step-title">換成永久不過期 Token（建議設定）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger 延伸工具</a>。</li>
+                    <li>把步驟 2 第一次產生的用戶 Token (<code class="guide-code-box">EAA...</code>) 貼進去 ➔ 點 <span class="guide-pill-blue">除錯</span> ➔ 往下拉點擊藍色按鈕 <span class="guide-pill-blue">延伸存取權杖 (Extend Access Token)</span>。</li>
+                    <li>將延長後的 Token 貼回 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> 右側 ➔ 重新按一次 <span class="guide-pill-blue">提交 (Submit)</span> ➔ 複製粉專最新的 <code class="guide-code-box">access_token</code> 覆蓋回本頁儲存即可！</li>
+                  </ol>
+                  <div class="guide-tip-box">
+                    ✨ <strong>永久 Token 驗證：</strong>放進 Token Debugger 查看若顯示 <strong>Expires: Never（從不）</strong>，代表永遠不會過期！
+                  </div>
+                </div>
+
+                <!-- 常見小提醒 -->
+                <div class="guide-warn-box">
+                  🚨 <strong>發文後粉絲看不到？</strong> 請到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta 應用程式後台</a> ➔ 點你的 App ➔ 右上角將 <span class="guide-pill">開發中 (Development)</span> 切換為 <span class="guide-pill-green">上線 (Live)</span>，所有人就能看見貼文了！
+                </div>
               </div>
             </details>
           </fieldset>
@@ -1112,14 +1148,21 @@
               <span id="testInstagramResult" class="test-result"></span>
             </div>
             <details class="disclosure compact">
-              <summary>如何取得 Instagram 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
+              <summary>📘 簡易教學：如何取得 Instagram 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
-                <ol class="setup-steps">
-                  <li>同一個 Meta App。使用案例勾<strong>管理 Instagram 的訊息和內容</strong>。IG 必須是專業帳號，並綁這個品牌的 Facebook 粉專。</li>
-                  <li>App 儀表板該使用案例 → 權限：加 <code>instagram_basic</code>、<code>instagram_content_publish</code>。Explorer 搜尋不到＝還沒加進使用案例。</li>
-                  <li>用已含 IG 權限的粉專 Token。GET <code>me/accounts?fields=id,name,instagram_business_account</code>，或 GET <code>{粉專ID}?fields=instagram_business_account</code>。</li>
-                  <li><code>instagram_business_account.id</code> 貼 User ID。沒這欄＝還沒綁粉專或權限不足。Access Token 貼同一串 Page Token。到期日可留白。</li>
-                </ol>
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li><strong>先決條件</strong>：IG 帳號需為 <span class="guide-pill">專業／商業帳號</span>，並已在手機 IG 設定中綁定此品牌的 Facebook 粉專。</li>
+                    <li><strong>加開權限</strong>：在 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> 右側「權限」清單中，確認已勾選 <span class="guide-pill-green">instagram_basic</span> 與 <span class="guide-pill-green">instagram_content_publish</span>（若無請按「Add a Permission」搜尋加入），並重新產生權杖。</li>
+                    <li><strong>查詢 User ID</strong>：網址輸入 <code class="guide-code-box">me/accounts?fields=id,name,instagram_business_account</code> ➔ 按「提交」。</li>
+                    <li><strong>填入資料</strong>：
+                      <ul>
+                        <li>把 <code class="guide-code-box">instagram_business_account.id</code> 的數字貼到 <strong>Instagram User ID</strong>。</li>
+                        <li><strong>Access Token</strong> 直接貼上已包含 IG 權限的 Page Access Token 即可。</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
               </div>
             </details>
           </fieldset>
@@ -1128,7 +1171,7 @@
           <section class="settings-page is-hidden" id="platformsPageThreads" role="tabpanel" data-platforms-page="threads" aria-labelledby="platformsTabThreads" data-required-permission="account.manage">
           <fieldset class="form-group-card" id="clientThreadsCard" data-required-permission="account.manage">
             <legend class="group-title">目前品牌的 Threads</legend>
-            <p class="helper">數字 User ID＋Threads Token。不要貼 Facebook 的 <code>EAA...</code>。</p>
+            <p class="helper">數字 User ID＋Threads 專用 Token（開頭為 THQVJ...）。</p>
             <div class="field">
               <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
               <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
@@ -1153,19 +1196,433 @@
               <span id="testThreadsResult" class="test-result"></span>
             </div>
             <details class="disclosure compact">
-              <summary>如何取得 Threads 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
+              <summary>📘 簡易教學：如何取得 Threads 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
               <div class="disclosure-body">
-                <ol class="setup-steps">
-                  <li>同一個 Meta App。勾使用案例<strong>存取 Threads API</strong>，儀表板再加入 Threads 產品。</li>
-                  <li>用 Threads 帳號授權取得 Token（開頭常是 <code>THQVJ...</code>）。不要把 Facebook 的 <code>EAA...</code> 貼來這裡。</li>
-                  <li>對 Threads Graph（<code>graph.threads.net</code>）GET <code>/me</code>，數字 <code>id</code> 貼 User ID。那不是粉專 ID。</li>
-                  <li>純文字可不設媒體網址；有圖／影則必須 HTTPS（如 <code>https://media.shrineflow.uk</code>）。到期日可留白。</li>
-                </ol>
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li>在同一個 Meta App 中，使用案例勾選 <span class="guide-pill-blue">存取 Threads API</span>。</li>
+                    <li>前往 <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads 授權說明</a>，透過 Threads 登入取得專用 Token（開頭通常為 <code class="guide-code-box">THQVJ...</code>）。</li>
+                    <li>對 Threads API 查詢 <code class="guide-code-box">graph.threads.net/me</code> 取得您的 Threads 數字 ID 貼入上方 <strong>Threads User ID</strong> 即可。</li>
+                  </ol>
+                </div>
               </div>
             </details>
           </fieldset>
           </section>
+
+          <section class="settings-page is-hidden" id="settingsPageBackup" role="tabpanel" data-settings-page="backup" aria-labelledby="settingsTabBackup" data-required-permission="system.manage">
+          <fieldset class="form-group-card" id="backupSettingsCard" data-required-permission="system.manage">
+            <legend class="group-title">備份與儲存管理</legend>
+            <details class="disclosure compact">
+              <summary>💾 備份範圍與自動保護機制 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-tip-box">
+                  💡 <strong>自動安全防護：</strong>系統備份包含貼文內容、排程與發布紀錄（最多保留最近 30 份歷史）。安全金鑰不會寫入備份檔，每次執行還原前也會自動建立當前快照，確保資料安全無虞。
+                </div>
+              </div>
+            </details>
+            <div class="field-row">
+              <div class="field">
+                <label for="backupIncludeMedia" class="field-label">備份素材</label>
+                <label class="checkbox-row"><input id="backupIncludeMedia" type="checkbox" /><span>同時複製 uploads 素材</span></label>
+              </div>
+              <div class="field">
+                <span class="field-label">未使用素材</span>
+                <p class="helper helper-live" id="storageHealthResult">按下檢查以計算可清理項目。</p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <span class="field-label">系統健康狀態</span>
+                <p class="helper helper-live" id="systemHealthResult">按下檢查以確認 JSON、備份、配額與排程器。</p>
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnCreateBackup" class="btn-secondary" aria-label="建立 JSON 備份">💾 建立備份</button>
+              <button type="button" id="btnRefreshStorage" class="btn-test" aria-label="檢查儲存空間">🔎 檢查儲存</button>
+              <button type="button" id="btnRefreshSystemHealth" class="btn-test" aria-label="檢查系統健康狀態">🩺 系統健康</button>
+              <button type="button" id="btnRefreshReadiness" class="btn-test" aria-label="檢查部署前置條件">🚦 部署檢查</button>
+              <button type="button" id="btnCleanupMedia" class="btn-test" aria-label="清理未使用素材">🧹 清理未使用素材</button>
+              <span id="systemStorageMessage" class="test-result"></span>
+            </div>
+            <div id="backupList" class="backup-list" aria-live="polite"></div>
+            <p class="helper" data-required-permission="system.manage">系統錯誤記錄已移到獨立頁。<a class="field-link" href="#/errors" data-view-target="errors" data-route-target="errors">前往錯誤記錄 →</a></p>
+            <p class="helper" id="readinessResult">部署檢查只提供準備度提示，不取代登入／HTTPS／反向代理設定。</p>
+            <div id="readinessList" class="backup-list" aria-live="polite"></div>
+          </fieldset>
+          </section>
           </div>
+        </form>
+
+        <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
+        <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
+          <div class="content-toolbar" aria-label="內容篩選工具">
+            <div class="field content-search-field">
+              <label for="contentSearch" class="field-label">搜尋內容</label>
+              <input id="contentSearch" type="search" placeholder="搜尋標題、文案或備註…" autocomplete="off" />
+            </div>
+            <div class="content-toolbar-main">
+              <div class="field content-filter-field">
+                <span id="contentStatusFilterLabel" class="field-label">狀態</span>
+                <div class="radio-pill-group content-filter-pills" id="contentStatusFilter" role="radiogroup" aria-labelledby="contentStatusFilterLabel">
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="all" checked /><span>目前</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="draft" /><span>草稿</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="scheduled" /><span>已排程</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="published" /><span>已發布</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="partial_success" /><span>部分成功</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
+                </div>
+              </div>
+              <div class="content-toolbar-end">
+                <details class="disclosure compact content-more-filters">
+                  <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
+                  <div class="disclosure-body">
+                    <div class="field content-filter-field">
+                      <span id="contentStageFilterLabel" class="field-label">內容階段</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+                      </div>
+                    </div>
+                    <div class="field content-filter-field content-platform-filter-field">
+                      <span id="contentPlatformFilterLabel" class="field-label">平台</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+              </div>
+            </div>
+          </div>
+          <form id="ideaCaptureForm" class="idea-capture-bar">
+            <div class="field">
+              <label for="ideaTopic" class="field-label">快速記下 Idea</label>
+              <input id="ideaTopic" type="text" maxlength="200" placeholder="主題，例如週末活動" required />
+            </div>
+            <div class="field">
+              <label for="ideaNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+              <input id="ideaNotes" type="text" maxlength="500" placeholder="時機或素材" />
+            </div>
+            <button class="btn-secondary" type="submit">保存</button>
+          </form>
+          <div class="content-batch-bar is-hidden" id="contentBatchBar" aria-label="批次操作列">
+            <label class="checkbox-row content-select-all-wrap">
+              <input type="checkbox" id="contentSelectAll" aria-label="全選目前顯示的內容" />
+              <span>全選 (<strong id="contentSelectedCount">0</strong>)</span>
+            </label>
+            <div class="content-batch-actions">
+              <button class="btn-secondary" id="btnBatchArchive" type="button">批次封存</button>
+              <button class="btn-secondary" id="btnBatchRestore" type="button">批次還原</button>
+              <button class="btn-secondary" id="btnBatchPromoteIdea" type="button">轉為草稿</button>
+              <button class="btn-text" id="btnBatchClear" type="button">取消選取</button>
+            </div>
+          </div>
+          <div id="postsList" class="list-empty">
+            <div class="empty-state">
+              <span class="empty-icon">📝</span>
+              <p>還沒有草稿</p>
+            </div>
+          </div>
+          <details class="disclosure compact bulk-import-card" data-required-permission="content.create">
+            <summary>📥 簡易教學：CSV 批次匯入內容 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <div class="guide-step-card">
+                <ol class="guide-list">
+                  <li><strong>欄位格式</strong>：第一行為英文欄位名，請依序填入（可直接複製）：<br />
+                    <code class="guide-code-box">contentTopic,facebook,platform,contentType</code>
+                  </li>
+                  <li><strong>資料範例</strong>：<br />
+                    <code class="guide-code-box">邢府三千歲,親手彩繪神尊完成！,facebook,post</code>
+                  </li>
+                  <li>貼入下方輸入框後，先按 <span class="guide-pill-blue">驗證 CSV</span> 預覽確認，再按 <span class="guide-pill-green">建立草稿</span> 即可一鍵全部匯入！</li>
+                </ol>
+              </div>
+              <form id="bulkImportForm">
+                <div class="field">
+                  <label for="bulkImportCsv" class="field-label">CSV 內容</label>
+                  <textarea id="bulkImportCsv" rows="5" placeholder="contentTopic,facebook,platform,contentType&#10;邢府大千歲,這尊神尊進行彩繪完成,facebook,post"></textarea>
+                </div>
+                <div class="action-box">
+                  <button class="btn-secondary" id="bulkImportPreviewButton" type="submit">驗證 CSV</button>
+                  <button class="btn-dark" id="bulkImportCommitButton" type="button" disabled>建立草稿（不排程）</button>
+                  <button class="btn-dark permission-hidden" id="bulkImportScheduleButton" data-required-permission="schedule.manage" type="button" disabled>套用匯入排程（本機）</button>
+                  <button class="btn-text" id="bulkImportClearButton" type="button">清除</button>
+                </div>
+              </form>
+              <p class="bulk-import-summary" id="bulkImportSummary" aria-live="polite">尚未執行 dry-run。</p>
+              <div class="bulk-import-rows" id="bulkImportRows" aria-live="polite"></div>
+            </div>
+          </details>
+        </section>
+
+        <!-- 排程 -->
+        <section class='panel module-panel is-hidden' id='reviewsPanel' data-view-panel='reviews'>
+          <div class='panel-heading compact'>
+            <p class='panel-lede'>集中查看送審版本，核准或留下修改意見。</p>
+            <button class='btn-text' id='refreshReviewButton' type='button'>重新整理</button>
+          </div>
+          <div id='reviewQueueList' class='list-empty' aria-live='polite'></div>
+        </section>
+
+        <section class='panel is-hidden' id='schedulePanel' data-view-panel='schedule'>
+          <div class="calendar-toolbar" aria-label="日曆控制">
+            <div class="calendar-month-nav">
+              <button class="btn-icon" id="calendarPrevious" type="button" aria-label="上一個日期範圍">‹</button>
+              <strong id="calendarMonthLabel">—</strong>
+              <button class="btn-icon" id="calendarNext" type="button" aria-label="下一個日期範圍">›</button>
+              <button class="btn-text" id="calendarToday" type="button">今天</button>
+            </div>
+            <div class="radio-pill-group calendar-view-switch" id="calendarViewSwitch" role="radiogroup" aria-label="日曆檢視">
+              <label class="radio-pill"><input type="radio" name="calendarView" value="month" checked /><span>月</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="week" /><span>週</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="list" /><span>列表</span></label>
+            </div>
+            <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="scheduled" aria-label="開啟 Meta Business Suite 排程">開啟 Business Suite</button>
+          </div>
+          <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
+          <div class="calendar-agenda">
+            <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">桌面可拖曳卡片改期；手機請使用改時間</span></div>
+            <p class="helper calendar-connection-notice is-hidden" id="calendarConnectionNotice"></p>
+            <div id="scheduleList" class="list-empty">
+              <div class="empty-state">
+                <span class="empty-icon">📅</span>
+                <p>還沒有排程</p>
+              </div>
+            </div>
+          </div>
+          <section class="form-group-card remote-schedule-card" id="remoteScheduleCard" aria-live="polite"></section>
+          <details class="disclosure compact crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
+            <summary>🛑 危機暫停（緊急暫停所有排程發布） <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <div class="guide-warn-box" style="margin-bottom: 12px;">
+                ⚠️ <strong>緊急暫停說明：</strong>當發生突發事件或貼文需要全面撤下時，按下此按鈕會立刻暫停所有尚未發出的排程，並嘗試取消 Facebook 遠端排程。
+              </div>
+              <form id="crisisPauseForm">
+              <div class="field">
+                <span class="field-label">暫停範圍</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停範圍">
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="client" checked /><span>目前品牌</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="account" /><span>單一帳號</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="platform" /><span>單一平台</span></label>
+                </div>
+              </div>
+              <div class="field is-hidden" id="crisisPauseAccountField"><label for="crisisPauseAccount" class="field-label">平台連線</label><select id="crisisPauseAccount"></select></div>
+              <div class="field is-hidden" id="crisisPausePlatformField">
+                <span class="field-label">平台</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停平台">
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="facebook" checked /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+                </div>
+              </div>
+              <div class="field"><label for="crisisPauseReason" class="field-label">原因 <span class="field-optional">(選填)</span></label><input id="crisisPauseReason" type="text" maxlength="500" placeholder="例：活動內容需要全面檢查" /></div>
+              <div class="action-box"><button class="btn-secondary crisis-pause-button" id="crisisPauseButton" type="submit">立即暫停發布</button><span class="test-result" id="crisisPauseStatus" aria-live="polite"></span></div>
+            </form>
+            </div>
+          </details>
+        </section>
+
+        <!-- ========== 素材庫 ========== -->
+        <section class="panel module-panel is-hidden" id="mediaPanel" data-view-panel="media">
+          <div class="panel-heading compact">
+            <p class="panel-lede">集中查看已上傳素材、使用內容與平台分布。</p>
+            <a class="btn-secondary" href="#/content/new" data-view-target="create" data-route-target="content/new">＋ 新增內容</a>
+          </div>
+          <div class="module-toolbar" aria-label="素材篩選工具">
+            <div class="field module-search-field">
+              <label for="mediaSearch" class="field-label">搜尋素材</label>
+              <input id="mediaSearch" type="search" placeholder="搜尋檔名或使用內容…" autocomplete="off" />
+            </div>
+            <div class="field module-filter-field">
+              <span id="mediaTypeFilterLabel" class="field-label">類型</span>
+              <div class="radio-pill-group module-filter-pills" id="mediaTypeFilter" role="radiogroup" aria-labelledby="mediaTypeFilterLabel">
+                <label class="radio-pill"><input type="radio" name="mediaType" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="image" /><span>圖片</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="video" /><span>影片</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="duplicate" /><span>重複</span></label>
+              </div>
+            </div>
+          </div>
+          <p class="module-summary" id="mediaSummary" aria-live="polite"></p>
+          <div id="mediaGrid" class="media-library-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="templatesPanel" data-view-panel="templates">
+          <div class="panel-heading compact">
+            <p class="panel-lede">保存常用內容結構、語氣、Hashtag 與平台預設。</p>
+            <button class="btn-secondary" id="newTemplateButton" type="button">＋ 建立模板</button>
+          </div>
+          <div class="module-toolbar" aria-label="模板工具">
+            <div class="field module-search-field">
+              <label for="templateSearch" class="field-label">搜尋模板</label>
+              <input id="templateSearch" type="search" placeholder="搜尋名稱、用途或主題提示…" autocomplete="off" />
+            </div>
+          </div>
+          <div id="templatesGrid" class="templates-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
+          <div class="panel-heading compact">
+            <p class="panel-lede">集中整理多篇內容、日期範圍與發布進度。</p>
+            <button class="btn-secondary" id="newCampaignButton" type="button">＋ 建立活動</button>
+          </div>
+          <div class="module-toolbar" aria-label="活動工具">
+            <div class="field module-search-field">
+              <label for="campaignSearch" class="field-label">搜尋活動</label>
+              <input id="campaignSearch" type="search" placeholder="搜尋活動名稱、目標或備註…" autocomplete="off" />
+            </div>
+          </div>
+          <div id="campaignsGrid" class="campaigns-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
+          <div class="panel-heading compact">
+            <p class="panel-lede">以平台目標查看排程、發布結果、錯誤與重試。</p>
+            <a class="btn-text" href="#/calendar" data-view-target="schedule" data-route-target="calendar">查看日曆 →</a>
+          </div>
+          <div class="module-summary-grid" id="publishingSummary" aria-label="發布摘要"></div>
+          <div class="module-toolbar" aria-label="發布紀錄篩選工具">
+            <div class="field module-filter-field">
+              <span id="publishingStatusFilterLabel" class="field-label">結果</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingStatusFilter" role="radiogroup" aria-labelledby="publishingStatusFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="queue" /><span>進行中</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="success" /><span>成功</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="attention" /><span>需處理</span></label>
+              </div>
+            </div>
+            <div class="field module-filter-field">
+              <span id="publishingPlatformFilterLabel" class="field-label">平台</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingPlatformFilter" role="radiogroup" aria-labelledby="publishingPlatformFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="all" checked /><span>全部平台</span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+              </div>
+            </div>
+          </div>
+          <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="insightsPanel" data-view-panel="insights">
+          <div class="panel-heading compact">
+            <p class="panel-lede">依 Facebook、Instagram、Threads 分頁查看本機發布漏斗與平台真實成效。沒同步到的數字不會用猜測補上。</p>
+            <a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">管理平台 →</a>
+          </div>
+          <div class="module-toolbar insights-toolbar" aria-label="成效平台與區間">
+            <div class="field module-filter-field">
+              <span id="insightsPlatformLabel" class="field-label">平台</span>
+              <div class="radio-pill-group module-filter-pills" id="insightsPlatformTabs" role="tablist" aria-labelledby="insightsPlatformLabel"></div>
+            </div>
+            <div class="field">
+              <span id="insightsRangeLabel" class="field-label">帳號區間</span>
+              <div class="radio-pill-group module-filter-pills" id="insightsRangeFilter" role="radiogroup" aria-labelledby="insightsRangeLabel">
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="7" checked /><span>近 7 日</span></label>
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="28" /><span>近 28 日</span></label>
+                <label class="radio-pill"><input type="radio" name="insightsRange" value="90" /><span>近 90 日</span></label>
+              </div>
+            </div>
+            <button type="button" id="btnRefreshInsights" class="btn-test" aria-label="重新同步此平台成效">↻ 重新同步</button>
+          </div>
+          <div id="insightsSourceNotice" class="insights-source-note" role="note"></div>
+          <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="此平台營運摘要"></div>
+          <div id="insightsPlatformDetail" class="insights-platform-detail" aria-live="polite"></div>
+          <section class="form-group-card best-times-card" id="bestTimesCard" aria-live="polite"></section>
+          <section class="form-group-card repurpose-card" id="repurposeCard" aria-live="polite"></section>
+        </section>
+        <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
+          <div class="panel-heading compact">
+            <p class="panel-lede">依平台分頁查看最近 50 則對話與來回內容。對方名稱來自平台參加者，不是本機猜測。</p>
+            <div class="panel-heading-actions">
+              <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="inbox" aria-label="開啟 Meta Business Suite 收件匣">開啟 Business Suite</button>
+              <a class="btn-secondary" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台</a>
+            </div>
+          </div>
+            <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註、同步 cursor 與 webhook 同步提示只保存本機 metadata，不建立永久訊息倉儲。Webhook 會讓下一次讀取從最新資料重新同步。</span></div>
+          <div class="inbox-toolbar" aria-label="收件匣篩選">
+            <div class="radio-pill-group" id="inboxPlatformTabs" role="tablist" aria-label="收件匣平台"></div>
+            <div class="radio-pill-group" id="inboxFilters" role="radiogroup" aria-label="收件匣篩選">
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="all" checked /><span>全部已讀取</span></label>
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="unread" /><span>只看未讀</span></label>
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="needsReply" /><span>只看待回</span></label>
+            </div>
+            <button class="btn-test" id="refreshInboxButton" type="button">↻ 重新同步</button>
+            <span class="helper" id="inboxFilterScope">篩選只作用於本次從平台讀到的資料。</span>
+          </div>
+          <fieldset class="form-group-card saved-replies-card" id="savedRepliesCard" data-required-permission="template.manage">
+            <legend class="group-title">Saved replies</legend>
+            <p class="helper">儲存常用短句；套用後仍可編輯，按下送出前不會自動回覆平台使用者。</p>
+            <form id="savedReplyForm">
+              <input id="savedReplyId" type="hidden" />
+              <div class="field-row">
+                <div class="field"><label for="savedReplyTitle" class="field-label">名稱</label><input id="savedReplyTitle" type="text" maxlength="80" placeholder="例：感謝支持" required /></div>
+                <div class="field"><label for="savedReplyShortcut" class="field-label">快捷名稱 <span class="field-optional">(選填)</span></label><input id="savedReplyShortcut" type="text" maxlength="40" placeholder="例：thanks" /></div>
+              </div>
+              <div class="field"><label for="savedReplyText" class="field-label">回覆內容</label><textarea id="savedReplyText" rows="2" maxlength="2000" placeholder="輸入可重用的回覆短句…" required></textarea></div>
+              <div class="action-box"><button class="btn-secondary" id="savedReplySaveButton" type="submit">儲存 Saved reply</button><button class="btn-text is-hidden" id="savedReplyCancelButton" type="button">取消編輯</button><span class="test-result" id="savedReplyStatus" aria-live="polite"></span></div>
+            </form>
+            <div id="savedReplyList" class="saved-reply-list" aria-live="polite"></div>
+          </fieldset>
+          <div id="inboxPlatformGrid" class="inbox-platform-grid" aria-live="polite"></div>
+        </section>
+        <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
+          <div class="panel-heading compact">
+            <p class="panel-lede">集中查看目前品牌的多平台連線狀態與可用格式。Token 請到設定填寫。</p>
+            <a class="btn-secondary" href="#/settings" data-view-target="settings" data-route-target="settings">⚙️ 前往設定</a>
+          </div>
+          <details class="disclosure compact" data-required-permission="account.manage">
+            <summary>📘 簡易指南：如何完成平台連線？ <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <div class="guide-step-card">
+                <ol class="guide-list">
+                  <li><strong>步驟 1</strong>：前往 <a class="field-link" href="#/settings" data-view-target="settings" data-route-target="settings">⚙️ 設定</a> 填入 Facebook、Instagram 或 Threads 的連線金鑰。</li>
+                  <li><strong>步驟 2</strong>：點擊「🧪 測試連線」確認回傳成功（綠燈）。</li>
+                  <li><strong>步驟 3</strong>：回到本頁即可即時掌握各平台的連線狀態與可用功能！</li>
+                </ol>
+              </div>
+            </div>
+          </details>
+          <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
+          <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
+          <details class="disclosure compact queue-settings-wrap" data-required-permission="schedule.manage">
+            <summary>發布佇列 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+          <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard">
+            <legend class="group-title">發布佇列</legend>
+            <p class="helper">為每個平台連線設定固定時段；排程時選擇「加入佇列」會自動找下一個空檔。</p>
+            <form id="queueForm">
+              <div class="field-row">
+                <div class="field">
+                  <label for="queueAccount" class="field-label">設定平台連線</label>
+                  <select id="queueAccount"></select>
+                </div>
+                <div class="field">
+                  <label for="queueTimeZone" class="field-label">時區</label>
+                  <input id="queueTimeZone" type="text" placeholder="Asia/Taipei" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field-row queue-toggle-row">
+                <div class="field"><label class="checkbox-field"><input id="queueEnabled" type="checkbox" /><span>啟用發布佇列</span></label></div>
+                <div class="field"><label class="checkbox-field"><input id="queuePaused" type="checkbox" /><span>暫停新內容加入</span></label></div>
+              </div>
+              <div class="field queue-slots-field">
+                <span class="field-label">固定時段</span>
+                <div id="queueSlots" class="queue-slots"></div>
+                <button class="btn-secondary" id="queueAddSlot" type="button">＋ 新增時段</button>
+              </div>
+              <div class="action-box">
+                <button class="primary-button" id="queueSaveButton" type="submit">儲存佇列設定</button>
+                <span class="test-result" id="queueStatus" aria-live="polite"></span>
+              </div>
+            </form>
+          </fieldset>
+            </div>
+          </details>
+>>>>>>> origin/main
         </section>
 
         <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">

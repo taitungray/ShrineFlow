@@ -313,6 +313,8 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
   align-items: center;
   gap: 12px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -350,8 +352,12 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
 .record-arrow { color: var(--accent); font-size: 1.2rem; }
 
 .list-pager {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-top: 12px;
   padding-top: 12px;
+  overflow-x: clip;
   border-top: 1px solid var(--border);
 }
 
@@ -361,6 +367,9 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
   align-items: center;
   justify-content: space-between;
   gap: 10px 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .list-pager-meta {
@@ -375,6 +384,8 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .list-pager-nav,
@@ -508,8 +519,47 @@ html:not(.has-session) .auth-required > :not(#authGate):not(#portraitLock) { dis
     width: 100%;
   }
 
+  .list-pager-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+
   .list-pager-nav {
-    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+  }
+
+  .list-pager-pages {
+    grid-column: 1 / -1;
+    order: 3;
+    justify-content: center;
+  }
+
+  .list-pager-page {
+    flex: 0 0 auto;
+    min-width: 44px;
+    padding: 8px 10px;
+  }
+
+  .schedule-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .schedule-card em {
+    margin-left: 0;
+  }
+
+  .schedule-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .schedule-actions .btn-text {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
   }
 }
 
