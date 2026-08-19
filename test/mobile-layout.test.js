@@ -67,8 +67,10 @@ function mediaBlocks(css, maxWidthPx) {
 }
 
 function ruleBodies(css, selector) {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return [...css.matchAll(new RegExp(`${escaped}\\s*\\{([^}]+)\\}`, 'g'))].map((match) => match[1]);
+  const pattern = selector
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\s+/g, '\\s+');
+  return [...css.matchAll(new RegExp(`${pattern}\\s*\\{([^}]+)\\}`, 'g'))].map((match) => match[1]);
 }
 
 function lastDecls(css, selector) {
@@ -155,11 +157,17 @@ test('phone content cards wrap actions instead of shoving them off-screen', asyn
   const css = await loadCss('public/style.css');
   const phone = [mediaBlocks(css, 767), mediaBlocks(css, 768)].join('\n');
   const card = lastDecls(phone, '.content-card');
+  const main = lastDecls(phone, '.content-card .record-card-main');
   const side = lastDecls(phone, '.content-card-side');
+  const pubMain = lastDecls(phone, '.publishing-log-card .record-card-main');
+  const pubSide = lastDecls(phone, '.publishing-log-card .content-card-side');
 
   assert.match(card, /flex-wrap\s*:\s*wrap/, 'nowrap content cards push 封存/隱藏/複製 past the phone viewport');
   assert.doesNotMatch(card, /flex-wrap\s*:\s*nowrap/, 'phone content-card must not keep the desktop single-row lock');
+  assert.match(main, /flex\s*:\s*1\s+1\s+100%|width\s*:\s*100%/, 'record-card-main must take full width on phone to force action wrap');
   assert.match(side, /flex\s*:\s*1\s+1\s+100%|flex-basis\s*:\s*100%|width\s*:\s*100%/, 'action column must drop to its own row on phone');
+  assert.match(pubMain, /flex\s*:\s*1\s+1\s+100%|width\s*:\s*100%/, 'publishing log card main must take full width on phone');
+  assert.match(pubSide, /flex\s*:\s*1\s+1\s+100%|flex-basis\s*:\s*100%|width\s*:\s*100%/, 'publishing log card side must take full width on phone');
 });
 
 test('phone chrome uses the header and does not double-pad the bottom nav', async () => {
@@ -172,6 +180,20 @@ test('phone chrome uses the header and does not double-pad the bottom nav', asyn
   assert.doesNotMatch(heading, /display\s*:\s*none/, 'hiding the page title leaves a blank flex hole beside the menu button');
   assert.match(leading, /flex\s*:\s*1/, 'page title must consume the leftover header space');
   assert.doesNotMatch(shell, /safe-area-inset-bottom/, 'shell + body both adding safe-area leaves a dead band above the bottom nav');
+});
+
+test('phone toolbars and filters reset flex-basis to avoid vertical empty space', async () => {
+  const css = await loadCss('public/style.css');
+  const phone = mediaBlocks(css, 767);
+  const moduleFields = lastDecls(phone, '.module-search-field, .module-filter-field');
+  const contentFilter = lastDecls(phone, '.content-toolbar-main .content-filter-field, .content-search-field');
+  const toolbarFields = lastDecls(phone, '.module-toolbar .field, .content-toolbar .field, .insights-toolbar .field, .inline-field');
+  const filterPills = lastDecls(phone, '.module-filter-pills');
+
+  assert.match(moduleFields, /flex\s*:\s*0\s+0\s+auto/, 'module search and filter fields must reset flex-basis so column toolbar does not stretch empty height');
+  assert.match(contentFilter, /flex\s*:\s*0\s+0\s+auto/, 'content search and filter fields must reset flex-basis on phone');
+  assert.match(toolbarFields, /flex\s*:\s*0\s+0\s+auto/, 'toolbar fields must reset flex-basis on phone');
+  assert.match(filterPills, /min-height\s*:\s*0/, 'module filter pills must drop desktop min-height');
 });
 
 test('phone viewports do not overflow any panel or inner tab', async () => {

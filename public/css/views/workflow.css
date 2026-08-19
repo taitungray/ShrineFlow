@@ -514,6 +514,13 @@ a.content-card-action {
     padding-bottom: 12px;
   }
 
+  .content-toolbar-main .content-filter-field,
+  .content-search-field {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
   .content-more-filters,
   .content-platform-filter-field {
     grid-column: auto;
@@ -612,7 +619,8 @@ a.content-card-action {
   }
 
   .content-card .record-card-main {
-    flex: 1 1 0;
+    flex: 1 1 100%;
+    width: 100%;
     min-width: 0;
   }
 

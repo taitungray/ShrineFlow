@@ -457,6 +457,7 @@ button.module-summary-card:focus-visible {
 .publishing-log-card {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
   gap: 10px;
   padding: 14px;
   border-radius: var(--r-md);
@@ -471,6 +472,7 @@ button.module-summary-card:focus-visible {
   align-items: flex-start;
   gap: 12px;
   width: 100%;
+  flex: 0 0 auto;
   min-width: 0;
   text-align: left;
   border: none;
@@ -563,6 +565,8 @@ button.module-summary-card:focus-visible {
   justify-content: space-between;
   gap: 10px;
   width: 100%;
+  flex: 1 1 100%;
+  min-width: 0;
   padding-top: 10px;
   border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
@@ -845,28 +849,37 @@ button.module-summary-card:focus-visible {
 
   .module-search-field,
   .module-filter-field {
+    flex: 0 0 auto;
     min-width: 0;
     width: 100%;
   }
 
   .module-toolbar .field,
   .content-toolbar .field,
-  .insights-toolbar .field {
+  .insights-toolbar .field,
+  .inline-field {
+    flex: 0 0 auto;
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    min-width: 0;
   }
 
   .module-toolbar .radio-pill-group,
   .content-toolbar .radio-pill-group,
   .insights-toolbar .radio-pill-group,
+  .inline-field > .radio-pill-group,
   .module-toolbar input,
   .content-toolbar input,
-  .insights-toolbar input {
+  .insights-toolbar input,
+  .inline-field > input {
     flex: 0 1 auto;
     width: 100%;
   }
 
   .module-filter-pills {
+    grid-template-columns: repeat(auto-fit, minmax(3.8rem, 1fr));
+    min-height: 0;
     justify-content: flex-start;
   }
 
@@ -954,5 +967,29 @@ button.module-summary-card:focus-visible {
   .queue-slot-row .btn-text {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+
+  .publishing-log-card {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .publishing-log-card .record-card-main {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .publishing-log-card .content-card-side {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 }

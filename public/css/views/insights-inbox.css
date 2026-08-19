@@ -900,14 +900,17 @@
 
   .inbox-toolbar .radio-pill-group,
   .inbox-toolbar .helper,
-  .inbox-toolbar .btn-test {
-    flex: 1 1 auto;
+  .inbox-toolbar .btn-test,
+  .insights-toolbar .btn-test {
+    flex: 0 0 auto;
     width: 100%;
     min-width: 0;
   }
 
-  .inbox-toolbar .btn-test {
+  .inbox-toolbar .btn-test,
+  .insights-toolbar .btn-test {
     min-height: 44px;
+    justify-content: center;
   }
 
   .inbox-platform-card,

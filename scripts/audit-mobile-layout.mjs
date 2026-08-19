@@ -174,6 +174,15 @@ function auditPage() {
             host.after(nav);
           }
         }
+        if (name === 'publishing') {
+          const host = document.getElementById('publishingLogList');
+          if (host) {
+            host.className = 'record-list content-list publishing-log-list';
+            if (!host.querySelector('.publishing-log-card')) {
+              host.innerHTML = '<article class="record-card content-card publishing-log-card" data-status="scheduled"><button class="record-card-main" type="button"><span class="record-thumb">🖼</span><span class="record-body"><strong>週末工坊體驗與預約邀請</strong><small>Facebook 粉專 · 貼文 · 排程：2026-08-20 10:00</small><span>親手為神像上色完成！看到成品的那一刻，心中滿滿的成就感與恭敬。細心彩繪出金耀戰甲與莊嚴神韻…</span><span class="content-platforms"><span class="platform-chip" data-platform="facebook">Facebook</span></span></span></button><span class="content-card-side"><em class="content-status" data-status="scheduled">已排程</em><span class="content-card-actions"><button class="content-card-action" type="button">查看內容</button><button class="content-card-action" type="button">前往日曆</button></span></span></article>';
+            }
+          }
+        }
         document.body.offsetHeight;
         const hits = overflowHits();
         const scrollOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth;
