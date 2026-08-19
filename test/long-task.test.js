@@ -212,3 +212,52 @@ test('waitForBackgroundJob abort clears pending so the composer can unlock', asy
   await assert.rejects(promise, /取消/);
   assert.equal(readPendingLongTask(storage), null);
 });
+
+test('waitForPublishTarget abort signal stops polling and clears pending', async () => {
+  const storage = installSessionStorage();
+  const { waitForPublishTarget, readPendingLongTask } = await import('../public/modules/long-task.js');
+  const controller = new AbortController();
+  const promise = waitForPublishTarget({
+    postId: 'post-cancel',
+    targetId: 't-cancel',
+    loadPost: async () => ({ id: 'post-cancel', targets: [{ id: 't-cancel', status: 'publishing' }] }),
+    intervalMs: 15,
+    timeoutMs: 500,
+    storage,
+    signal: controller.signal,
+    document: createVisibilityDocument('visible').document,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  controller.abort();
+  await assert.rejects(promise, (error) => {
+    assert.equal(error.code, 'PUBLISH_ABORTED');
+    return true;
+  });
+  assert.equal(readPendingLongTask(storage), null);
+});
+
+test('publishTargetWithRecovery abort signal immediately rethrows and clears pending', async () => {
+  const storage = installSessionStorage();
+  const { publishTargetWithRecovery, readPendingLongTask } = await import('../public/modules/long-task.js');
+  const controller = new AbortController();
+  controller.abort();
+  await assert.rejects(
+    () => publishTargetWithRecovery({
+      api: async () => {
+        const error = new Error('The user aborted a request.');
+        error.name = 'AbortError';
+        throw error;
+      },
+      postId: 'post-abort',
+      targetId: 't-abort',
+      signal: controller.signal,
+      storage,
+      loadPost: async () => ({ id: 'post-abort', targets: [{ id: 't-abort', status: 'publishing' }] }),
+    }),
+    (error) => {
+      assert.equal(error.name, 'AbortError');
+      return true;
+    },
+  );
+  assert.equal(readPendingLongTask(storage), null);
+});

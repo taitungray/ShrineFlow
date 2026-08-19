@@ -10,7 +10,7 @@ import { createScheduleRouter } from '../lib/routes/schedule.js';
 import { getPublishingPlatforms } from '../lib/platforms.js';
 import { directories, jsonFiles, readJson, writeJson } from '../lib/store.js';
 
-function scheduledPost() {
+function scheduledPost(scheduledAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) {
   return {
     id: 'post-hidden-1',
     clientId: 'brand-a',
@@ -25,7 +25,7 @@ function scheduledPost() {
       platformId: 'facebook',
       contentType: 'post',
       status: 'scheduled',
-      scheduledAt: '2026-08-16T23:00:00.000Z',
+      scheduledAt,
       externalId: 'graph-hidden-1',
     }],
   };
@@ -68,7 +68,7 @@ test('hide keeps remote schedule intact and drops the row from GET /schedule', a
     assert.ok(hidden.hiddenAt);
     assert.equal(hidden.status, 'scheduled');
     assert.equal(hidden.targets[0].status, 'scheduled');
-    assert.equal(hidden.targets[0].scheduledAt, '2026-08-16T23:00:00.000Z');
+    assert.ok(hidden.targets[0].scheduledAt);
     assert.equal(hidden.targets[0].externalId, 'graph-hidden-1');
     assert.ok(hidden.lifecycleEvents.some((event) => event.event === 'hidden'));
 

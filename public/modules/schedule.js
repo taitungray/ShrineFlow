@@ -430,6 +430,19 @@ export function initScheduleDialog(refreshListsFn) {
         if (!window.confirm(`確定立刻重發「${platformName}」？`)) return;
         button.dataset.busy = 'true';
         button.disabled = true;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner"></span> 重發中…';
+
+        const handleBeforeUnload = (event) => {
+          event.preventDefault();
+          event.returnValue = '';
+          return '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        const abortController = new AbortController();
+        const timeoutTimer = window.setTimeout(() => abortController.abort(), 45_000);
+
         try {
           showToast('重發中…', 'info');
           await publishTargetWithRecovery({
@@ -437,20 +450,29 @@ export function initScheduleDialog(refreshListsFn) {
             postId: item.postId || button.dataset.postId,
             targetId: item.targetId,
             createIdempotencyKey,
+            signal: abortController.signal,
+            timeoutMs: 45_000,
             loadPost: async () => {
               const postId = item.postId || button.dataset.postId;
-              const posts = await api(clientQuery('/api/posts'));
+              const posts = await api(clientQuery('/api/posts'), { signal: abortController.signal });
               return (Array.isArray(posts) ? posts : []).find((entry) => entry.id === postId) || null;
             },
           });
           if (typeof refreshListsFn === 'function') await refreshListsFn();
           showToast(`${platformName} 已重發成功。`, 'success');
         } catch (error) {
-          if (typeof refreshListsFn === 'function') await refreshListsFn();
-          showToast(error.message || '重發失敗。', 'error');
+          if (typeof refreshListsFn === 'function') await refreshListsFn().catch(() => {});
+          const isTimeout = abortController.signal.aborted || error?.code === 'PUBLISH_ABORTED';
+          const errorMsg = isTimeout
+            ? '重發等待超時，請檢查網路連線。'
+            : (error.message || '重發失敗。');
+          showToast(errorMsg, 'error');
         } finally {
+          window.clearTimeout(timeoutTimer);
+          window.removeEventListener('beforeunload', handleBeforeUnload);
           button.dataset.busy = 'false';
           button.disabled = false;
+          button.innerHTML = originalText;
         }
         return;
       }
