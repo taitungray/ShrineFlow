@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createScheduler, shouldClaimTargetForLocalPublish } from '../lib/scheduler.js';
+import { createScheduler, reconcilePassedNativeSchedules, shouldClaimTargetForLocalPublish } from '../lib/scheduler.js';
 import { directories, jsonFiles, readJson, writeJson } from '../lib/store.js';
 
 const originalJsonFiles = { ...jsonFiles };
@@ -307,4 +307,31 @@ test('processDueSchedules records a bounded failure notification', async () => {
   assert.equal(notifications.items.length, 1);
   assert.equal(notifications.items[0].targetId, 'target-failed');
   assert.equal(notifications.items[0].message, 'Threads temporary failure');
+});
+
+test('reconcilePassedNativeSchedules marks passed facebook native schedules as published', async () => {
+  await writeJson(jsonFiles.posts, [{
+    id: 'post-fb-native-passed',
+    clientId: 'client-1',
+    contentTopic: '邢府三千歲',
+    facebook: '親手彩繪的邢府三千歲神尊終於完成了！',
+    status: 'scheduled',
+    targets: [{
+      id: 'target-fb-native',
+      accountId: 'facebook:1',
+      platformId: 'facebook',
+      contentType: 'post',
+      status: 'scheduled',
+      scheduledAt: '2026-08-18T21:04:00.000Z',
+      externalId: 'fb-graph-native-123',
+    }],
+  }]);
+
+  await reconcilePassedNativeSchedules({ now: new Date('2026-08-19T08:00:00.000Z') });
+
+  const posts = await readJson(jsonFiles.posts, []);
+  assert.equal(posts[0].status, 'published');
+  assert.equal(posts[0].targets[0].status, 'published');
+  assert.equal(posts[0].targets[0].publishedAt, '2026-08-18T21:04:00.000Z');
+  assert.equal(posts[0].facebookPostId, 'fb-graph-native-123');
 });

@@ -113,6 +113,7 @@ export async function runPostAction(action, postId) {
     'promote-idea': '轉成草稿',
     hide: '隱藏',
     unhide: '取消隱藏',
+    'mark-published': '標記為已發布',
   };
   const actionName = actionNames[action] || '操作';
   if (!window.confirm(`確定要${actionName}這篇貼文嗎？`)) return;
@@ -145,6 +146,7 @@ async function runBatchPostAction(action) {
     archive: '封存',
     restore: '還原',
     'promote-idea': '轉成草稿',
+    'mark-published': '標記為已發布',
   };
   const actionName = actionNames[action] || '批次操作';
   const count = selectedPostIds.size;
@@ -220,13 +222,15 @@ export function renderPosts() {
       post.archivedAt ? '封存：' + formatDate(post.archivedAt) : '',
       post.hiddenAt ? '隱藏：' + formatDate(post.hiddenAt) : '',
     ].filter(Boolean).join(' · ');
+    const isScheduled = status === 'scheduled' || targets.some((target) => target.status === 'scheduled');
     const lifecycleActions = contentStage === 'idea'
       ? '<button class="content-card-action" type="button" data-post-action="promote-idea" data-post-id="' + escapeHtml(post.id) + '">轉成草稿</button>'
       : status === 'archived'
       ? '<button class="content-card-action" type="button" data-post-action="restore" data-post-id="' + escapeHtml(post.id) + '">還原</button>'
       : post.hiddenAt
       ? '<button class="content-card-action" type="button" data-post-action="unhide" data-post-id="' + escapeHtml(post.id) + '">取消隱藏</button>'
-      : '<button class="content-card-action" type="button" data-post-action="archive" data-post-id="' + escapeHtml(post.id) + '">封存</button>'
+      : (isScheduled ? '<button class="content-card-action" type="button" data-post-action="mark-published" data-post-id="' + escapeHtml(post.id) + '">已發布</button>' : '')
+        + '<button class="content-card-action" type="button" data-post-action="archive" data-post-id="' + escapeHtml(post.id) + '">封存</button>'
         + '<button class="content-card-action" type="button" data-post-action="hide" data-post-id="' + escapeHtml(post.id) + '">隱藏</button>';
     const badgeStatus = post.hiddenAt ? 'hidden' : (contentStage === 'idea' ? 'idea' : status);
     const badgeLabel = post.hiddenAt ? '已隱藏' : (contentStage === 'idea' ? stageLabel : statusLabel(status));

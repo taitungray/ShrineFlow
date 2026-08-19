@@ -160,12 +160,16 @@ export function initSettingsListeners(onSettingsSavedFn) {
           msg.className = 'helper text-success';
         }
         showToast(res.message, 'success');
+        if (state.config) state.config.aiConfigured = true;
+        renderApiStatus();
       } catch (error) {
         if (msg) {
           msg.textContent = error.message;
           msg.className = 'helper text-danger';
         }
         showToast(error.message, 'error');
+        if (state.config) state.config.aiConfigured = false;
+        renderApiStatus();
       }
     });
   }
@@ -195,7 +199,7 @@ export function initSettingsListeners(onSettingsSavedFn) {
             msg.className = res.connected ? 'helper text-success' : 'helper text-danger';
           }
           showToast(message, res.connected ? 'success' : 'error');
-          if (res.connected) await refreshConnectionStatus();
+          await refreshConnectionStatus();
           return;
         }
 
@@ -213,12 +217,21 @@ export function initSettingsListeners(onSettingsSavedFn) {
           msg.className = 'helper text-success';
         }
         showToast(res.message, 'success');
+        if (state.facebookStatus) {
+          state.facebookStatus.connected = true;
+          state.facebookStatus.configured = true;
+        }
+        renderApiStatus();
       } catch (error) {
         if (msg) {
           msg.textContent = error.message;
           msg.className = 'helper text-danger';
         }
         showToast(error.message, 'error');
+        if (state.facebookStatus) {
+          state.facebookStatus.connected = false;
+        }
+        renderApiStatus();
       }
     });
   }

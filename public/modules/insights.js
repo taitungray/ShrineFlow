@@ -359,7 +359,7 @@ function renderPlatformTabs() {
   if (!tabs) return;
   const available = platformIds();
   if (!available.includes(state.insightsPlatform)) state.insightsPlatform = available[0] || 'facebook';
-  const posts = state.posts || [];
+  const posts = (state.posts || []).filter((post) => !post.hiddenAt && post.status !== 'archived');
   tabs.innerHTML = available.map((platformId) => {
     const count = posts.flatMap(targetsOf).filter((target) => target.platformId === platformId).length;
     return platformPillHtml(platformId, {
@@ -531,7 +531,7 @@ export function renderInsights() {
   const rangeInput = document.querySelector('#insightsRangeFilter input[value="' + String(state.insightsRange || 7) + '"]');
   if (rangeInput) rangeInput.checked = true;
 
-  const posts = state.posts || [];
+  const posts = (state.posts || []).filter((post) => !post.hiddenAt && post.status !== 'archived');
   const platformEntries = posts.flatMap((post) => targetsOf(post).map((target) => ({ post, target })))
     .filter((item) => item.target.platformId === platformId);
   const targets = platformEntries.map((item) => item.target);

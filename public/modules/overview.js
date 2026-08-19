@@ -28,7 +28,7 @@ function attentionStatuses() {
 
 function publishingAttentionCount() {
   const schedules = state.schedule || [];
-  const posts = state.posts || [];
+  const posts = (state.posts || []).filter((post) => !post.hiddenAt && post.status !== 'archived');
   const failedSchedules = schedules.filter((item) => attentionStatuses().has(item.status));
   const attentionTargetPostIds = new Set(failedSchedules.map((item) => item.postId).filter(Boolean));
   const partialPosts = posts.filter((post) => post.status === 'partial_success' && !attentionTargetPostIds.has(post.id));
@@ -106,8 +106,13 @@ export function renderOverview() {
   const recentList = $('#overviewRecentList');
 
   const schedules = state.schedule || [];
-  const posts = state.posts || [];
-  const reviewQueue = state.reviewQueue || [];
+  const rawPosts = state.posts || [];
+  const posts = rawPosts.filter((post) => !post.hiddenAt && post.status !== 'archived');
+  const rawReviewQueue = state.reviewQueue || [];
+  const reviewQueue = rawReviewQueue.filter((item) => {
+    const post = rawPosts.find((p) => p.id === (item.postId || item.id));
+    return !post || (!post.hiddenAt && post.status !== 'archived');
+  });
 
   const failedSchedules = schedules.filter((item) => attentionStatuses().has(item.status));
   const scheduledItems = schedules.filter((item) => ['scheduled', 'pending'].includes(item.status));
