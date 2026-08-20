@@ -1,0 +1,257 @@
+        <!-- ========== Composer ========== -->
+        <section class="panel composer-panel is-hidden" id="composerPanel" data-view-panel="composer" data-composer-mode="edit">
+          <div class="composer-shell-header">
+            <div class="composer-header-tools">
+              <div class="autosave-indicator" aria-live="polite">
+                <span class="autosave-dot" aria-hidden="true"></span>
+                <p class="autosave-status" id="autosaveStatus" hidden></p>
+                <button class="btn-text" id="autosaveRetryButton" type="button" hidden>重試儲存</button>
+              </div>
+              <div class="composer-mode-switch" role="tablist" aria-label="Composer 顯示模式">
+                <button class="composer-mode-button active" type="button" data-composer-mode="edit" role="tab" aria-selected="true">編輯</button>
+                <button class="composer-mode-button" type="button" data-composer-mode="preview" role="tab" aria-selected="false">預覽</button>
+              </div>
+            </div>
+          </div>
+
+        <form class="composer-workspace" id="generateForm">
+        <div class="composer-editor-pane">
+          <div class="panel-heading visually-hidden">
+            <h2>內容編輯</h2>
+          </div>
+
+          <fieldset class="form-group-card">
+            <legend class="group-title">素材</legend>
+            <div class="upload-zone" id="uploadZone">
+              <input id="imageInput" name="media" type="file" accept="image/*,video/*" multiple aria-label="上傳素材" />
+              <label for="imageInput" class="upload-prompt">
+                <span class="upload-icon">↥</span>
+                <strong>拖曳或點擊上傳素材</strong>
+                <small>JPG / PNG / MP4（單檔 ≤ 20MB）</small>
+              </label>
+              <div id="uploadPreviewGallery" class="media-gallery upload-preview-gallery" aria-label="已選擇的媒體"></div>
+            </div>
+            <div class="media-source-actions">
+              <button class="btn-secondary" id="pickLibraryMediaButton" type="button">從素材庫選</button>
+              <p class="helper">最多 10 個，第 1 張為主圖。</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-group-card">
+            <legend class="group-title">母稿</legend>
+            <div class="field">
+              <span id="createContentTypeLabel" class="field-label">格式</span>
+              <div class="radio-pill-group" id="createContentType" role="radiogroup" aria-labelledby="createContentTypeLabel"></div>
+            </div>
+            <div class="field">
+              <span id="createContentSettingsLabel" class="field-label">格式說明</span>
+              <div id="createContentSettings" class="content-settings" aria-labelledby="createContentSettingsLabel"></div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="contentTopic" class="field-label-group">
+                  <span class="field-label">內容主題或對象 <span class="field-required">*</span></span>
+                </label>
+                <input id="contentTopic" name="contentTopic" type="text" placeholder="例：新品上市、週末活動、品牌故事" autocomplete="off" required />
+                <div class="topic-chips" id="topicChips" aria-label="常見主題快捷">
+                  <button type="button" class="topic-chip" data-topic="✨ 新品上市：工藝細節與設計亮點">✨ 新品上市</button>
+                  <button type="button" class="topic-chip" data-topic="🎉 週末活動：限時體驗與預約邀請">🎉 週末活動</button>
+                  <button type="button" class="topic-chip" data-topic="📢 重要公告：最新營業時間與服務升級">📢 重要公告</button>
+                  <button type="button" class="topic-chip" data-topic="💡 品牌日常：工坊幕後與職人堅持">💡 品牌日常</button>
+                  <button type="button" class="topic-chip" data-topic="🌸 節慶祝福：願平安順心，福澤常在">🌸 節慶祝福</button>
+                </div>
+              </div>
+              <div class="field">
+                <span id="postTypeLabel" class="field-label">內容方向</span>
+                <div class="radio-pill-group" role="radiogroup" aria-labelledby="postTypeLabel">
+                  <label class="radio-pill">
+                    <input id="postTypeIntro" type="radio" name="postType" value="intro" checked />
+                    <span>品牌／作品介紹</span>
+                  </label>
+                  <label class="radio-pill">
+                    <input id="postTypeAnnouncement" type="radio" name="postType" value="announcement" />
+                    <span>活動／公告</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <details class="disclosure compact composer-ai-notes">
+              <summary>給 AI 的補充 <span class="field-optional">(選填)</span> <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="field">
+                  <label for="extraNotes" class="field-label-group">
+                    <span class="field-label">補充說明</span>
+                  </label>
+                  <textarea id="extraNotes" name="extraNotes" rows="2" placeholder="例：希望帶到金箔在光影下的典雅質感"></textarea>
+                </div>
+              </div>
+            </details>
+
+            <div class="field" id="platformCopyField">
+              <div class="field-header-row">
+                <label for="facebookText" class="field-label" id="accountCopyLabel">文案</label>
+                <span class="char-count-badge" id="facebookCharCount">0 字</span>
+              </div>
+              <textarea id="facebookText" rows="7" placeholder="直接寫，或按下方 AI 產生"></textarea>
+            </div>
+            <div class="field is-hidden" id="reelTextField">
+              <div class="field-header-row">
+                <label for="reelText" class="field-label">短影音文案</label>
+                <span class="char-count-badge" id="reelCharCount">0 字</span>
+              </div>
+              <textarea id="reelText" rows="4" placeholder="短影音用的描述文字"></textarea>
+            </div>
+            <div class="action-box platform-copy-actions">
+              <span class="helper helper-live" id="platformCopyMode" data-mode="inherited">沿用母稿</span>
+              <button class="btn-secondary" id="btnRewritePlatform" type="button" aria-label="AI 改寫此平台文案">AI 改寫此平台</button>
+              <button class="btn-text" id="btnRestoreMotherCopy" type="button" aria-label="還原母稿" disabled>還原母稿</button>
+            </div>
+            <div class="field">
+              <label for="hashtagsText" class="field-label">Hashtags 標籤 <span class="field-optional">(選填)</span></label>
+              <textarea id="hashtagsText" class="hashtag-field" rows="3" placeholder="選填，多個標籤請用空格隔開，如 #品牌名稱 #新品"></textarea>
+              <div class="hashtag-chips" id="quickHashtagChips" role="group" aria-label="快捷標籤">
+                <button type="button" class="hashtag-chip" data-tag="#新品上市">＋ #新品上市</button>
+                <button type="button" class="hashtag-chip" data-tag="#限時特惠">＋ #限時特惠</button>
+                <button type="button" class="hashtag-chip" data-tag="#熱門推薦">＋ #熱門推薦</button>
+                <button type="button" class="hashtag-chip" data-tag="#門市資訊">＋ #門市資訊</button>
+                <button type="button" class="hashtag-chip" data-tag="#抽獎活動">＋ #抽獎活動</button>
+              </div>
+            </div>
+            <div class="field visually-hidden">
+              <label for="defaultHashtags" class="field-label">AI Hashtag</label>
+              <input id="defaultHashtags" name="defaultHashtags" type="text" value="" />
+            </div>
+
+          <div class="composer-generate-action">
+            <div class="composer-generate-buttons">
+              <button class="primary-button" type="submit" id="generateButton" aria-label="AI 產生文案"><span>✦</span> AI 產生文案</button>
+              <button class="btn-secondary" type="button" id="cancelGenerateButton" hidden aria-label="取消等待 AI 產生">取消等待</button>
+            </div>
+            <p class="form-hint" id="formMessage"></p>
+          </div>
+          </fieldset>
+
+          <details class="disclosure compact composer-advanced">
+            <summary>進階排程與版本 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+          <fieldset class="form-group-card evergreen-card" id="evergreenCard" data-required-permission="schedule.manage">
+            <legend class="group-title">週期再排程</legend>
+            <p class="helper">只從已發布內容建立下一篇本機排程；有上限、可暫停。</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="evergreenIntervalDays" class="field-label">間隔天數</label>
+                <input id="evergreenIntervalDays" type="number" min="1" max="90" value="7" />
+              </div>
+              <div class="field">
+                <label for="evergreenMaxOccurrences" class="field-label">最多再發布</label>
+                <input id="evergreenMaxOccurrences" type="number" min="1" max="50" value="12" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="evergreenStartAt" class="field-label">第一次再排程時間 <span class="field-optional">(選填)</span></label>
+              <input id="evergreenStartAt" type="datetime-local" />
+              <p class="helper helper-live" id="evergreenStartHint">留白則從來源 target 的發布時間加上間隔天數計算。</p>
+            </div>
+            <div class="action-box">
+              <button class="btn-secondary" id="evergreenEnableButton" type="button">啟用／更新</button>
+              <button class="btn-secondary" id="evergreenPauseButton" type="button">暫停</button>
+              <button class="btn-text schedule-action-danger" id="evergreenDisableButton" type="button">停用</button>
+            </div>
+            <p class="form-hint" id="evergreenStatus" aria-live="polite">請先載入已發布內容。</p>
+          </fieldset>
+
+          <section class="version-history" id="versionHistory" hidden aria-labelledby="versionHistoryTitle">
+            <div class="version-history-heading">
+              <h3 id="versionHistoryTitle">版本歷史</h3>
+              <div class="version-history-actions">
+                <button class="btn-text" id="createVersionButton" type="button">建立版本</button>
+                <button class="btn-text" id="refreshVersionsButton" type="button" aria-label="重新整理版本歷史">重新整理</button>
+              </div>
+            </div>
+            <div class="version-history-list" id="versionHistoryList" aria-live="polite"></div>
+          </section>
+            </div>
+          </details>
+        </div>
+
+        <section class="composer-preview-pane" id="reviewPanel">
+          <div class="panel-heading">
+            <h2>預覽</h2>
+            <span class="badge" id="draftState">尚未產生</span>
+          </div>
+
+          <fieldset class="form-group-card composer-target-card">
+            <legend class="group-title">發去哪裡</legend>
+            <div class="field">
+              <span id="targetAccountsLabel" class="field-label">發布平台</span>
+              <div id="targetAccountChecks" class="checkbox-pill-group" role="group" aria-labelledby="targetAccountsLabel"></div>
+            </div>
+            <div class="field" id="activeTargetField">
+              <span id="activeTargetLabel" class="field-label">正在看的平台</span>
+              <div id="activeTargetTabs" class="radio-pill-group" role="radiogroup" aria-labelledby="activeTargetLabel"></div>
+            </div>
+          </fieldset>
+
+          <details class="disclosure compact composer-target-advanced">
+            <summary>此平台進階 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <div class="field">
+                <span id="targetContentTypeLabel" class="field-label">此平台格式</span>
+                <div id="targetContentType" class="radio-pill-group" role="radiogroup" aria-labelledby="targetContentTypeLabel"></div>
+                <div id="targetContentSettings" class="content-settings" aria-live="polite"></div>
+              </div>
+              <div class="platform-strategy-card" id="platformStrategyCard" aria-live="polite">
+                <span class="platform-strategy-icon" aria-hidden="true"></span>
+                <div><strong>平台內容策略</strong><p id="platformStrategyText">選取平台後顯示文案與素材建議。</p></div>
+              </div>
+              <div class="field" id="targetScheduleField">
+                <label for="targetScheduledAt" class="field-label">此平台排程時間 <span class="field-optional">(選填)</span></label>
+                <input id="targetScheduledAt" type="datetime-local" />
+                <p class="helper helper-live" id="targetScheduleHint"></p>
+              </div>
+              <div class="field is-hidden" id="targetFirstCommentField">
+                <label for="targetFirstComment" class="field-label">Instagram 首則留言 <span class="field-optional">(選填)</span></label>
+                <textarea id="targetFirstComment" rows="3" maxlength="2000" placeholder="發布後自動留下第一則留言"></textarea>
+                <p class="helper helper-live" id="targetFirstCommentHint"></p>
+              </div>
+            </div>
+          </details>
+
+          <div class="review-preview">
+              <p id="previewPlatformStatus" class="platform-status" aria-live="polite"></p>
+              <div class="preview-image-wrap empty" id="previewImageWrap" hidden>
+                <div id="previewMediaGallery" class="media-gallery preview-media-gallery" aria-label="作品預覽"></div>
+              </div>
+              <article class="copy-card">
+                <div class="copy-card-header">
+                  <h4>貼文預覽</h4>
+                  <div class="preview-header-actions">
+                    <button type="button" class="btn-text copy-preview-btn" id="btnDownloadMedia" title="下載此貼文素材圖片或影片">📥 下載素材</button>
+                    <button type="button" class="btn-text copy-preview-btn" id="btnCopyPreviewText" title="複製貼文文案到剪貼簿">📋 複製文案</button>
+                  </div>
+                </div>
+                <div id="facebookPreview" class="copy-text">尚未產生文案</div>
+                <p id="hashtagsPreview" class="hashtags"></p>
+                <p id="storyPreviewNotice" class="story-preview-notice" hidden></p>
+              </article>
+          </div>
+        </section>
+
+        <div class="composer-dock">
+          <div class="action-row composer-actions">
+            <div class="action-box approval-actions" id="approvalActions">
+              <span class="approval-state-badge" id="approvalStateBadge" aria-live="polite">尚未儲存</span>
+              <button class="btn-secondary permission-hidden" id="submitReviewButton" data-required-permission="content.submit_review" type="button">送出審核</button>
+              <button class="btn-secondary permission-hidden" id="requestChangesButton" data-required-permission="content.approve" type="button">要求修改</button>
+              <button class="primary-button permission-hidden" id="approveButton" data-required-permission="content.approve" type="button">核准版本</button>
+            </div>
+            <button class="btn-save" id="saveButton" type="button" aria-label="儲存草稿" disabled>儲存草稿</button>
+            <button class="btn-dark" id="scheduleButton" type="button" aria-label="排程發布" disabled>排程發布</button>
+            <button class="btn-text composer-publish-now" id="publishNowButton" type="button" aria-label="立即發布" disabled>立即發布</button>
+          </div>
+          <p class="form-hint" id="previewMessage"></p>
+        </div>
+        </form>
+        </section>

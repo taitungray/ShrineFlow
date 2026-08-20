@@ -1,0 +1,56 @@
+
+        <section class='panel is-hidden' id='schedulePanel' data-view-panel='schedule'>
+          <div class="calendar-toolbar" aria-label="日曆控制">
+            <div class="calendar-month-nav">
+              <button class="btn-icon" id="calendarPrevious" type="button" aria-label="上一個日期範圍">‹</button>
+              <strong id="calendarMonthLabel">—</strong>
+              <button class="btn-icon" id="calendarNext" type="button" aria-label="下一個日期範圍">›</button>
+              <button class="btn-text" id="calendarToday" type="button">今天</button>
+            </div>
+            <div class="radio-pill-group calendar-view-switch" id="calendarViewSwitch" role="radiogroup" aria-label="日曆檢視">
+              <label class="radio-pill"><input type="radio" name="calendarView" value="month" checked /><span>月</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="week" /><span>週</span></label>
+              <label class="radio-pill"><input type="radio" name="calendarView" value="list" /><span>列表</span></label>
+            </div>
+            <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="scheduled" aria-label="開啟 Meta Business Suite 排程">開啟 Business Suite</button>
+          </div>
+          <div id="calendarGrid" class="calendar-grid" aria-label="內容日曆"></div>
+          <div class="calendar-agenda">
+            <div class="calendar-list-heading"><h3>發布行程</h3><span class="helper">桌面可拖曳卡片改期；手機請使用改時間</span></div>
+            <p class="helper calendar-connection-notice is-hidden" id="calendarConnectionNotice"></p>
+            <div id="scheduleList" class="list-empty">
+              <div class="empty-state">
+                <span class="empty-icon">📅</span>
+                <p>還沒有排程</p>
+              </div>
+            </div>
+          </div>
+          <section class="form-group-card remote-schedule-card" id="remoteScheduleCard" aria-live="polite"></section>
+          <details class="disclosure compact crisis-pause-card" id="crisisPauseCard" data-required-permission="schedule.manage">
+            <summary>危機暫停 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+            <p class="helper">只處理 ShrineFlow 管理的排程；Facebook 遠端排程會逐筆嘗試取消。</p>
+            <form id="crisisPauseForm">
+              <div class="field">
+                <span class="field-label">暫停範圍</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停範圍">
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="client" checked /><span>目前品牌</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="account" /><span>單一帳號</span></label>
+                  <label class="radio-pill"><input type="radio" name="crisisPauseScope" value="platform" /><span>單一平台</span></label>
+                </div>
+              </div>
+              <div class="field is-hidden" id="crisisPauseAccountField"><label for="crisisPauseAccount" class="field-label">平台連線</label><select id="crisisPauseAccount"></select></div>
+              <div class="field is-hidden" id="crisisPausePlatformField">
+                <span class="field-label">平台</span>
+                <div class="radio-pill-group" role="radiogroup" aria-label="危機暫停平台">
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="facebook" checked /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                  <label class="radio-pill radio-pill-platform"><input type="radio" name="crisisPausePlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+                </div>
+              </div>
+              <div class="field"><label for="crisisPauseReason" class="field-label">原因 <span class="field-optional">(選填)</span></label><input id="crisisPauseReason" type="text" maxlength="500" placeholder="例：活動內容需要全面檢查" /></div>
+              <div class="action-box"><button class="btn-secondary crisis-pause-button" id="crisisPauseButton" type="submit">立即暫停發布</button><span class="test-result" id="crisisPauseStatus" aria-live="polite"></span></div>
+            </form>
+            </div>
+          </details>
+        </section>

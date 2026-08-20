@@ -1,0 +1,269 @@
+        </section>
+        <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
+          <div class="panel-heading compact">
+            <p class="panel-lede">看連線狀態、填 Token、測連線，並設定發布佇列。</p>
+          </div>
+          <nav class="settings-tabs" role="tablist" aria-label="平台連線分頁">
+            <button type="button" class="settings-tab active" role="tab" id="platformsTabOverview" data-platforms-page="overview" aria-controls="platformsPageOverview" aria-selected="true">總覽</button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="platformsTabFacebook" data-platforms-page="facebook" data-required-permission="account.manage" aria-controls="platformsPageFacebook" aria-selected="false" aria-label="Facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /></button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="platformsTabInstagram" data-platforms-page="instagram" data-required-permission="account.manage" aria-controls="platformsPageInstagram" aria-selected="false" aria-label="Instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /></button>
+            <button type="button" class="settings-tab settings-tab-platform" role="tab" id="platformsTabThreads" data-platforms-page="threads" data-required-permission="account.manage" aria-controls="platformsPageThreads" aria-selected="false" aria-label="Threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /></button>
+          </nav>
+          <div class="settings-pages">
+          <section class="settings-page" id="platformsPageOverview" role="tabpanel" data-platforms-page="overview" aria-labelledby="platformsTabOverview">
+          <div class="module-summary-grid" id="platformSummary" aria-label="平台連線摘要"></div>
+          <div id="platformConnectionGrid" class="platform-connection-grid" aria-live="polite"></div>
+          <details class="disclosure compact queue-settings-wrap" data-required-permission="schedule.manage">
+            <summary>發布佇列 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+          <fieldset class="form-group-card queue-settings-card" id="queueSettingsCard">
+            <legend class="group-title">發布佇列</legend>
+            <p class="helper">為每個平台連線設定固定時段；排程時選擇「加入佇列」會自動找下一個空檔。</p>
+            <form id="queueForm">
+              <div class="field-row">
+                <div class="field">
+                  <label for="queueAccount" class="field-label">設定平台連線</label>
+                  <select id="queueAccount"></select>
+                </div>
+                <div class="field">
+                  <label for="queueTimeZone" class="field-label">時區</label>
+                  <input id="queueTimeZone" type="text" placeholder="Asia/Taipei" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field-row queue-toggle-row">
+                <div class="field"><label class="checkbox-field"><input id="queueEnabled" type="checkbox" /><span>啟用發布佇列</span></label></div>
+                <div class="field"><label class="checkbox-field"><input id="queuePaused" type="checkbox" /><span>暫停新內容加入</span></label></div>
+              </div>
+              <div class="field queue-slots-field">
+                <span class="field-label">固定時段</span>
+                <div id="queueSlots" class="queue-slots"></div>
+                <button class="btn-secondary" id="queueAddSlot" type="button">＋ 新增時段</button>
+              </div>
+              <div class="action-box">
+                <button class="primary-button" id="queueSaveButton" type="submit">儲存佇列設定</button>
+                <span class="test-result" id="queueStatus" aria-live="polite"></span>
+              </div>
+            </form>
+          </fieldset>
+            </div>
+          </details>
+          </section>
+          <section class="settings-page is-hidden" id="platformsPageFacebook" role="tabpanel" data-platforms-page="facebook" aria-labelledby="platformsTabFacebook" data-required-permission="account.manage">
+          <fieldset class="form-group-card" id="clientFacebookCard" data-required-permission="account.manage">
+            <legend class="group-title">目前品牌的 Facebook</legend>
+            <p class="helper">貼粉專 ID 與 Page Access Token，儲存後測試。到期日可留白。</p>
+            <div class="field">
+              <label for="settingFacebookPageId" class="field-label">粉專 ID</label>
+              <input id="settingFacebookPageId" type="text" placeholder="100088888888" />
+            </div>
+            <div class="field">
+              <div class="field-label-group">
+                <label for="settingFacebookPageAccessToken" class="field-label">Page Access Token</label>
+                <span class="field-link-row">
+                  <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph Explorer →</a>
+                  <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger →</a>
+                </span>
+              </div>
+              <div class="input-action">
+                <input id="settingFacebookPageAccessToken" type="password" placeholder="EAA..." />
+                <button type="button" id="toggleFbToken" class="btn-icon" aria-label="顯示或隱藏 Page Access Token">顯示</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="settingFacebookTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingFacebookTokenExpiresAt" type="date" />
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnSaveClientFacebook" class="btn-secondary" aria-label="儲存品牌 Facebook 連線">💾 儲存此品牌 Facebook 連線</button>
+              <button type="button" id="btnTestFacebook" class="btn-test" aria-label="測試 Facebook 連線">🧪 測試連線</button>
+              <span id="testFacebookResult" class="test-result"></span>
+            </div>
+            <details class="disclosure compact">
+              <summary>⚙️ 進階設定：Graph 版本與媒體公開網址 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="field"><label for="settingMetaGraphVersion" class="field-label">Graph API 版本</label><input id="settingMetaGraphVersion" type="text" placeholder="v25.0" /></div>
+                <div class="field">
+                  <label for="settingPublicMediaBaseUrl" class="field-label">公開媒體基底網址 <span class="field-optional">(IG／Threads 發布圖片影片時必填)</span></label>
+                  <input id="settingPublicMediaBaseUrl" type="url" placeholder="https://media.shrineflow.uk" />
+                  <div class="guide-tip-box">
+                    💡 <strong>說明：</strong>發布圖片或影片到 Instagram／Threads 時，Meta 伺服器需要能由公開網際網路讀取該圖片（例如 <code>https://media.shrineflow.uk</code>）。若只發布純文字或只發到 Facebook 則留白即可。
+                  </div>
+                </div>
+              </div>
+            </details>
+            <details class="disclosure compact">
+              <summary>📘 簡易教學：3 步驟快速拿到 Facebook 金鑰與粉專 ID <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-quick-links">
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">🔗 1. 開啟 Meta App 後台</a>
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">🔗 2. 開啟 Graph 測試工具</a>
+                  <a class="guide-quick-btn" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">🔗 3. 開啟 Token 延長工具</a>
+                </div>
+
+                <!-- 步驟 1 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">1</span>
+                    <span class="guide-step-title">建立 Meta 應用程式（只需做一次）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>前往 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> ➔ 點右上角 <span class="guide-pill">建立應用程式</span> ➔ 類型選擇 <strong style="color:#e05a2b;">企業 (Business)</strong>。</li>
+                    <li>在「使用案例」勾選：<span class="guide-pill-blue">管理粉絲專頁的所有內容</span>（若要發 IG 順便勾選「管理 Instagram 訊息與內容」）。</li>
+                    <li>建立完成後，到左側選單點 <strong style="color:var(--text-primary);">使用案例 ➔ Pages API ➔ 權限</strong> ➔ 確認並新增：
+                      <ul>
+                        <li><code class="guide-code-box">pages_manage_posts</code>（發布與排程貼文）</li>
+                        <li><code class="guide-code-box">pages_show_list</code>（列出管理的粉專）</li>
+                        <li><code class="guide-code-box">pages_messaging</code>（收件匣回覆私訊）</li>
+                        <li><code class="guide-code-box">pages_manage_metadata</code>（即時 Webhook 通知）</li>
+                        <li><code class="guide-code-box">business_management</code>（企業帳號管理）</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+
+                <!-- 步驟 2 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">2</span>
+                    <span class="guide-step-title">取得粉專 ID 與 Access Token（三動搞定）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API 測試工具</a> ➔ 最上方「Meta 應用程式」選剛剛建立的 App。</li>
+                    <li><strong>確認加入核心發布權限</strong>：在右側「權限 (Permissions)」清單中確認已勾選（若沒有請按 <span class="guide-pill-blue">Add a Permission</span> 搜尋加入）：
+                      <ul>
+                        <li><span class="guide-pill-green">pages_manage_posts</span>（發文必備）</li>
+                        <li><span class="guide-pill-green">pages_show_list</span>（取得粉專清單）</li>
+                        <li><span class="guide-pill-green">pages_messaging</span>（收件匣私訊）</li>
+                        <li><span class="guide-pill-green">pages_manage_metadata</span>（Webhook 通知）</li>
+                        <li><span class="guide-pill-green">business_management</span>（企業管理）</li>
+                      </ul>
+                    </li>
+                    <li>點擊右上方藍色按鈕 <span class="guide-pill-blue">產生存取權杖 (Generate Access Token)</span> ➔ 在跳出視窗中登入並<strong>勾選授權你的粉絲專頁</strong>。</li>
+                    <li>將中間的網址輸入框換成這段代碼（點擊全選複製）：<br /><code class="guide-code-box">me/accounts?fields=id,name,access_token</code><br />然後按右邊的 <span class="guide-pill-blue">提交 (Submit)</span> 按鈕。</li>
+                    <li>在下方回應的內容中，找到你的粉專名稱：
+                      <ul>
+                        <li>把 <code class="guide-code-box">"id": "123456789..."</code> 的數字複製 ➔ 貼到上方的 <strong>Facebook Page ID</strong> 欄位。</li>
+                        <li>把 <code class="guide-code-box">"access_token": "EAA..."</code> 的長字串複製 ➔ 貼到上方的 <strong>Page Access Token</strong> 欄位。</li>
+                      </ul>
+                    </li>
+                    <li>點擊本頁下方的 <span class="guide-pill-green">💾 儲存此品牌 FB 連線</span> ➔ <span class="guide-pill-green">🧪 測試連線</span>，顯示綠色粉專名稱就代表成功連線了！🎉</li>
+                  </ol>
+                </div>
+
+                <!-- 步驟 3 -->
+                <div class="guide-step-card">
+                  <div class="guide-step-header">
+                    <span class="guide-step-num">3</span>
+                    <span class="guide-step-title">換成永久不過期 Token（建議設定）</span>
+                  </div>
+                  <ol class="guide-list">
+                    <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/debug/accesstoken/" target="_blank" rel="noopener">Token Debugger 延伸工具</a>。</li>
+                    <li>把步驟 2 第一次產生的用戶 Token (<code class="guide-code-box">EAA...</code>) 貼進去 ➔ 點 <span class="guide-pill-blue">除錯</span> ➔ 往下拉點擊藍色按鈕 <span class="guide-pill-blue">延伸存取權杖 (Extend Access Token)</span>。</li>
+                    <li>將延長後的 Token 貼回 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> 右側 ➔ 重新按一次 <span class="guide-pill-blue">提交 (Submit)</span> ➔ 複製粉專最新的 <code class="guide-code-box">access_token</code> 覆蓋回本頁儲存即可！</li>
+                  </ol>
+                  <div class="guide-tip-box">
+                    ✨ <strong>永久 Token 驗證：</strong>放進 Token Debugger 查看若顯示 <strong>Expires: Never（從不）</strong>，代表永遠不會過期！
+                  </div>
+                </div>
+
+                <!-- 常見小提醒 -->
+                <div class="guide-warn-box">
+                  🚨 <strong>發文後粉絲看不到？</strong> 請到 <a class="field-link" href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta 應用程式後台</a> ➔ 點你的 App ➔ 右上角將 <span class="guide-pill">開發中 (Development)</span> 切換為 <span class="guide-pill-green">上線 (Live)</span>，所有人就能看見貼文了！
+                </div>
+              </div>
+            </details>
+          </fieldset>
+          </section>
+
+          <section class="settings-page is-hidden" id="platformsPageInstagram" role="tabpanel" data-platforms-page="instagram" aria-labelledby="platformsTabInstagram" data-required-permission="account.manage">
+          <fieldset class="form-group-card" id="clientInstagramCard" data-required-permission="account.manage">
+            <legend class="group-title">目前品牌的 Instagram</legend>
+            <p class="helper">數字 User ID＋Token（常與 Facebook Page Token 相同），不是 @帳號。</p>
+            <div class="field">
+              <label for="settingInstagramUserId" class="field-label">Instagram User ID <span class="field-required">*</span></label>
+              <input id="settingInstagramUserId" type="text" placeholder="17841400000000000" />
+            </div>
+            <div class="field">
+              <div class="field-label-group">
+                <label for="settingInstagramAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+                <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph Explorer →</a>
+              </div>
+              <div class="input-action">
+                <input id="settingInstagramAccessToken" type="password" placeholder="EAA..." />
+                <button type="button" id="toggleInstagramToken" class="btn-icon" aria-label="顯示或隱藏 Instagram Access Token">顯示</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="settingInstagramTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingInstagramTokenExpiresAt" type="date" />
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnSaveClientInstagram" class="btn-secondary" aria-label="儲存品牌 Instagram 連線">💾 儲存此品牌 IG 連線</button>
+              <button type="button" id="btnTestInstagram" class="btn-test" aria-label="測試 Instagram 連線">🧪 測試連線</button>
+              <span id="testInstagramResult" class="test-result"></span>
+            </div>
+            <details class="disclosure compact">
+              <summary>📘 簡易教學：如何取得 Instagram 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li><strong>先決條件</strong>：IG 帳號需為 <span class="guide-pill">專業／商業帳號</span>，並已在手機 IG 設定中綁定此品牌的 Facebook 粉專。</li>
+                    <li><strong>加開權限</strong>：在 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph 測試工具</a> 右側「權限」清單中，確認已勾選 <span class="guide-pill-green">instagram_basic</span> 與 <span class="guide-pill-green">instagram_content_publish</span>（若無請按「Add a Permission」搜尋加入），並重新產生權杖。</li>
+                    <li><strong>查詢 User ID</strong>：網址輸入 <code class="guide-code-box">me/accounts?fields=id,name,instagram_business_account</code> ➔ 按「提交」。</li>
+                    <li><strong>填入資料</strong>：
+                      <ul>
+                        <li>把 <code class="guide-code-box">instagram_business_account.id</code> 的數字貼到 <strong>Instagram User ID</strong>。</li>
+                        <li><strong>Access Token</strong> 直接貼上已包含 IG 權限的 Page Access Token 即可。</li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </details>
+          </fieldset>
+          </section>
+
+          <section class="settings-page is-hidden" id="platformsPageThreads" role="tabpanel" data-platforms-page="threads" aria-labelledby="platformsTabThreads" data-required-permission="account.manage">
+          <fieldset class="form-group-card" id="clientThreadsCard" data-required-permission="account.manage">
+            <legend class="group-title">目前品牌的 Threads</legend>
+            <p class="helper">數字 User ID＋Threads 專用 Token（開頭為 THQVJ...）。</p>
+            <div class="field">
+              <label for="settingThreadsUserId" class="field-label">Threads User ID <span class="field-required">*</span></label>
+              <input id="settingThreadsUserId" type="text" placeholder="12345678901234567" />
+            </div>
+            <div class="field">
+              <div class="field-label-group">
+                <label for="settingThreadsAccessToken" class="field-label">Access Token <span class="field-required">*</span></label>
+                <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads 文件 →</a>
+              </div>
+              <div class="input-action">
+                <input id="settingThreadsAccessToken" type="password" placeholder="THQVJ..." />
+                <button type="button" id="toggleThreadsToken" class="btn-icon" aria-label="顯示或隱藏 Threads Access Token">顯示</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="settingThreadsTokenExpiresAt" class="field-label">Token 到期日 <span class="field-optional">（選填）</span></label>
+              <input id="settingThreadsTokenExpiresAt" type="date" />
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnSaveClientThreads" class="btn-secondary" aria-label="儲存品牌 Threads 連線">💾 儲存此品牌 Threads 連線</button>
+              <button type="button" id="btnTestThreads" class="btn-test" aria-label="測試 Threads 連線">🧪 測試連線</button>
+              <span id="testThreadsResult" class="test-result"></span>
+            </div>
+            <details class="disclosure compact">
+              <summary>📘 簡易教學：如何取得 Threads 憑證 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li>在同一個 Meta App 中，使用案例勾選 <span class="guide-pill-blue">存取 Threads API</span>。</li>
+                    <li>前往 <a class="field-link" href="https://developers.facebook.com/docs/threads/get-started" target="_blank" rel="noopener">Threads 授權說明</a>，透過 Threads 登入取得專用 Token（開頭通常為 <code class="guide-code-box">THQVJ...</code>）。</li>
+                    <li>對 Threads API 查詢 <code class="guide-code-box">graph.threads.net/me</code> 取得您的 Threads 數字 ID 貼入上方 <strong>Threads User ID</strong> 即可。</li>
+                  </ol>
+                </div>
+              </div>
+            </details>
+          </fieldset>
+          </section>
+
+          </div>
+        </section>

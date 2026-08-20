@@ -1,0 +1,35 @@
+        </section>
+        <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
+          <div class="panel-heading compact">
+            <p class="panel-lede">依平台分頁查看最近 50 則對話與來回內容。對方名稱來自平台參加者，不是本機猜測。</p>
+            <div class="panel-heading-actions">
+              <button class="btn-text" type="button" data-open-business-suite data-business-suite-dest="inbox" aria-label="開啟 Meta Business Suite 收件匣">開啟 Business Suite</button>
+              <a class="btn-text" href="#/platforms" data-view-target="platforms" data-route-target="platforms">查看平台 →</a>
+            </div>
+          </div>
+            <div class="inbox-source-note"><strong>Provider-backed 收件匣</strong><span>訊息正文只來自平台即時回傳；未讀、標籤、備註、同步 cursor 與 webhook 同步提示只保存本機 metadata，不建立永久訊息倉儲。Webhook 會讓下一次讀取從最新資料重新同步。</span></div>
+          <div class="inbox-toolbar" aria-label="收件匣篩選">
+            <div class="radio-pill-group" id="inboxPlatformTabs" role="tablist" aria-label="收件匣平台"></div>
+            <div class="radio-pill-group" id="inboxFilters" role="radiogroup" aria-label="收件匣篩選">
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="all" checked /><span>全部已讀取</span></label>
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="unread" /><span>只看未讀</span></label>
+              <label class="radio-pill"><input type="radio" name="inboxFilter" value="needsReply" /><span>只看待回</span></label>
+            </div>
+            <button class="btn-test" id="refreshInboxButton" type="button">↻ 重新同步</button>
+            <span class="helper" id="inboxFilterScope">篩選只作用於本次從平台讀到的資料。</span>
+          </div>
+          <fieldset class="form-group-card saved-replies-card" id="savedRepliesCard" data-required-permission="template.manage">
+            <legend class="group-title">Saved replies</legend>
+            <p class="helper">儲存常用短句；套用後仍可編輯，按下送出前不會自動回覆平台使用者。</p>
+            <form id="savedReplyForm">
+              <input id="savedReplyId" type="hidden" />
+              <div class="field-row">
+                <div class="field"><label for="savedReplyTitle" class="field-label">名稱</label><input id="savedReplyTitle" type="text" maxlength="80" placeholder="例：感謝支持" required /></div>
+                <div class="field"><label for="savedReplyShortcut" class="field-label">快捷名稱 <span class="field-optional">(選填)</span></label><input id="savedReplyShortcut" type="text" maxlength="40" placeholder="例：thanks" /></div>
+              </div>
+              <div class="field"><label for="savedReplyText" class="field-label">回覆內容</label><textarea id="savedReplyText" rows="2" maxlength="2000" placeholder="輸入可重用的回覆短句…" required></textarea></div>
+              <div class="action-box"><button class="btn-secondary" id="savedReplySaveButton" type="submit">儲存 Saved reply</button><button class="btn-text is-hidden" id="savedReplyCancelButton" type="button">取消編輯</button><span class="test-result" id="savedReplyStatus" aria-live="polite"></span></div>
+            </form>
+            <div id="savedReplyList" class="saved-reply-list" aria-live="polite"></div>
+          </fieldset>
+          <div id="inboxPlatformGrid" class="inbox-platform-grid" aria-live="polite"></div>

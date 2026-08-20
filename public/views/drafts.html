@@ -1,0 +1,99 @@
+        <!-- 草稿（與其他分頁同屬 workspace-grid，避免 bottom-grid 留下空的 min-height 空隙） -->
+        <section class="panel is-hidden" id="draftsPanel" data-view-panel="drafts">
+          <div class="content-toolbar" aria-label="內容篩選工具">
+            <div class="field content-search-field">
+              <label for="contentSearch" class="field-label">搜尋內容</label>
+              <input id="contentSearch" type="search" placeholder="搜尋標題、文案或備註…" autocomplete="off" />
+            </div>
+            <div class="content-toolbar-main">
+              <div class="field content-filter-field">
+                <span id="contentStatusFilterLabel" class="field-label">狀態</span>
+                <div class="radio-pill-group content-filter-pills" id="contentStatusFilter" role="radiogroup" aria-labelledby="contentStatusFilterLabel">
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="all" checked /><span>目前</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="draft" /><span>草稿</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="scheduled" /><span>已排程</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="published" /><span>已發布</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="partial_success" /><span>部分成功</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="failed" /><span>需處理</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="archived" /><span>已封存</span></label>
+                  <label class="radio-pill"><input type="radio" name="contentStatus" value="hidden" /><span>已隱藏</span></label>
+                </div>
+              </div>
+              <div class="content-toolbar-end">
+                <details class="disclosure compact content-more-filters">
+                  <summary>更多篩選 <span class="chevron" aria-hidden="true">›</span></summary>
+                  <div class="disclosure-body">
+                    <div class="field content-filter-field">
+                      <span id="contentStageFilterLabel" class="field-label">內容階段</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentStageFilter" role="radiogroup" aria-labelledby="contentStageFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="all" checked /><span>全部</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="idea" /><span>Ideas</span></label>
+                        <label class="radio-pill"><input type="radio" name="contentStage" value="draft" /><span>已開始</span></label>
+                      </div>
+                    </div>
+                    <div class="field content-filter-field content-platform-filter-field">
+                      <span id="contentPlatformFilterLabel" class="field-label">平台</span>
+                      <div class="radio-pill-group content-filter-pills" id="contentPlatformFilter" role="radiogroup" aria-labelledby="contentPlatformFilterLabel">
+                        <label class="radio-pill"><input type="radio" name="contentPlatform" value="all" checked /><span>全部平台</span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                        <label class="radio-pill radio-pill-platform"><input type="radio" name="contentPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <button class="btn-text" id="refreshButton" type="button" aria-label="重新整理草稿">↻ 重新整理</button>
+              </div>
+            </div>
+          </div>
+          <form id="ideaCaptureForm" class="idea-capture-bar" aria-label="快速記下 Idea">
+            <p class="idea-capture-kicker">快速記下 Idea</p>
+            <div class="field idea-capture-topic">
+              <label for="ideaTopic" class="field-label">主題 <span class="field-required">*</span></label>
+              <input id="ideaTopic" type="text" maxlength="200" placeholder="例如週末活動" required />
+            </div>
+            <div class="field idea-capture-notes">
+              <label for="ideaNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+              <input id="ideaNotes" type="text" maxlength="500" placeholder="時機或素材" />
+            </div>
+            <button class="btn-secondary idea-capture-submit" type="submit" aria-label="保存 Idea">保存</button>
+          </form>
+          <div class="content-batch-bar is-hidden" id="contentBatchBar" aria-label="批次操作列">
+            <label class="checkbox-row content-select-all-wrap">
+              <input type="checkbox" id="contentSelectAll" aria-label="全選目前顯示的內容" />
+              <span>全選 (<strong id="contentSelectedCount">0</strong>)</span>
+            </label>
+            <div class="content-batch-actions">
+              <button class="btn-secondary" id="btnBatchArchive" type="button">批次封存</button>
+              <button class="btn-secondary" id="btnBatchRestore" type="button">批次還原</button>
+              <button class="btn-secondary" id="btnBatchPromoteIdea" type="button">轉為草稿</button>
+              <button class="btn-text" id="btnBatchClear" type="button">取消選取</button>
+            </div>
+          </div>
+          <div id="postsList" class="list-empty">
+            <div class="empty-state">
+              <span class="empty-icon">📝</span>
+              <p>還沒有草稿</p>
+            </div>
+          </div>
+          <details class="disclosure compact bulk-import-card" data-required-permission="content.create">
+            <summary>CSV 批次匯入 <span class="chevron" aria-hidden="true">›</span></summary>
+            <div class="disclosure-body">
+              <p class="helper">先驗證再建立草稿，不會自動排程或發布。多個素材用 `|` 分隔。</p>
+              <form id="bulkImportForm">
+                <div class="field">
+                  <label for="bulkImportCsv" class="field-label">CSV 內容</label>
+                  <textarea id="bulkImportCsv" rows="5" placeholder="contentTopic,facebook,platform,contentType,mediaPaths,mediaIds,scheduledLocal,timeZone"></textarea>
+                </div>
+                <div class="action-box">
+                  <button class="btn-secondary" id="bulkImportPreviewButton" type="submit">驗證 CSV</button>
+                  <button class="btn-dark" id="bulkImportCommitButton" type="button" disabled>建立草稿（不排程）</button>
+                  <button class="btn-dark permission-hidden" id="bulkImportScheduleButton" data-required-permission="schedule.manage" type="button" disabled>套用匯入排程（本機）</button>
+                  <button class="btn-text" id="bulkImportClearButton" type="button">清除</button>
+                </div>
+              </form>
+              <p class="bulk-import-summary" id="bulkImportSummary" aria-live="polite">尚未執行 dry-run。</p>
+              <div class="bulk-import-rows" id="bulkImportRows" aria-live="polite"></div>
+            </div>
+          </details>
+        </section>

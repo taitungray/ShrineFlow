@@ -42,7 +42,9 @@ before(async () => {
 
 after(async () => {
   Object.assign(jsonFiles, originalJsonFiles);
-  await fs.rm(temporaryDataDirectory, { recursive: true, force: true });
+  if (temporaryDataDirectory) {
+    await fs.rm(temporaryDataDirectory, { recursive: true, force: true });
+  }
 });
 
 test('rejects Facebook story scheduling', () => {

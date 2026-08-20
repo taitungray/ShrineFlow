@@ -1,0 +1,27 @@
+        </section>
+        <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
+          <div class="panel-heading compact">
+            <p class="panel-lede">以平台目標查看排程、發布結果、錯誤與重試。</p>
+          </div>
+          <div class="module-summary-grid" id="publishingSummary" aria-label="發布摘要"></div>
+          <div class="module-toolbar" aria-label="發布紀錄篩選工具">
+            <div class="field module-filter-field">
+              <span id="publishingStatusFilterLabel" class="field-label">結果</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingStatusFilter" role="radiogroup" aria-labelledby="publishingStatusFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="queue" /><span>進行中</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="success" /><span>成功</span></label>
+                <label class="radio-pill"><input type="radio" name="publishingStatus" value="attention" /><span>需處理</span></label>
+              </div>
+            </div>
+            <div class="field module-filter-field">
+              <span id="publishingPlatformFilterLabel" class="field-label">平台</span>
+              <div class="radio-pill-group module-filter-pills" id="publishingPlatformFilter" role="radiogroup" aria-labelledby="publishingPlatformFilterLabel">
+                <label class="radio-pill"><input type="radio" name="publishingPlatform" value="all" checked /><span>全部平台</span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="facebook" /><span data-platform="facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /><span class="visually-hidden">Facebook</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="instagram" /><span data-platform="instagram"><img class="platform-icon" data-platform="instagram" src="/icons/instagram.svg" alt="" width="20" height="20" /><span class="visually-hidden">Instagram</span></span></label>
+                <label class="radio-pill radio-pill-platform"><input type="radio" name="publishingPlatform" value="threads" /><span data-platform="threads"><img class="platform-icon" data-platform="threads" src="/icons/threads.svg" alt="" width="20" height="20" /><span class="visually-hidden">Threads</span></span></label>
+              </div>
+            </div>
+          </div>
+          <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>

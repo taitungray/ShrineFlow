@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { buildIndexHtml } from './build-html.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -58,15 +60,9 @@ const componentsCss = `/* ======================================================
 fs.writeFileSync(path.join(__dirname, '../public/css/components.css'), componentsCss, 'utf8');
 console.log(`[OK] public/css/components.css (@import ?v=${version})`);
 
-// 3. Update public/index.html with new version
-const htmlPath = path.join(__dirname, '../public/index.html');
-let html = fs.readFileSync(htmlPath, 'utf8');
-html = html.replace(/href="\/style\.css(?:\?v=[^"]*)?"/, `href="/style.css?v=${version}"`);
-html = html.replace(/src="\/app\.js(?:\?v=[^"]*)?"/, `src="/app.js?v=${version}"`);
-html = html.replace(/<span class="version-tag" id="authAppVersion">[^<]*<\/span>/, `<span class="version-tag" id="authAppVersion">v${version}</span>`);
-html = html.replace(/<em class="version-tag" id="appVersion">[^<]*<\/em>/, `<em class="version-tag" id="appVersion">v${version}</em>`);
-fs.writeFileSync(htmlPath, html, 'utf8');
-console.log(`[OK] public/index.html (?v=${version})`);
+// 3. Assemble and update public/index.html with new version
+const buildResult = buildIndexHtml({ version });
+console.log(`[OK] public/index.html (assembled from ${buildResult.partsCount} partials ?v=${version})`);
 
 // 4. Update public/app.js imports WITHOUT ?v= on submodule paths.
 // ESM treats `./modules/state.js` and `./modules/state.js?v=x` as different modules.

@@ -1,0 +1,68 @@
+    <header class="app-header-fixed">
+      <div class="topbar">
+        <div class="topbar-leading">
+          <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="開啟導覽選單" aria-controls="appSidebar" aria-expanded="false">☰</button>
+          <div class="page-heading">
+            <p class="section-tag visually-hidden" id="pageSectionTag">OVERVIEW</p>
+            <h1 id="currentPageTitle">總覽</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="field client-switcher">
+            <label for="currentClientSelect" class="field-label">品牌</label>
+            <select id="currentClientSelect" aria-label="切換品牌"></select>
+          </div>
+          <button class="btn-text topbar-business-suite" id="openBusinessSuiteButton" type="button" data-open-business-suite data-business-suite-dest="home" aria-label="開啟 Meta Business Suite 官網或 App" title="開啟 Meta Business Suite 官網或 App">
+            <span class="topbar-business-suite-full">Business Suite</span>
+            <span class="topbar-business-suite-short" aria-hidden="true">Suite</span>
+          </button>
+          <div class="status-cluster" id="apiStatus" role="status" aria-live="polite" aria-label="連線狀態">
+            <span class="status-cluster-label">連線</span>
+            <a class="status-dot" data-status="ai" href="#/settings/gemini" title="檢查連線中…">Gemini</a>
+            <a class="status-dot status-dot-platform" data-status="fb" data-platform="facebook" href="#/platforms/facebook" title="檢查連線中…" aria-label="Facebook"><img class="platform-icon" data-platform="facebook" src="/icons/facebook.svg" alt="" width="20" height="20" /></a>
+          </div>
+          <div class="topbar-account">
+            <div class="user-identity is-hidden" id="userIdentity" aria-label="目前登入使用者">
+              <span class="user-avatar" id="userAvatar" aria-hidden="true">U</span>
+              <span class="user-identity-copy"><strong id="userDisplayName">使用者</strong><small id="userRoleLabel">—</small></span>
+            </div>
+            <button class="btn-text is-hidden" id="authLogoutButton" type="button">登出</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
+      <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
+      <div class="sidebar-brand">
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.6.107</em></span>
+        <p>Social publishing workspace</p>
+      </div>
+      <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span> 新增內容</a>
+      <nav class="app-nav" aria-label="工作區導覽">
+        <p class="nav-group-label">工作區</p>
+        <a class="app-nav-item" href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span>內容</a>
+        <a class="app-nav-item" href="#/publishing" data-view-target="publishing" data-route-target="publishing"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-publishing" /></svg></span>發布紀錄<span class="nav-badge" id="navPublishingBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/calendar" data-view-target="schedule" data-route-target="calendar"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-calendar" /></svg></span>日曆</a>
+        <a class="app-nav-item" href="#/inbox" data-view-target="inbox" data-route-target="inbox"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-inbox" /></svg></span>收件匣<span class="nav-badge" id="navInboxBadge" hidden></span></a>
+        <a class="app-nav-item" href="#/media" data-view-target="media" data-route-target="media"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-media" /></svg></span>素材庫</a>
+        <a class="app-nav-item permission-hidden" id="reviewNavItem" href="#/reviews" data-view-target="reviews" data-route-target="reviews" data-required-any="content.approve,content.submit_review"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-reviews" /></svg></span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
+        <p class="nav-group-label nav-group-label-spaced">管理</p>
+        <a class="app-nav-item nav-secondary active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span>總覽</a>
+        <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-campaigns" /></svg></span>活動</a>
+        <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-templates" /></svg></span>模板</a>
+      </nav>
+      <nav class="sidebar-footer" aria-label="系統導覽">
+        <p class="nav-group-label">系統</p>
+        <a class="app-nav-item" id="settingsNavItem" href="#/settings" data-view-target="settings" data-route-target="settings"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-settings" /></svg></span>設定</a>
+        <a class="app-nav-item" href="#/platforms" data-view-target="platforms" data-route-target="platforms"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-platforms" /></svg></span>平台連線</a>
+        <a class="app-nav-item" href="#/help" data-view-target="help" data-route-target="help"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-help" /></svg></span>幫助</a>
+        <a class="app-nav-item permission-hidden" id="teamNavItem" href="#/team" data-view-target="team" data-route-target="team"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-team" /></svg></span>團隊與權限</a>
+        <a class="app-nav-item permission-hidden" id="errorLogNavItem" href="#/errors" data-view-target="errors" data-route-target="errors" data-required-permission="system.manage"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-errors" /></svg></span>錯誤記錄<span class="nav-badge" id="navErrorsBadge" hidden></span></a>
+      </nav>
+    </aside>
+    <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
+
+    <main class="shell">
+
+      <section class="workspace-grid">

@@ -1,0 +1,30 @@
+        <!-- ========== 總覽 ========== -->
+        <section class="panel overview-panel" id="overviewPanel" data-view-panel="overview">
+          <div class="panel-heading overview-heading">
+            <p class="panel-lede">集中掌握多平台內容進度、待辦審核與發布異常狀態。</p>
+            <button class="primary-button" type="button" data-view-target="create" data-route-target="content/new" aria-label="新增內容">＋ 新增內容</button>
+          </div>
+          <div class="overview-summary" aria-label="內容摘要">
+            <article class="summary-card"><span class="summary-label">全部內容</span><strong id="overviewPostCount">—</strong><small>目前品牌</small></article>
+            <article class="summary-card"><span class="summary-label">待發排程</span><strong id="overviewScheduledCount">—</strong><small>即將發布</small></article>
+            <article class="summary-card"><span class="summary-label">待審核</span><strong id="overviewReviewCount">—</strong><small>佇列待審</small></article>
+            <article class="summary-card" id="overviewAttentionSummaryCard"><span class="summary-label">需要處理</span><strong id="overviewAttentionCount">—</strong><small id="overviewAttentionCardSub">失敗或未完成</small></article>
+          </div>
+          <div class="overview-grid">
+            <div class="overview-col-left">
+              <fieldset class="form-group-card overview-now-card" id="overviewAttentionCard">
+                <legend class="group-title">此刻</legend>
+                <div class="overview-health" id="overviewHealth" aria-label="連線狀態"></div>
+                <div id="overviewAttentionList" class="overview-attention-list"><p class="helper">檢查待辦事項中…</p></div>
+                <div id="overviewNextList" class="overview-next-list" hidden></div>
+              </fieldset>
+            </div>
+            <fieldset class="form-group-card overview-recent-card">
+              <div class="group-title-row">
+                <legend class="group-title">最近內容動態</legend>
+                <a href="#/content" data-view-target="drafts" class="group-action-link" title="前往內容管理查看全部">查看全部 ›</a>
+              </div>
+              <div id="overviewRecentList" class="overview-recent-list"><p class="helper">載入最近內容中…</p></div>
+            </fieldset>
+          </div>
+        </section>

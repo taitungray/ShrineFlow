@@ -43,7 +43,7 @@
       })();
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.107" />
+    <link rel="stylesheet" href="/style.css?v=0.6.108" />
   </head>
   <body class="auth-required">
     <script>
@@ -79,7 +79,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.107</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.108</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -131,7 +131,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.6.107</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.6.108</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span> 新增內容</a>
@@ -701,6 +701,7 @@
           <div id='reviewQueueList' class='list-empty' aria-live='polite'></div>
         </section>
 
+
         <section class='panel is-hidden' id='schedulePanel' data-view-panel='schedule'>
           <div class="calendar-toolbar" aria-label="日曆控制">
             <div class="calendar-month-nav">
@@ -780,6 +781,7 @@
           </div>
           <p class="module-summary" id="mediaSummary" aria-live="polite"></p>
           <div id="mediaGrid" class="media-library-grid" aria-live="polite"></div>
+
         </section>
         <section class="panel module-panel is-hidden" id="templatesPanel" data-view-panel="templates">
           <div class="panel-heading compact">
@@ -793,6 +795,7 @@
             </div>
           </div>
           <div id="templatesGrid" class="templates-grid" aria-live="polite"></div>
+
         </section>
         <section class="panel module-panel is-hidden" id="campaignsPanel" data-view-panel="campaigns">
           <div class="panel-heading compact">
@@ -806,6 +809,7 @@
             </div>
           </div>
           <div id="campaignsGrid" class="campaigns-grid" aria-live="polite"></div>
+
         </section>
         <section class="panel module-panel is-hidden" id="publishingPanel" data-view-panel="publishing">
           <div class="panel-heading compact">
@@ -833,6 +837,7 @@
             </div>
           </div>
           <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>
+
         </section>
         <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
           <div class="panel-heading compact">
@@ -868,6 +873,7 @@
             <div id="savedReplyList" class="saved-reply-list" aria-live="polite"></div>
           </fieldset>
           <div id="inboxPlatformGrid" class="inbox-platform-grid" aria-live="polite"></div>
+
         </section>
         <section class="panel module-panel is-hidden" id="platformsPanel" data-view-panel="platforms">
           <div class="panel-heading compact">
@@ -1138,6 +1144,7 @@
           </div>
         </section>
 
+
         <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
           <div class="panel-heading compact">
             <p class="panel-lede">管理目前品牌的成員、邀請、角色與操作紀錄。</p>
@@ -1207,6 +1214,7 @@
           </div>
         </section>
 
+
         <section class="panel module-panel is-hidden" id="errorLogPanel" data-view-panel="errors">
           <div class="panel-heading compact">
             <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
@@ -1240,6 +1248,7 @@
           <div id="errorLogList" class="backup-list error-log-list" aria-live="polite"></div>
         </section>
 
+
         <section class="panel module-panel is-hidden" id="helpPanel" data-view-panel="help">
           <div class="panel-heading">
             <p class="panel-lede">操作手冊。可貼錯誤原文，也可查「怎麼排程」「Token」「審核」。</p>
@@ -1267,6 +1276,7 @@
     </main>
 
     <nav class="mobile-bottom-nav" aria-label="手機主要導覽">
+
       <a href="#/overview" data-view-target="overview" data-route-target="overview"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span><small>總覽</small></a>
       <a href="#/content" data-view-target="drafts" data-route-target="content"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-content" /></svg></span><small>內容</small></a>
       <a class="mobile-nav-create" href="#/content/new" data-view-target="create" data-route-target="content/new" aria-label="新增內容"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span><small>新增</small></a>
@@ -1504,6 +1514,7 @@
         </div>
       </form>
     </dialog>
+
     <div id="toast" class="toast" role="status" popover="manual"></div>
     <div id="portraitLock" class="portrait-lock" role="alert">
       <div class="portrait-lock-card">
@@ -1516,7 +1527,6 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.107" type="module"></script>
+    <script src="/app.js?v=0.6.108" type="module"></script>
   </body>
 </html>
-

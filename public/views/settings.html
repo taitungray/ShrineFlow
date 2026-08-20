@@ -1,0 +1,139 @@
+        <!-- ========== 設定 ========== -->
+        <form class="panel is-hidden" id="settingsForm" data-view-panel="settings">
+          <div class="panel-heading">
+            <p class="panel-lede">Gemini、品牌與備份。平台 Token 與測連線在「平台連線」。</p>
+          </div>
+          <nav class="settings-tabs" role="tablist" aria-label="設定分頁">
+            <button type="button" class="settings-tab active" role="tab" id="settingsTabGemini" data-settings-page="gemini" data-required-permission="system.manage" aria-controls="settingsPageGemini" aria-selected="true">Gemini</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabBrand" data-settings-page="brand" data-required-permission="system.manage" aria-controls="settingsPageBrand" aria-selected="false">品牌</button>
+            <button type="button" class="settings-tab" role="tab" id="settingsTabBackup" data-settings-page="backup" data-required-permission="system.manage" aria-controls="settingsPageBackup" aria-selected="false">備份</button>
+          </nav>
+
+          <div class="settings-pages">
+          <section class="settings-page" id="settingsPageGemini" role="tabpanel" data-settings-page="gemini" aria-labelledby="settingsTabGemini" data-required-permission="system.manage">
+          <fieldset class="form-group-card" id="geminiSettingsCard" data-required-permission="system.manage">
+            <legend class="group-title">Gemini AI 設定</legend>
+            <div class="field">
+              <div class="field-label-group">
+                <label for="settingGeminiApiKey" class="field-label">API Key <span class="field-required">*</span></label>
+                <a class="field-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">免費取得 Key →</a>
+              </div>
+              <div class="input-action">
+                <input id="settingGeminiApiKey" type="password" placeholder="AIzaSy..." />
+                <button type="button" id="toggleGeminiKey" class="btn-icon" aria-label="顯示或隱藏 API Key">顯示</button>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field"><label for="settingGeminiModel" class="field-label">主要模型</label><input id="settingGeminiModel" type="text" placeholder="gemini-3.6-flash" /></div>
+              <div class="field"><label for="settingGeminiFallbackModels" class="field-label">備援模型</label><input id="settingGeminiFallbackModels" type="text" placeholder="gemini-2.5-flash" /></div>
+            </div>
+
+            <details class="disclosure compact">
+              <summary>📘 簡易教學：如何取得免費 Gemini API Key <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-step-card">
+                  <ol class="guide-list">
+                    <li>點擊前往 🔗 <a class="field-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>（使用 Google 帳號登入）。</li>
+                    <li>點擊藍色按鈕 <span class="guide-pill-blue">Create API key</span> ➔ 選擇建立新的 Key。</li>
+                    <li>將產生的長代碼（開頭為 <code class="guide-code-box">AIzaSy...</code>）複製，貼到上方的 <strong>API Key</strong> 欄位。</li>
+                    <li>點擊 <span class="guide-pill-green">🧪 測試 Gemini 連線</span>，看到綠色勾勾就完成了！🎉</li>
+                  </ol>
+                </div>
+              </div>
+            </details>
+            <div class="action-box">
+              <button type="button" id="btnTestGemini" class="btn-test" aria-label="測試 Gemini 連線">🧪 測試 Gemini 連線</button>
+              <span id="testGeminiResult" class="test-result"></span>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-group-card" id="secretStorageCard" data-required-permission="system.manage">
+            <legend class="group-title">憑證保存狀態</legend>
+            <p class="helper" id="secretStorageStatus">正在檢查憑證保存狀態…</p>
+            <details class="disclosure compact">
+              <summary>🔒 安全加密說明 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <div class="guide-tip-box">
+                  💡 <strong>主密鑰功能：</strong>設定主密鑰後，系統會以高規格 <span class="guide-pill-blue">AES-256-GCM</span> 將所有平台 Token 與金鑰自動加密保存。請妥善保管密鑰，遺失無法復原。
+                </div>
+              </div>
+            </details>
+            <div class="field-row">
+              <div class="field">
+                <label for="currentMasterKey" class="field-label">目前主密鑰</label>
+                <input id="currentMasterKey" type="password" autocomplete="current-password" placeholder="首次啟用可留白" />
+              </div>
+              <div class="field">
+                <label for="newMasterKey" class="field-label">新主密鑰</label>
+                <input id="newMasterKey" type="password" autocomplete="new-password" minlength="16" placeholder="至少 16 個字元" />
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnRotateSecrets" class="btn-secondary" aria-label="輪替已保存的秘密">輪替已保存的秘密</button>
+              <span id="secretRotationStatus" class="test-result"></span>
+            </div>
+          </fieldset>
+          <button class="primary-button" type="submit" id="saveSettingsBtn" data-required-permission="system.manage" aria-label="儲存 Gemini 與全站設定">💾 儲存 Gemini／全站設定</button>
+          </section>
+
+          <section class="settings-page is-hidden" id="settingsPageBrand" role="tabpanel" data-settings-page="brand" aria-labelledby="settingsTabBrand" data-required-permission="system.manage">
+          <fieldset class="form-group-card" id="brandManageCard" data-required-permission="system.manage">
+            <legend class="group-title">品牌管理</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="newClientName" class="field-label">新增品牌名稱</label>
+                <input id="newClientName" type="text" placeholder="例：品牌／服務名稱" />
+              </div>
+              <div class="field">
+                <label for="newClientNotes" class="field-label">備註 <span class="field-optional">(選填)</span></label>
+                <input id="newClientNotes" type="text" placeholder="聯絡人或備註" />
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnCreateClient" class="btn-secondary" aria-label="新增品牌">＋ 新增品牌</button>
+            </div>
+          </fieldset>
+          </section>
+
+          <section class="settings-page is-hidden" id="settingsPageBackup" role="tabpanel" data-settings-page="backup" aria-labelledby="settingsTabBackup" data-required-permission="system.manage">
+          <fieldset class="form-group-card" id="backupSettingsCard" data-required-permission="system.manage">
+            <legend class="group-title">備份與儲存管理</legend>
+            <details class="disclosure compact">
+              <summary>備份範圍與上限 <span class="chevron" aria-hidden="true">›</span></summary>
+              <div class="disclosure-body">
+                <p class="helper">備份包含 JSON 內容、排程、品牌、平台快照與發布紀錄；不包含 `.env`、Token 或其他秘密。JSON 寫入採單檔鎖定、原子替換與單一復原快照；主要集合另有筆數／檔案大小硬上限，達上限時停止新增，不自動刪除內容。還原前會自動建立目前資料的安全備份。備份最多保留最近 30 份，且超過 180 天會自動清理；發布事件與 Insights 歷史最多保留 24 個月，單月檔案也有紀錄數上限。Inbox webhook 只保留最多 200 筆同步提示。</p>
+              </div>
+            </details>
+            <div class="field-row">
+              <div class="field">
+                <label for="backupIncludeMedia" class="field-label">備份素材</label>
+                <label class="checkbox-row"><input id="backupIncludeMedia" type="checkbox" /><span>同時複製 uploads 素材</span></label>
+              </div>
+              <div class="field">
+                <span class="field-label">未使用素材</span>
+                <p class="helper helper-live" id="storageHealthResult">按下檢查以計算可清理項目。</p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <span class="field-label">系統健康狀態</span>
+                <p class="helper helper-live" id="systemHealthResult">按下檢查以確認 JSON、備份、配額與排程器。</p>
+              </div>
+            </div>
+            <div class="action-box">
+              <button type="button" id="btnCreateBackup" class="btn-secondary" aria-label="建立 JSON 備份">💾 建立備份</button>
+              <button type="button" id="btnRefreshStorage" class="btn-test" aria-label="檢查儲存空間">🔎 檢查儲存</button>
+              <button type="button" id="btnRefreshSystemHealth" class="btn-test" aria-label="檢查系統健康狀態">🩺 系統健康</button>
+              <button type="button" id="btnRefreshReadiness" class="btn-test" aria-label="檢查部署前置條件">🚦 部署檢查</button>
+              <button type="button" id="btnCleanupMedia" class="btn-test" aria-label="清理未使用素材">🧹 清理未使用素材</button>
+              <span id="systemStorageMessage" class="test-result"></span>
+            </div>
+            <div id="backupList" class="backup-list" aria-live="polite"></div>
+            <p class="helper" data-required-permission="system.manage">系統錯誤記錄已移到獨立頁。<a class="field-link" href="#/errors" data-view-target="errors" data-route-target="errors">前往錯誤記錄 →</a></p>
+            <p class="helper" id="readinessResult">部署檢查只提供準備度提示，不取代登入／HTTPS／反向代理設定。</p>
+            <div id="readinessList" class="backup-list" aria-live="polite"></div>
+          </fieldset>
+          </section>
+          </div>
+        </form>

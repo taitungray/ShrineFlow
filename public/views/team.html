@@ -1,0 +1,69 @@
+
+        <section class="panel module-panel team-panel is-hidden" id="teamPanel" data-view-panel="team">
+          <div class="panel-heading compact">
+            <p class="panel-lede">管理目前品牌的成員、邀請、角色與操作紀錄。</p>
+            <button class="btn-text" id="refreshTeamButton" type="button">↻ 重新整理</button>
+          </div>
+          <div class="module-summary-grid" id="teamSummary" aria-label="團隊摘要"></div>
+          <div class="radio-pill-group team-section-tabs" id="teamSectionTabs" role="tablist" aria-label="團隊管理區段">
+            <button class="team-section-tab active" type="button" role="tab" aria-selected="true" data-team-section="members">成員</button>
+            <button class="team-section-tab" type="button" role="tab" aria-selected="false" data-team-section="invitations">邀請</button>
+            <button class="team-section-tab" type="button" role="tab" aria-selected="false" data-team-section="audit">操作紀錄</button>
+          </div>
+
+          <div class="team-section" data-team-section-panel="members">
+            <fieldset class="form-group-card" id="teamInviteCard">
+              <legend class="group-title">邀請新成員</legend>
+              <p class="helper">邀請連結只顯示一次；對方需使用相同 Email 的 Google 帳號登入。</p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="teamInviteEmail" class="field-label">Email <span class="field-required">*</span></label>
+                  <input id="teamInviteEmail" type="email" autocomplete="email" placeholder="member@example.com" />
+                </div>
+                <div class="field">
+                  <label for="teamInviteRole" class="field-label">角色 <span class="field-required">*</span></label>
+                  <select id="teamInviteRole">
+                    <option value="editor">Editor · 編輯</option>
+                    <option value="reviewer">Reviewer · 審核</option>
+                    <option value="publisher">Publisher · 發布</option>
+                    <option value="viewer">Viewer · 檢視</option>
+                    <option value="admin">Admin · 管理</option>
+                    <option value="owner">Owner · 擁有者</option>
+                  </select>
+                </div>
+              </div>
+              <div class="action-box">
+                <button class="btn-secondary" id="createInvitationButton" type="button">＋ 建立邀請</button>
+                <span class="test-result" id="teamInviteStatus" aria-live="polite"></span>
+              </div>
+              <div class="invitation-link-result is-hidden" id="invitationLinkResult">
+                <div class="field">
+                  <label for="invitationLink" class="field-label">一次性邀請連結</label>
+                  <div class="input-action"><input id="invitationLink" type="text" readonly /><button class="btn-test" id="copyInvitationLink" type="button">複製</button></div>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class='form-group-card workflow-settings-card' id='workflowSettingsCard' data-required-permission='member.manage'>
+              <legend class='group-title'>發布流程</legend>
+              <div class='field'>
+                <label class='checkbox-field'><input id='approvalRequiredToggle' type='checkbox' /><span>此品牌強制審核後才能排程或發布</span></label>
+                <p class='helper'>關閉時維持快速發布；開啟後，內容必須先送審並核准目前版本。</p>
+              </div>
+            </fieldset>
+            <div class="team-list" id="teamMemberList" aria-live="polite"></div>
+          </div>
+
+          <div class="team-section is-hidden" data-team-section-panel="invitations">
+            <div class="team-list" id="teamInvitationList" aria-live="polite"></div>
+          </div>
+
+          <div class="team-section is-hidden" data-team-section-panel="audit">
+            <div class="module-toolbar">
+              <div class="field module-search-field">
+                <label for="auditSearch" class="field-label">搜尋紀錄</label>
+                <input id="auditSearch" type="search" placeholder="搜尋動作、操作者或資源…" autocomplete="off" />
+              </div>
+            </div>
+            <div class="audit-list" id="auditEventList" aria-live="polite"></div>
+          </div>
+        </section>

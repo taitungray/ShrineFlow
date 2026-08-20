@@ -1,0 +1,23 @@
+        <!-- ========== 素材庫 ========== -->
+        <section class="panel module-panel is-hidden" id="mediaPanel" data-view-panel="media">
+          <div class="panel-heading compact">
+            <p class="panel-lede">集中查看已上傳素材、使用內容與平台分布。</p>
+            <a class="btn-secondary" href="#/content/new" data-view-target="create" data-route-target="content/new">＋ 新增內容</a>
+          </div>
+          <div class="module-toolbar" aria-label="素材篩選工具">
+            <div class="field module-search-field">
+              <label for="mediaSearch" class="field-label">搜尋素材</label>
+              <input id="mediaSearch" type="search" placeholder="搜尋檔名或使用內容…" autocomplete="off" />
+            </div>
+            <div class="field module-filter-field">
+              <span id="mediaTypeFilterLabel" class="field-label">類型</span>
+              <div class="radio-pill-group module-filter-pills" id="mediaTypeFilter" role="radiogroup" aria-labelledby="mediaTypeFilterLabel">
+                <label class="radio-pill"><input type="radio" name="mediaType" value="all" checked /><span>全部</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="image" /><span>圖片</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="video" /><span>影片</span></label>
+                <label class="radio-pill"><input type="radio" name="mediaType" value="duplicate" /><span>重複</span></label>
+              </div>
+            </div>
+          </div>
+          <p class="module-summary" id="mediaSummary" aria-live="polite"></p>
+          <div id="mediaGrid" class="media-library-grid" aria-live="polite"></div>

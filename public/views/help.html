@@ -1,0 +1,28 @@
+
+        <section class="panel module-panel is-hidden" id="helpPanel" data-view-panel="help">
+          <div class="panel-heading">
+            <p class="panel-lede">操作手冊。可貼錯誤原文，也可查「怎麼排程」「Token」「審核」。</p>
+          </div>
+          <div class="help-toolbar">
+            <div class="field help-search-field">
+              <label for="helpSearch" class="field-label">搜尋說明</label>
+              <input id="helpSearch" type="search" placeholder="貼錯誤原文，或輸入：排程、Token、審核、Queue…" autocomplete="off" />
+            </div>
+            <div class="help-filter-stack">
+              <div class="field help-kind-field">
+                <span id="helpKindLabel" class="field-label">類型</span>
+                <div class="radio-pill-group help-filter-pills help-kind-pills" id="helpKindFilter" role="radiogroup" aria-labelledby="helpKindLabel"></div>
+              </div>
+              <div class="field help-topic-field">
+                <span id="helpTopicLabel" class="field-label">主題</span>
+                <div class="radio-pill-group help-filter-pills help-topic-pills" id="helpTopicFilter" role="radiogroup" aria-labelledby="helpTopicLabel"></div>
+              </div>
+            </div>
+          </div>
+          <p class="helper" id="helpStatus">載入說明中…</p>
+          <div id="helpArticleList" class="help-article-list" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="mobile-bottom-nav" aria-label="手機主要導覽">

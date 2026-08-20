@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f1eb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141211" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ShrineFlow" />
+    <meta name="screen-orientation" content="portrait" />
+    <title>ShrineFlow · Social Publishing Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      html, body { background-color: #f7f1eb; }
+      @media (prefers-color-scheme: dark) {
+        html, body { background-color: #141211; }
+      }
+      html[data-theme="dark"], html[data-theme="dark"] body { background-color: #141211; }
+      html[data-theme="light"], html[data-theme="light"] body { background-color: #f7f1eb; }
+      html.is-booting *, html.is-resuming * { transition: none !important; animation: none !important; }
+      html:not(.has-session) body.auth-required > :not(#authGate):not(.nav-sprite):not(#portraitLock) { display: none !important; }
+      html.has-session #authGate { display: none !important; }
+      .is-hidden { display: none !important; }
+    </style>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('is-booting');
+        var theme = null;
+        try { theme = localStorage.getItem('shrineflow.theme'); } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        root.dataset.theme = theme;
+        try { localStorage.setItem('shrineflow.theme', theme); } catch (e) {}
+        try {
+          if (localStorage.getItem('shrineflow.signedIn') === '1') root.classList.add('has-session');
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css?v=0.6.107" />
+  </head>
+  <body class="auth-required">
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('shrineflow.signedIn') === '1') {
+            document.body.classList.remove('auth-required');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <svg class="nav-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <symbol id="nav-content" viewBox="0 0 24 24"><path fill="none" d="M7 3.75h7.2L17.5 7.1V20.25H7z"/><path fill="none" d="M14 3.75V7.4h3.5"/><path fill="none" d="M9.4 11.2h5.4M9.4 14.4h5.4M9.4 17.6h3.4"/></symbol>
+      <symbol id="nav-calendar" viewBox="0 0 24 24"><rect fill="none" x="4" y="5.5" width="16" height="14.75" rx="2"/><path fill="none" d="M4 10h16M8 3.75v3.4M16 3.75v3.4"/><rect fill="currentColor" stroke="none" x="8.3" y="13.2" width="2.4" height="2.4" rx="0.4"/></symbol>
+      <symbol id="nav-media" viewBox="0 0 24 24"><rect fill="none" x="3.75" y="5.5" width="16.5" height="13" rx="2"/><circle fill="none" cx="8.6" cy="10.1" r="1.45"/><path fill="none" d="M3.9 16.4l4.4-3.6 3.2 2.5 2.7-2.1 5.6 3.4"/></symbol>
+      <symbol id="nav-reviews" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="8.25"/><path fill="none" d="M8.4 12.2l2.5 2.5 4.8-5.1"/></symbol>
+      <symbol id="nav-publishing" viewBox="0 0 24 24"><path fill="none" d="M12 15.5V4.75"/><path fill="none" d="M8.2 8.4 12 4.75 15.8 8.4"/><path fill="none" d="M5 14.5v4.75h14V14.5"/></symbol>
+      <symbol id="nav-inbox" viewBox="0 0 24 24"><path fill="none" d="M4 13.2 7.1 6.5h9.8L20 13.2v5.3H4z"/><path fill="none" d="M4 13.2h4.4l1.5 2.3h4.2l1.5-2.3H20"/></symbol>
+      <symbol id="nav-overview" viewBox="0 0 24 24"><path fill="none" d="M4.5 11.2 12 4.6l7.5 6.6"/><path fill="none" d="M7 10.4V19.4h10V10.4"/></symbol>
+      <symbol id="nav-templates" viewBox="0 0 24 24"><rect fill="none" x="8" y="6.2" width="11.2" height="13.1" rx="1.6"/><path fill="none" d="M15.4 4.7H6.6A1.6 1.6 0 0 0 5 6.3v11.2"/></symbol>
+      <symbol id="nav-campaigns" viewBox="0 0 24 24"><path fill="none" d="M7 4.6v15.8"/><path fill="none" d="M7 5.2h11.2l-2.6 3.7 2.6 3.7H7"/></symbol>
+      <symbol id="nav-platforms" viewBox="0 0 24 24"><circle fill="none" cx="7" cy="12" r="2.6"/><circle fill="none" cx="17" cy="7.4" r="2.6"/><circle fill="none" cx="17" cy="16.6" r="2.6"/><path fill="none" d="M9.4 11.2 14.6 8.4M9.4 12.8l5.2 2.8"/></symbol>
+      <symbol id="nav-settings" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="3.1"/><path fill="none" d="M12 4v2.3M12 17.7V20M4 12h2.3M17.7 12H20M6.2 6.2l1.6 1.6M16.2 16.2l1.6 1.6M17.8 6.2l-1.6 1.6M7.8 16.2l-1.6 1.6"/></symbol>
+      <symbol id="nav-team" viewBox="0 0 24 24"><circle fill="none" cx="9" cy="8.2" r="2.4"/><path fill="none" d="M4.6 18.4v-1.3a4.4 4.4 0 0 1 8.8 0v1.3"/><circle fill="none" cx="16.4" cy="8.8" r="2"/><path fill="none" d="M14.2 18.4v-.9a3.4 3.4 0 0 1 5.2-2.9"/></symbol>
+      <symbol id="nav-errors" viewBox="0 0 24 24"><path fill="none" d="M12 4.4 20.4 19H3.6z"/><path fill="none" d="M12 10v4.2"/><circle fill="currentColor" stroke="none" cx="12" cy="16.6" r="0.75"/></symbol>
+      <symbol id="nav-help" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="8.25"/><path fill="none" d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.35c-.7.36-1.1.86-1.1 1.65"/><circle fill="currentColor" stroke="none" cx="12" cy="16.35" r="0.75"/></symbol>
+      <symbol id="nav-plus" viewBox="0 0 24 24"><path fill="none" d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="nav-more" viewBox="0 0 24 24"><circle fill="currentColor" stroke="none" cx="6" cy="12" r="1.4"/><circle fill="currentColor" stroke="none" cx="12" cy="12" r="1.4"/><circle fill="currentColor" stroke="none" cx="18" cy="12" r="1.4"/></symbol>
+    </svg>
+
+    <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
+      <div class="auth-card">
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.107</span></p>
+        <h1 id="authTitle">登入工作台</h1>
+        <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
+        <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
+        <form class="is-hidden" id="authForm">
+          <div class="field">
+            <label for="authPassword" class="field-label">操作員密碼</label>
+            <input id="authPassword" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="primary-button" type="submit">登入工作台</button>
+        </form>
+        <p class="helper text-danger" id="authMessage" aria-live="polite"></p>
+      </div>
+    </section>

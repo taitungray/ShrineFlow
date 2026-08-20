@@ -1,0 +1,33 @@
+
+        <section class="panel module-panel is-hidden" id="errorLogPanel" data-view-panel="errors">
+          <div class="panel-heading compact">
+            <p class="panel-lede">系統與發布錯誤。僅系統 Owner 可見，最多保留 500 筆。</p>
+            <a class="btn-text" href="#/settings" data-view-target="settings" data-route-target="settings">前往設定 →</a>
+          </div>
+          <div class="error-log-toolbar" data-required-permission="system.manage">
+            <div class="action-box">
+              <button type="button" id="btnRefreshErrorLog" class="btn-test" aria-label="查看最近錯誤記錄">🧭 查看錯誤記錄</button>
+              <button type="button" id="btnExportErrorLog" class="btn-test" aria-label="下載錯誤記錄 JSON">⬇ 下載 JSON</button>
+              <span id="errorLogResult" class="test-result">錯誤記錄最多保留 500 筆，已過期項目自動清理。</span>
+            </div>
+            <div class="field inline-field">
+              <span id="errorLogStatusFilterLabel" class="field-label">顯示</span>
+              <div class="radio-pill-group" role="radiogroup" aria-labelledby="errorLogStatusFilterLabel">
+                <label class="radio-pill">
+                  <input id="errorLogStatusOpen" type="radio" name="errorLogStatusFilter" value="open" checked />
+                  <span>未修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusFixed" type="radio" name="errorLogStatusFilter" value="fixed" />
+                  <span>已修正</span>
+                </label>
+                <label class="radio-pill">
+                  <input id="errorLogStatusAll" type="radio" name="errorLogStatusFilter" value="all" />
+                  <span>全部</span>
+                </label>
+              </div>
+            </div>
+            <p id="errorLogMessage" class="test-result" aria-live="polite"></p>
+          </div>
+          <div id="errorLogList" class="backup-list error-log-list" aria-live="polite"></div>
+        </section>
