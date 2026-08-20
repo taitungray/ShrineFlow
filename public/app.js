@@ -355,7 +355,6 @@ async function initApp() {
   initDateTime24h();
   initBusinessSuiteButtons();
   initHelp();
-  initInsightsListeners();
   initInboxListeners();
   initContentFilters(refreshLists);
   initBulkImportListeners();
