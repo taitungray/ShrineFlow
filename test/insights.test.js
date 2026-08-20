@@ -661,6 +661,46 @@ test('Facebook post Insights merge object engagement fields', async () => {
   assert.ok(urls.some((url) => url.includes('fields=') && url.includes('likes.summary')));
 });
 
+test('Facebook post Insights falls back to post engagement fields when /insights is rejected by Meta', async () => {
+  const client = createFacebookInsightsClient({
+    pageId: 'page-1',
+    pageAccessToken: 'token-1',
+    fetchImpl: async (url) => {
+      const parsed = new URL(String(url));
+      if (parsed.pathname.endsWith('/insights')) {
+        return response({
+          error: {
+            message: 'Tried accessing nonexisting field (insights) on node type (Post)',
+            type: 'OAuthException',
+            code: 100,
+          },
+        }, { status: 400 });
+      }
+      return response({
+        likes: { summary: { total_count: 12 } },
+        comments: { summary: { total_count: 5 } },
+        shares: { count: 3 },
+        reactions: { summary: { total_count: 15 } },
+      });
+    },
+  });
+
+  const result = await client.fetchPostInsights({
+    externalId: 'page-1_101',
+  });
+
+  assert.equal(result.scope, 'post');
+  assert.deepEqual(
+    result.data.map((item) => [item.name, item.value]),
+    [
+      ['likes', 12],
+      ['comments', 5],
+      ['shares', 3],
+      ['reactions', 15],
+    ],
+  );
+});
+
 test('Insights router provides AI analysis endpoint with structured advice', async () => {
   let analyzedPayload = null;
   const fakeAiService = {
