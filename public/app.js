@@ -40,7 +40,6 @@ import { renderPlatformConnections } from './modules/platform-connections.js';
 import { renderApiStatus } from './modules/api-status.js';
 import { renderTemplates, initTemplateManager } from './modules/templates.js';
 import { renderCampaigns, initCampaignManager } from './modules/campaigns.js';
-import { renderInsights, initInsightsListeners } from './modules/insights.js';
 import { renderInbox, initInboxListeners } from './modules/inbox.js';
 import { loadSettings, initSettingsListeners } from './modules/settings.js';
 import { initSystemTools } from './modules/system.js';
@@ -57,7 +56,6 @@ import { initQueueSettings, loadQueueSettings, renderQueueSettings } from './mod
 import { initCrisisPause, loadCrisisPause, renderCrisisPause } from './modules/crisis-pause.js';
 import { initHelp } from './modules/help.js';
 import { initDateTime24h } from './modules/datetime-24h.js';
-import { renderBestTimes } from './modules/best-times.js';
 import { renderRemoteSchedule } from './modules/remote-schedule.js';
 import { initBusinessSuiteButtons } from './modules/business-suite.js';
 
@@ -92,21 +90,12 @@ async function fetchCoreLists() {
 }
 
 async function fetchSecondaryLists() {
-  const insightsPlatform = state.insightsPlatform || 'facebook';
-  const insightsPath = clientQuery('/api/insights?scope=' + encodeURIComponent(state.insightsScope || 'account'));
-  const [insights, inbox, bestTimes, remoteSchedule, repurposeCandidates] = await Promise.all([
-    api(insightsPath).catch(() => ({ status: 'unavailable', sources: [] })),
+  const [inbox, remoteSchedule] = await Promise.all([
     api(clientQuery('/api/inbox')).catch(() => ({ status: 'unavailable', sources: [] })),
-    api(clientQuery('/api/insights/best-times?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'unavailable', slots: [] })),
     api(clientQuery('/api/remote-schedule')).catch(() => ({ status: 'remote_schedule_unavailable', sources: [] })),
-    api(clientQuery('/api/insights/repurpose?platform=' + encodeURIComponent(insightsPlatform))).catch(() => ({ status: 'insufficient_data', candidates: [] })),
   ]);
-  state.insights = insights;
-  state.insightsScope = insights.scope || state.insightsScope || 'account';
   state.inbox = inbox;
-  state.bestTimes = bestTimes;
   state.remoteSchedule = remoteSchedule;
-  state.repurposeCandidates = repurposeCandidates;
 }
 
 function renderCoreLists() {
@@ -123,9 +112,7 @@ function renderCoreLists() {
 }
 
 function renderSecondaryLists() {
-  renderInsights();
   renderInbox();
-  renderBestTimes();
   renderRemoteSchedule();
   renderOverview();
 }

@@ -26,7 +26,7 @@ const TOPIC_OPTIONS = [
   ['publish', '發布與失敗'],
   ['content', '內容與審核'],
   ['team', '團隊與權限'],
-  ['insights', '成效與收件匣'],
+  ['inbox', '收件匣與互動'],
   ['settings', '設定與備份'],
 ];
 

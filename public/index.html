@@ -43,7 +43,7 @@
       })();
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/style.css?v=0.6.105" />
+    <link rel="stylesheet" href="/style.css?v=0.6.106" />
   </head>
   <body class="auth-required">
     <script>
@@ -68,7 +68,6 @@
       <symbol id="nav-overview" viewBox="0 0 24 24"><path fill="none" d="M4.5 11.2 12 4.6l7.5 6.6"/><path fill="none" d="M7 10.4V19.4h10V10.4"/></symbol>
       <symbol id="nav-templates" viewBox="0 0 24 24"><rect fill="none" x="8" y="6.2" width="11.2" height="13.1" rx="1.6"/><path fill="none" d="M15.4 4.7H6.6A1.6 1.6 0 0 0 5 6.3v11.2"/></symbol>
       <symbol id="nav-campaigns" viewBox="0 0 24 24"><path fill="none" d="M7 4.6v15.8"/><path fill="none" d="M7 5.2h11.2l-2.6 3.7 2.6 3.7H7"/></symbol>
-      <symbol id="nav-insights" viewBox="0 0 24 24"><path fill="none" d="M4.5 19.2h15"/><path fill="none" d="M7 19.2V13h2.6v6.2M11.7 19.2V8.4h2.6v10.8M16.4 19.2V5.6H19v13.6"/></symbol>
       <symbol id="nav-platforms" viewBox="0 0 24 24"><circle fill="none" cx="7" cy="12" r="2.6"/><circle fill="none" cx="17" cy="7.4" r="2.6"/><circle fill="none" cx="17" cy="16.6" r="2.6"/><path fill="none" d="M9.4 11.2 14.6 8.4M9.4 12.8l5.2 2.8"/></symbol>
       <symbol id="nav-settings" viewBox="0 0 24 24"><circle fill="none" cx="12" cy="12" r="3.1"/><path fill="none" d="M12 4v2.3M12 17.7V20M4 12h2.3M17.7 12H20M6.2 6.2l1.6 1.6M16.2 16.2l1.6 1.6M17.8 6.2l-1.6 1.6M7.8 16.2l-1.6 1.6"/></symbol>
       <symbol id="nav-team" viewBox="0 0 24 24"><circle fill="none" cx="9" cy="8.2" r="2.4"/><path fill="none" d="M4.6 18.4v-1.3a4.4 4.4 0 0 1 8.8 0v1.3"/><circle fill="none" cx="16.4" cy="8.8" r="2"/><path fill="none" d="M14.2 18.4v-.9a3.4 3.4 0 0 1 5.2-2.9"/></symbol>
@@ -80,7 +79,7 @@
 
     <section class="auth-gate" id="authGate" aria-labelledby="authTitle" aria-busy="true">
       <div class="auth-card">
-        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.105</span></p>
+        <p class="section-tag">SHRINEFLOW <span class="version-tag" id="authAppVersion">v0.6.106</span></p>
         <h1 id="authTitle">登入工作台</h1>
         <p class="panel-lede" id="authDescription">正在確認登入狀態…</p>
         <button class="primary-button auth-google-button is-hidden" id="authGoogleButton" type="button"><span aria-hidden="true">G</span> 使用 Google 帳號登入</button>
@@ -132,7 +131,7 @@
     <aside class="app-sidebar" id="appSidebar" aria-label="主要導覽">
       <button class="sidebar-close-button" id="mobileSidebarClose" type="button" aria-label="關閉導覽選單">×<span>關閉導覽</span></button>
       <div class="sidebar-brand">
-        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.6.105</em></span>
+        <span class="brand-badge">✦ SHRINEFLOW <em class="version-tag" id="appVersion">v0.6.106</em></span>
         <p>Social publishing workspace</p>
       </div>
       <a class="sidebar-create" href="#/content/new" data-view-target="create" data-route-target="content/new"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-plus" /></svg></span> 新增內容</a>
@@ -146,7 +145,6 @@
         <a class="app-nav-item permission-hidden" id="reviewNavItem" href="#/reviews" data-view-target="reviews" data-route-target="reviews" data-required-any="content.approve,content.submit_review"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-reviews" /></svg></span>審核佇列<span class="nav-badge" id="navReviewsBadge" hidden></span></a>
         <p class="nav-group-label nav-group-label-spaced">管理</p>
         <a class="app-nav-item nav-secondary active" href="#/overview" data-view-target="overview" data-route-target="overview" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-overview" /></svg></span>總覽</a>
-        <a class="app-nav-item nav-secondary" href="#/insights" data-view-target="insights" data-route-target="insights"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-insights" /></svg></span>成效</a>
         <a class="app-nav-item nav-secondary" href="#/campaigns" data-view-target="campaigns" data-route-target="campaigns"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-campaigns" /></svg></span>活動</a>
         <a class="app-nav-item nav-secondary" href="#/templates" data-view-target="templates" data-route-target="templates"><span class="nav-icon" aria-hidden="true"><svg><use href="#nav-templates" /></svg></span>模板</a>
       </nav>
@@ -836,76 +834,6 @@
           </div>
           <div id="publishingLogList" class="publishing-log-list" aria-live="polite"></div>
         </section>
-        <section class="panel module-panel is-hidden" id="insightsPanel" data-view-panel="insights">
-          <div class="panel-heading compact">
-            <p class="panel-lede">聚焦熱門內容表現排行與 AI 題材建議，助您掌握受眾喜好並快速發想下一步貼文。</p>
-            <div class="panel-heading-actions">
-              <button type="button" id="btnRunAiInsights" class="primary-button" aria-label="執行 AI 社群成效顧問分析">✨ AI 深度分析</button>
-            </div>
-          </div>
-          <div class="module-toolbar insights-toolbar" aria-label="成效平台與區間">
-            <div class="insights-toolbar-group">
-              <span id="insightsPlatformLabel" class="field-label">平台</span>
-              <div class="radio-pill-group" id="insightsPlatformTabs" role="tablist" aria-labelledby="insightsPlatformLabel"></div>
-            </div>
-            <div class="insights-toolbar-group">
-              <span id="insightsRangeLabel" class="field-label">帳號區間</span>
-              <div class="radio-pill-group" id="insightsRangeFilter" role="radiogroup" aria-labelledby="insightsRangeLabel">
-                <label class="radio-pill"><input type="radio" name="insightsRange" value="7" checked /><span>近 7 日</span></label>
-                <label class="radio-pill"><input type="radio" name="insightsRange" value="28" /><span>近 28 日</span></label>
-                <label class="radio-pill"><input type="radio" name="insightsRange" value="90" /><span>近 90 日</span></label>
-              </div>
-            </div>
-            <button type="button" id="btnRefreshInsights" class="btn-test" aria-label="向 Meta 重拉最新成效，請勿頻繁點" title="向 Meta 重拉最新成效，請勿頻繁點">↻ 重新同步</button>
-          </div>
-          <div id="insightsSourceNotice" class="insights-source-note" role="note"></div>
-
-          <!-- 核心成效重點摘要卡片 -->
-          <div class="module-summary-grid" id="insightsOperationalSummary" aria-label="此平台營運摘要"></div>
-
-          <!-- ✨ AI 社群成效顧問專區 -->
-          <section class="form-group-card ai-insights-card" id="aiInsightsCard" aria-live="polite">
-            <div class="ai-insights-header">
-              <div class="ai-insights-title-group">
-                <span class="section-tag">AI INSIGHTS ADVISOR</span>
-                <h3>✨ 社群題材成效與發文顧問</h3>
-              </div>
-            </div>
-            <div id="aiInsightsContent" class="ai-insights-content">
-              <p class="helper">點擊上方「✨ AI 深度分析」，會依現有貼文表現整理受眾偏好，並給 3 個下一步發文建議。</p>
-            </div>
-          </section>
-
-          <!-- 🔥 熱門內容表現排行榜 -->
-          <section class="form-group-card leaderboard-card" id="leaderboardCard" aria-live="polite">
-            <div class="leaderboard-heading">
-              <div>
-                <span class="section-tag">TOP PERFORMING CONTENT</span>
-                <h3>🔥 熱門內容表現排行</h3>
-              </div>
-              <div class="leaderboard-filter-group" id="leaderboardSortGroup">
-                <div class="radio-pill-group leaderboard-sort-pills" id="leaderboardSort" role="radiogroup" aria-label="排行排序">
-                  <label class="radio-pill"><input type="radio" name="leaderboardSort" value="engagement" checked /><span>最高互動</span></label>
-                  <label class="radio-pill"><input type="radio" name="leaderboardSort" value="reach" /><span>最高觸及</span></label>
-                  <label class="radio-pill"><input type="radio" name="leaderboardSort" value="recent" /><span>最新發布</span></label>
-                </div>
-              </div>
-            </div>
-            <div id="leaderboardList" class="leaderboard-list"></div>
-          </section>
-
-          <!-- 最佳發布時段與再製 -->
-          <section class="form-group-card best-times-card" id="bestTimesCard" aria-live="polite"></section>
-          <section class="form-group-card repurpose-card" id="repurposeCard" aria-live="polite"></section>
-
-          <!-- 平台原始技術指標 (折疊收納) -->
-          <details class="disclosure compact insights-raw-details" id="insightsRawDetails">
-            <summary>平台原始 API 技術指標與粉專帳號狀態 <span class="chevron" aria-hidden="true">›</span></summary>
-            <div class="disclosure-body">
-              <div id="insightsPlatformDetail" class="insights-platform-detail" aria-live="polite"></div>
-            </div>
-          </details>
-        </section>
         <section class="panel module-panel is-hidden" id="inboxPanel" data-view-panel="inbox">
           <div class="panel-heading compact">
             <p class="panel-lede">依平台分頁查看最近 50 則對話與來回內容。對方名稱來自平台參加者，不是本機猜測。</p>
@@ -1054,7 +982,6 @@
                     <li>建立完成後，到左側選單點 <strong style="color:var(--text-primary);">使用案例 ➔ Pages API ➔ 權限</strong> ➔ 確認並新增：
                       <ul>
                         <li><code class="guide-code-box">pages_manage_posts</code>（發布與排程貼文）</li>
-                        <li><code class="guide-code-box">pages_read_engagement</code>（讀取互動與成效）</li>
                         <li><code class="guide-code-box">pages_show_list</code>（列出管理的粉專）</li>
                         <li><code class="guide-code-box">pages_messaging</code>（收件匣回覆私訊）</li>
                         <li><code class="guide-code-box">pages_manage_metadata</code>（即時 Webhook 通知）</li>
@@ -1072,10 +999,9 @@
                   </div>
                   <ol class="guide-list">
                     <li>打開 <a class="field-link" href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API 測試工具</a> ➔ 最上方「Meta 應用程式」選剛剛建立的 App。</li>
-                    <li><strong>確認加入 6 項權限</strong>：在右側「權限 (Permissions)」清單中確認已勾選（若沒有請按 <span class="guide-pill-blue">Add a Permission</span> 搜尋加入）：
+                    <li><strong>確認加入核心發布權限</strong>：在右側「權限 (Permissions)」清單中確認已勾選（若沒有請按 <span class="guide-pill-blue">Add a Permission</span> 搜尋加入）：
                       <ul>
                         <li><span class="guide-pill-green">pages_manage_posts</span>（發文必備）</li>
-                        <li><span class="guide-pill-green">pages_read_engagement</span>（成效必備）</li>
                         <li><span class="guide-pill-green">pages_show_list</span>（取得粉專清單）</li>
                         <li><span class="guide-pill-green">pages_messaging</span>（收件匣私訊）</li>
                         <li><span class="guide-pill-green">pages_manage_metadata</span>（Webhook 通知）</li>
@@ -1590,7 +1516,7 @@
         </div>
       </div>
     </div>
-    <script src="/app.js?v=0.6.105" type="module"></script>
+    <script src="/app.js?v=0.6.106" type="module"></script>
   </body>
 </html>
 

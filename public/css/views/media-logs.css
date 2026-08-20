@@ -856,7 +856,7 @@ button.module-summary-card:focus-visible {
 
   .module-toolbar .field,
   .content-toolbar .field,
-  .insights-toolbar .field,
+  .inbox-toolbar .field,
   .inline-field {
     flex: 0 0 auto;
     flex-direction: column;
@@ -867,7 +867,7 @@ button.module-summary-card:focus-visible {
 
   .module-toolbar .radio-pill-group,
   .content-toolbar .radio-pill-group,
-  .insights-toolbar .radio-pill-group,
+  .inbox-toolbar .radio-pill-group,
   .inline-field > .radio-pill-group,
   .module-toolbar input,
   .content-toolbar input,

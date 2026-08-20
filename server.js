@@ -23,8 +23,6 @@ import { createScheduleRouter } from './lib/routes/schedule.js';
 import { createCrisisPauseRouter } from './lib/routes/crisis-pause.js';
 import { createQueuesRouter } from './lib/routes/queues.js';
 import { createPublishRouter } from './lib/routes/publish.js';
-import { createInsightsRouter } from './lib/routes/insights.js';
-import { createBestTimesRouter } from './lib/routes/best-times.js';
 import { createRemoteScheduleRouter } from './lib/routes/remote-schedule.js';
 import { createInboxRouter } from './lib/routes/inbox.js';
 import { createSavedRepliesRouter } from './lib/routes/saved-replies.js';
@@ -52,11 +50,6 @@ import { createEvergreenRouter } from './lib/routes/evergreen.js';
 import { createTeamRouter } from './lib/routes/team.js';
 import { createInvitationMailer } from './lib/invitation-mailer.js';
 import { createReviewRouter } from './lib/routes/review.js';
-import {
-  createFacebookInsightsClient,
-  createInstagramInsightsClient,
-  createThreadsInsightsClient,
-} from './lib/insights.js';
 import {
   createFacebookInboxClient,
   createInstagramInboxClient,
@@ -138,36 +131,6 @@ async function resolveThreadsPublisher(context) {
     graphVersion: process.env.THREADS_GRAPH_VERSION || 'v1.0',
     graphBaseUrl: process.env.THREADS_GRAPH_BASE_URL || 'https://graph.threads.net',
     publicMediaBaseUrl: process.env.PUBLIC_MEDIA_BASE_URL,
-  });
-}
-
-async function resolveFacebookInsights(context) {
-  const account = await resolveAccount(context);
-  return createFacebookInsightsClient({
-    pageId: account?.credentials?.pageId || process.env.FACEBOOK_PAGE_ID,
-    pageAccessToken: account?.credentials?.pageAccessToken || process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
-    graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
-    graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
-  });
-}
-
-async function resolveInstagramInsights(context) {
-  const account = await resolveAccount(context);
-  return createInstagramInsightsClient({
-    userId: account?.credentials?.userId,
-    accessToken: account?.credentials?.accessToken,
-    graphVersion: process.env.META_GRAPH_VERSION || 'v25.0',
-    graphBaseUrl: process.env.META_GRAPH_BASE_URL || 'https://graph.facebook.com',
-  });
-}
-
-async function resolveThreadsInsights(context) {
-  const account = await resolveAccount(context);
-  return createThreadsInsightsClient({
-    userId: account?.credentials?.userId,
-    accessToken: account?.credentials?.accessToken,
-    graphVersion: process.env.THREADS_GRAPH_VERSION || 'v1.0',
-    graphBaseUrl: process.env.THREADS_GRAPH_BASE_URL || 'https://graph.threads.net',
   });
 }
 
@@ -339,18 +302,11 @@ app.use('/api', createSystemRouter({
 app.use('/api', createWebhookRouter());
 app.use('/api', createMediaRouter({ repositories }));
 app.use('/api', createBulkImportRouter({ repositories }));
-app.use('/api', (request, response, next) => createInsightsRouter({
-  aiService,
-  resolveFacebookInsights,
-  resolveInstagramInsights,
-  resolveThreadsInsights,
-})(request, response, next));
 app.use('/api', (request, response, next) => createInboxRouter({
   resolveFacebookInbox,
   resolveInstagramInbox,
   resolveThreadsInbox,
 })(request, response, next));
-app.use('/api', createBestTimesRouter({ repositories }));
 app.use('/api', (request, response, next) => createRemoteScheduleRouter({
   resolveFacebookPublisher,
   repositories,

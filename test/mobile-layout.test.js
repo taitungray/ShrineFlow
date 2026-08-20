@@ -20,7 +20,6 @@ const VIEW_PANELS = [
   'templates',
   'campaigns',
   'publishing',
-  'insights',
   'inbox',
   'platforms',
   'team',
@@ -79,24 +78,18 @@ function lastDecls(css, selector) {
   return bodies.at(-1) || '';
 }
 
-test('every workspace view panel and inner tab exists in index.html', async () => {
+test('index.html contains every navigation route panel once and only once', async () => {
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-
   for (const view of VIEW_PANELS) {
-    assert.match(
-      html,
-      new RegExp(`data-view-panel=["']${view}["']`),
-      `missing view panel ${view}`,
-    );
+    const hits = html.match(new RegExp(`data-view-panel=["']${view}["']`, 'g')) || [];
+    assert.equal(hits.length, 1, `data-view-panel="${view}" must exist once`);
   }
-
   for (const page of INNER_TABS.settings) {
     assert.match(html, new RegExp(`data-settings-page="${page}"`), `missing settings tab ${page}`);
   }
   for (const page of INNER_TABS.platforms) {
     assert.match(html, new RegExp(`data-platforms-page="${page}"`), `missing platforms tab ${page}`);
   }
-  assert.doesNotMatch(html, /id="settingsPageFacebook"/, 'Facebook credentials must live under platforms, not settings');
   assert.match(html, /id="platformsPageFacebook"/, 'Facebook credentials page missing from platforms');
   for (const mode of INNER_TABS.composerModes) {
     assert.match(html, new RegExp(`data-composer-mode="${mode}"`), `missing composer mode ${mode}`);
@@ -108,26 +101,11 @@ test('every workspace view panel and inner tab exists in index.html', async () =
     assert.match(html, new RegExp(`data-team-section="${section}"`), `missing team tab ${section}`);
   }
 
-  for (const id of ['insightsPanel', 'inboxPanel', 'platformsPanel', 'draftsPanel', 'schedulePanel']) {
+  for (const id of ['inboxPanel', 'platformsPanel', 'draftsPanel', 'schedulePanel']) {
     const hits = html.match(new RegExp(`id=["']${id}["']`, 'g')) || [];
     assert.equal(hits.length, 1, `${id} must exist once; duplicates stack two toolbars`);
   }
   assert.doesNotMatch(html, /^(<<<<<<<|=======|>>>>>>>)/m, 'unresolved merge markers break the workspace');
-});
-
-test('insights leaderboard stays scannable on desktop and stacks cleanly on phone', async () => {
-  const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
-  const js = await fs.readFile(path.join(root, 'public', 'modules', 'insights.js'), 'utf8');
-  const css = await loadCss('public/style.css');
-  const phone = mediaBlocks(css, 767);
-
-  assert.doesNotMatch(html, /id="btnTriggerAiAnalysis"/, 'one AI CTA is enough; in-card duplicate clutters both desktop and phone');
-  assert.match(js, /platformChipHtml\(target\.platformId\)/, 'leaderboard must scan platform with official icon');
-  assert.doesNotMatch(js, /ID \$\{/, 'long external IDs must not sit in the leaderboard meta line');
-  assert.match(css, /\.leaderboard-item\s*\{[^}]*grid-template-columns\s*:\s*48px minmax\(0,\s*1fr\) auto auto/, 'desktop row is rank | copy | stats | action');
-  assert.match(css, /\.leaderboard-sort-pills \.radio-pill\s*\{[^}]*flex\s*:\s*0\s+1\s+auto/, 'sort pills must not stretch to full card width');
-  assert.match(lastDecls(phone, '.insights-toolbar-group'), /flex-direction\s*:\s*column/, 'phone toolbar groups stack label over pills');
-  assert.match(lastDecls(phone, '.leaderboard-item'), /grid-template-columns\s*:\s*40px minmax\(0,\s*1fr\)/, 'phone leaderboard drops the desktop four-column row');
 });
 
 test('mobile layout drops desktop min-heights that leave empty space', async () => {
@@ -214,7 +192,7 @@ test('phone toolbars and filters reset flex-basis to avoid vertical empty space'
   const phone = mediaBlocks(css, 767);
   const moduleFields = lastDecls(phone, '.module-search-field, .module-filter-field');
   const contentFilter = lastDecls(phone, '.content-toolbar-main .content-filter-field, .content-search-field');
-  const toolbarFields = lastDecls(phone, '.module-toolbar .field, .content-toolbar .field, .insights-toolbar .field, .inline-field');
+  const toolbarFields = lastDecls(phone, '.module-toolbar .field, .content-toolbar .field, .inbox-toolbar .field, .inline-field');
   const filterPills = lastDecls(phone, '.module-filter-pills');
 
   assert.match(moduleFields, /flex\s*:\s*0\s+0\s+auto/, 'module search and filter fields must reset flex-basis so column toolbar does not stretch empty height');

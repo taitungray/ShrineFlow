@@ -62,8 +62,6 @@ const REQUIRED_IDS = [
   'review-queue',
   'roles-permissions',
   'member-invite',
-  'insights-empty',
-  'best-times',
   'inbox-how',
   'templates-campaigns',
   'platforms-page',

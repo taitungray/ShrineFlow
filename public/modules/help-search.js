@@ -17,7 +17,7 @@ export const HELP_TOPICS = Object.freeze([
   'publish',
   'content',
   'team',
-  'insights',
+  'inbox',
   'settings',
 ]);
 

@@ -14,20 +14,18 @@ function sliceFn(source, name, nextName) {
   return source.slice(start, end);
 }
 
-test('core boot lists exclude Meta insights and inbox so publishing records can paint first', async () => {
+test('core boot lists exclude Meta inbox so publishing records can paint first', async () => {
   const app = await fs.readFile(path.join(root, 'public', 'app.js'), 'utf8');
   const core = sliceFn(app, 'fetchCoreLists', 'fetchSecondaryLists');
-  const secondary = sliceFn(app, 'fetchSecondaryLists', 'renderSecondaryLists');
+  const secondary = sliceFn(app, 'fetchSecondaryLists', 'renderCoreLists');
   const refresh = sliceFn(app, 'refreshLists', 'applyClientAccounts');
   const load = sliceFn(app, 'loadData', 'initApp');
 
   assert.match(core, /\/api\/posts/, 'posts belong on the first paint path');
   assert.match(core, /\/api\/schedule/, 'schedule belongs on the first paint path');
-  assert.doesNotMatch(core, /\/api\/insights/, 'insights must not block posts');
   assert.doesNotMatch(core, /\/api\/inbox/, 'inbox must not block posts');
   assert.doesNotMatch(core, /\/api\/remote-schedule/, 'remote schedule must not block posts');
 
-  assert.match(secondary, /\/api\/insights/, 'insights stay on the background path');
   assert.match(secondary, /\/api\/inbox/, 'inbox stays on the background path');
 
   assert.match(refresh, /await fetchCoreLists\(\)/, 'refresh paints after core fetch');

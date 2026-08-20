@@ -55,7 +55,6 @@ test('nav badges stay hidden until they have a count', async () => {
   const css = await loadCss('public/style.css');
   const html = await fs.readFile(path.join(root, 'public', 'index.html'), 'utf8');
   const overviewJs = await fs.readFile(path.join(root, 'public', 'modules', 'overview.js'), 'utf8');
-  const insightsNav = html.match(/href="#\/insights"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
   const contentNav = html.match(/href="#\/content"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
   const calendarNav = html.match(/href="#\/calendar"[^>]*>[\s\S]*?<\/a>/)?.[0] || '';
 
@@ -66,8 +65,6 @@ test('nav badges stay hidden until they have a count', async () => {
   assert.match(html, /id="navInboxBadge" hidden/, 'inbox badge starts hidden');
   assert.match(html, /id="navReviewsBadge" hidden/, 'reviews badge starts hidden');
   assert.match(overviewJs, /inboxAttentionCount/, 'inbox badge counts unread or needs-reply only');
-  assert.match(insightsNav, /href="#nav-insights"/, 'insights uses a bar-chart icon, not a circle');
-  assert.equal(insightsNav.includes('◌'), false, 'insights icon must not look like a notification dot');
 });
 
 test('publishing logs reuse content-card density', async () => {

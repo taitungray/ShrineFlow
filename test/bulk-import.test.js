@@ -155,6 +155,7 @@ test('bulk import commit is all-or-nothing and creates unscheduled drafts only a
   app.use('/api', createBulkImportRouter({
     repositories,
     listClients: async () => [{ id: 'client-1', name: 'Brand A' }],
+    now: () => new Date('2026-08-15T00:00:00.000Z'),
   }));
   const server = app.listen(0);
   try {
@@ -163,7 +164,7 @@ test('bulk import commit is all-or-nothing and creates unscheduled drafts only a
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         clientId: 'client-1',
-        csv: 'contentTopic,facebook,platform,contentType,scheduledLocal,timeZone\n批次內容,批次文案,facebook,post,2026-08-20T10:00,Asia/Taipei',
+        csv: 'contentTopic,facebook,platform,contentType,scheduledLocal,timeZone\n批次內容,批次文案,facebook,post,2029-08-20T10:00,Asia/Taipei',
       }),
     });
     assert.equal(validResponse.status, 201);
@@ -171,7 +172,7 @@ test('bulk import commit is all-or-nothing and creates unscheduled drafts only a
     assert.equal(validPayload.createdCount, 1);
     assert.equal(validPayload.drafts[0].status, 'draft');
     assert.equal(validPayload.drafts[0].targets[0].scheduledAt, null);
-    assert.equal(validPayload.drafts[0].importedSchedule.requestedAt, '2026-08-20T02:00:00.000Z');
+    assert.equal(validPayload.drafts[0].importedSchedule.requestedAt, '2029-08-20T02:00:00.000Z');
     assert.equal(records.length, 1);
 
     const invalidResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/commit`, {
@@ -205,7 +206,7 @@ test('bulk import schedule applies requested times atomically as local schedules
         facebook: '可排程文案',
         platformId: 'facebook',
         contentType: 'post',
-        scheduledAt: '2026-08-20T02:00:00.000Z',
+        scheduledAt: '2029-08-20T02:00:00.000Z',
         timeZone: 'Asia/Taipei',
         mediaPaths: [],
       },
@@ -251,7 +252,7 @@ test('bulk import schedule applies requested times atomically as local schedules
     assert.equal(validPayload.remoteScheduling, false);
     assert.equal(records[0].targets[0].status, 'scheduled');
     assert.equal(records[0].targets[0].scheduleSource, 'local');
-    assert.equal(records[0].targets[0].scheduledAt, '2026-08-20T02:00:00.000Z');
+    assert.equal(records[0].targets[0].scheduledAt, '2029-08-20T02:00:00.000Z');
 
     const originalStatus = records[1].targets[0].status;
     const invalidResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/bulk-import/schedule`, {
